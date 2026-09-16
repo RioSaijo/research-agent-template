@@ -33,17 +33,7 @@ for path in tests/**/*; do
   [[ -f "$path" && "$(basename "$path")" != ".gitkeep" ]] && test_files+=("$path")
 done
 if (( ${#test_files[@]} > 0 )); then
-  if command -v pytest >/dev/null 2>&1; then
-    pytest -q
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -m unittest discover -s tests -v
-  elif command -v python >/dev/null 2>&1; then
-    python -m unittest discover -s tests -v
-  elif command -v py >/dev/null 2>&1; then
-    py -m unittest discover -s tests -v
-  else
-    echo "[check] Python not found; tests were not executed by this script" >&2
-  fi
+  if command -v pytest >/dev/null 2>&1; then pytest -q; else python -m unittest discover -s tests -v; fi
 fi
 
 if command -v latexmk >/dev/null 2>&1; then
