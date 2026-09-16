@@ -36,6 +36,17 @@
 
 `FINAL_REPORT.md`は常設せず、Git repositoryの正本から最終応答として生成します。研究内容に応じて必要な場合は、`results/reports/`へ版管理可能な報告書artifactを作成できます。
 
+## Multiple research projects
+
+このrepository自体には個別研究のdata、文献、結果を保存しません。新しい研究テーマごとに、このtemplateから`research-<topic-slug>`という独立repositoryを作成します。
+
+- 1 research project = 1 Git repository
+- repositoryごとに`PROJECT.md`、`STATUS.md`、文献、data provenance、code、results、paperを分離
+- 全projectの一覧と最終報告書linkは`research-project-index`で管理
+- 完了projectは成果物を維持したままGitHubでarchive可能
+
+これにより、研究テーマ間でdata、dependency、Claim–Evidence、Git履歴、CI、PDFが混在することを防ぎます。
+
 ## 構成
 
 ```text
