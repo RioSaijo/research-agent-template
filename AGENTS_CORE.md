@@ -25,6 +25,15 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 
 初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
 
+### Non-stop execution contract
+
+- テーマ受領をworkflow開始の指示として扱う。各phaseの開始許可を繰り返し求めない。
+- あるtaskがblockedでも、同じRQまたはquality gateに属する別の実行可能taskへ進む。
+- 不足resourceには、代替source、公開dataset、API、追加測定案、simulation、proxy、design変更案の順で対応可能性を調べる。
+- intermediate updateは状態共有であり、作業停止点ではない。
+- human pause condition以外では、質問への回答を待たずに合理的な仮定と`要検討`表示を使って進める。
+- scientific completionに到達できない場合も、調査済み範囲、blocker、証拠、再開条件をまとめた最終研究報告書を提出する。
+
 ## 3. Roles and context
 
 roleは常設agentではなく必要時の責務である。
@@ -96,3 +105,19 @@ WriterはearlyにIntroduction/Literature Positioning/Methodology、evidence後�
 
 Gate 4と`SPECIFICATION.md`のCompletion Criteriaを満たし、Referee decisionがPASSで、未解決CRITICALがない時だけ`PROJECT_STATUS: COMPLETE`にする。最終成果には4正本、reproducible code（該当時）、results、Claim Evidence mapping、manuscript、reference、limitations、unresolved questionsを含める。
 
+### Final research report
+
+最終応答は、以下を一つの研究報告書として構成する。
+
+1. Executive Summary
+2. Research Background, Objective, and RQs
+3. Literature Positioning, Gap, and Novelty
+4. Data and Methodology
+5. Evaluation and Verification Design
+6. Results and Claim–Evidence Mapping
+7. Falsification Attempts and Referee Findings
+8. Negative Results, Limitations, and Unresolved Questions
+9. Reproducibility and Artifact Links
+10. Quality Gate, Project Status, and Recommended Next Work
+
+Claim Evidence Tableを超える断定をしない。未完了の場合は報告書を省略せず、完了した範囲と停止理由を明示する。`FINAL_REPORT.md`は常設正本として追加せず、必要な版管理artifactは`results/reports/`へ置く。

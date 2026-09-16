@@ -145,3 +145,10 @@ Failure state: `TRIAGE / REFRAMING`
 4. method、metric、criterion、baseline、verification planを設計する。
 5. Gate 1とGate 2を判定する。
 
+## Final Report Delivery
+
+- Execution mode: NON_STOP
+- Final response format: INTEGRATED_RESEARCH_REPORT
+- Routine phase approval: NOT_REQUIRED
+- Human pause conditions: RQ change / major scope change / human-only resource / critical direction decision / PARK
+- Report status: NOT_STARTED

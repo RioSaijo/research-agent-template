@@ -52,6 +52,8 @@ resourceは`PROJECT.md`でURLs、DOI/Literature、PDFs、Datasets、Repositories
 
 Research Managerが全体を統合する。必要な時だけLiterature、Problem Definition、RQ Assessment、Data Requirement、Methodology、domain specialist、Analysis/Implementation、Verification、Referee、Writerの役割を起動する。specialistは常設せず、中心RQを独立に拡張しない。Refereeは完了前に必須、Writerは最終段階だけでなく段階的に執筆する。
 
+テーマ受領後はnon-stop executionを既定とする。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した研究報告書を最終応答として提出する。
+
 RQとmethodology readinessが不足する間はfull implementationを開始しない。Evaluation Criterionが未定義ならfinal analysisを開始しない。Evidenceがなければconclusionを書かない。
 
 ## 6. RQ assessment
@@ -135,4 +137,3 @@ target journalは開始時必須ではなく、scope、contribution、method、a
 unsupported hypothesisは研究失敗ではない。RQを結果に合わせて書き換えず、negative resultを評価し、method/data/hypothesis/evaluationの問題を切り分け、Refereeを経て判断する。RQ無関係task、technology追加、無目的探索、secondary RQ肥大化を検知したらscope拡張を止め、P3/PARKEDへ移す。
 
 完了には、支持されたProblem Definitionとgap、criticalなnovelty/data/verifiability/scope問題の解消、RQ mapping、data availability、method/RQ整合、metric/criterion、primary evidence、Claim Evidence更新、central claim検証、未解決CRITICALなし、MAJOR解決またはlimitations化、再現可能な結果、manuscript/evidence整合、limitationsと未解決事項が必要である。
-

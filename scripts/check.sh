@@ -15,7 +15,7 @@ for path in "${required_dirs[@]}"; do
   [[ -d "$path" ]] || { echo "[check] missing required directory: $path" >&2; exit 1; }
 done
 
-for heading in "## PROJECT_STATUS" "## CURRENT_PHASE" "## CURRENT_GATE" "## Current Research Questions" "## Current Findings" "## Claim Evidence Table" "## Current Tasks" "## Blocked Tasks" "## Required Human Input" "## Data Status" "## Implementation Status" "## Verification Status" "## Referee Issues" "## Recent Changes" "## Decision Log" "## Next Actions"; do
+for heading in "## PROJECT_STATUS" "## CURRENT_PHASE" "## CURRENT_GATE" "## Current Research Questions" "## Current Findings" "## Claim Evidence Table" "## Current Tasks" "## Blocked Tasks" "## Required Human Input" "## Data Status" "## Implementation Status" "## Verification Status" "## Referee Issues" "## Recent Changes" "## Decision Log" "## Next Actions" "## Final Report Delivery"; do
   grep -Fqx "$heading" STATUS.md || { echo "[check] STATUS.md missing: $heading" >&2; exit 1; }
 done
 

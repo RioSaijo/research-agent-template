@@ -13,10 +13,28 @@
 
 ## 開始方法
 
-1. `PROJECT.md` のResearch Background、Motivation、Problem Definition、Research Objective、Research Questionsを記入します。不明な項目は推測せず `要検討` とします。
-2. ChatGPTにrepositoryを渡します。`AGENTS.md`を入口として自動的に文献調査、問題定義、RQ評価、データ要件、方法設計を開始します。
+1. 研究テーマをChatGPTへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
+2. ChatGPTは`AGENTS.md`を入口として、研究入力の整理、文献調査、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、執筆を自動的に進めます。
 3. `STATUS.md`で現在のphase、quality gate、task、Claim Evidence Tableを確認します。
 4. 重要な研究方針変更や人間だけが取得できる資源が必要になった場合に限り、人間が判断します。
+
+## Non-stop execution and final report
+
+テーマ受領後は、通常の途中確認やphaseごとの承認を求めず、実行可能なtaskを継続して処理します。情報不足があっても、文献・公開data・simulation・代替methodなど、仕様で許された経路を先に調べます。
+
+中断するのは、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向の判断を要するCRITICAL issue、PARK判断など、仕様上人間の承認が必要な場合だけです。
+
+終了時は、単なる進捗通知ではなく、次を含む研究報告書をchatで提出します。
+
+- 研究課題、背景、目的、RQ
+- 文献positioning、closest prior work、research gap、novelty評価
+- data、method、evaluation criterion、verification design
+- 実施内容、結果、negative result、Claim–Evidence対応
+- Referee findings、limitations、unresolved questions
+- quality gateとcompletion criteriaの状態
+- reproducibility情報と成果物へのlink
+
+`FINAL_REPORT.md`は常設せず、Git repositoryの正本から最終応答として生成します。研究内容に応じて必要な場合は、`results/reports/`へ版管理可能な報告書artifactを作成できます。
 
 ## 構成
 
@@ -51,4 +69,3 @@ research-agent-template/
 4. Publication Readiness Gate
 
 研究完了は論文の文章量ではなく、問題定義、新規性、方法、評価基準、証拠、検証、査読、再現性が揃ったことで判断します。
-
