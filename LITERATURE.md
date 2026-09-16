@@ -19,7 +19,7 @@
 
 | ID | Source | Original Checked | Same / Different RQ | Difference | Proposed Knowledge | Classification |
 |---|---|---|---|---|---|---|
-| L-CPW-01 | Donkers et al., DOI:10.1016/j.buildenv.2024.112433 | YES (publisher and institutional record) | semantic integration and personal comfort | selection/contextを分離しbuilding-held-out generalizationとeffortをablation | incremental value and cost-benefit | CRITICAL |
+| L-CPW-01 | Donkers et al., DOI:10.1016/j.buildenv.2024.111319 | YES (record/abstract) | semantic integration and personal comfort | selection/contextを分離しbuilding-held-out generalizationとeffortをablation | incremental value and cost-benefit | CRITICAL |
 | L-CPW-02 | Donkers et al., DOI:10.3390/buildings12101522 | YES (open article) | IEQ ontology design | ontology設計でなくgeneralization評価 | 有効/無効条件 | CRITICAL |
 | L-CPW-03 | Tang et al., DOI:10.1016/j.enbuild.2022.111870 | YES (record/abstract) | cross-dataset IEQ satisfaction prediction | semantic modelなし | contextによるgeneralization改善 | DEEP_REVIEW |
 
@@ -93,3 +93,4 @@ Semantic models can integrate building/IEQ data and configure portable applicati
 - [ ] Brick/BOP/BOTの必要最小profileを決定。
 - [ ] timeseriesとsemantic modelが同一IDで結合できるdatasetを確定。
 - [ ] targetをCO₂、comfort vote、overall IEQ satisfactionからdataに基づき固定。
+

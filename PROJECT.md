@@ -44,7 +44,7 @@ Building semantic data modelから自動抽出した空間・設備・sensor con
 | URLs | https://brickschema.org/ | Brick schema/documentation | RQ-01, RQ-02 | PUBLIC |
 | DOI / Literature | 10.3390/buildings12101522 | IEQ semantic web review and BOP | RQ-01, RQ-02 | PUBLIC |
 | DOI / Literature | 10.1145/3366375 | Mortar portable analytics | RQ-02 | PUBLIC |
-| DOI / Literature | 10.1016/j.buildenv.2024.112433 | Cross-domain semantic digital twin comfort model | RQ-01 | PUBLIC/OPEN ACCESS |
+| DOI / Literature | 10.1016/j.buildenv.2024.111319 | Cross-domain semantic digital twin comfort model | RQ-01 | PUBLIC/OPEN ACCESS |
 | DOI / Literature | 10.1016/j.buildenv.2018.06.022 | ASHRAE Global Thermal Comfort Database II | RQ-01 | PUBLICATION; DATA ACCESS TO VERIFY |
 | Datasets | Project-specific building data | Final empirical evaluation | RQ-01, RQ-02 | NOT_PROVIDED |
 
@@ -140,3 +140,4 @@ Building semantic data modelから自動抽出した空間・設備・sensor con
 
 - Default classification: `INTERNAL` until dataset terms are reviewed。
 - occupant feedback/occupancy dataはpersonal informationとしてde-identification、access control、purpose limitationを確認する。
+
