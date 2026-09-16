@@ -1,105 +1,98 @@
 # REFEREE
 
-REFEREE_DECISION: NOT_READY
-
-独立したcritical reviewの正本。conversationやagentの自己評価ではなく、repositoryのartifactから判断し、確認より先に反証可能性を探す。
+REFEREE_DECISION: MAJOR_REVISION_REQUIRED
 
 ## Topic Review
 
-- Problem Definition: NOT_REVIEWED
-- Research Gap: NOT_REVIEWED
-- RQ clarity: NOT_REVIEWED
-- Novelty: NOT_REVIEWED
-- Scope: NOT_REVIEWED
-- Invalidity codes considered: `NOVELTY_INSUFFICIENT / DATA_INSUFFICIENT / NOT_VERIFIABLE / SCOPE_PROBLEM`
-
-### Findings
-
-- 要検討
+- Problem Definition: PASS
+- Research Gap: PROVISIONAL_PASS
+- RQ clarity: PASS
+- Novelty: PROVISIONAL; full closest-work chain incomplete
+- Scope: PASS after limiting primary outcome and three conditions
+- Invalidity codes: `DATA_INSUFFICIENT` not yet triggered because acquisition alternatives remain; other codes not triggered。
 
 ## Scientific and Technical Review
 
-- Claim–Evidence alignment: NOT_REVIEWED
-- Methodology validity: NOT_REVIEWED
-- Data quality and provenance: NOT_REVIEWED
-- Evaluation design: NOT_REVIEWED
-- Independent verification where required: NOT_REVIEWED
-- Alternative explanations: NOT_REVIEWED
-- Falsification attempt: NOT_STARTED
-- Reproducibility: NOT_REVIEWED
-
-### Review Round 1
-
-- Claims reviewed: 要検討
-- Artifacts reviewed: 要検討
-- Decision: NOT_READY
+- Claim–Evidence alignment: PASS (claims remain OPEN)
+- Methodology validity: PROVISIONAL_PASS
+- Data quality/provenance: NOT_READY
+- Evaluation design: PASS_FOR_PROTOCOL
+- Independent verification: PLANNED
+- Alternative explanations: IDENTIFIED
+- Falsification attempt: DESIGNED, NOT_RUN
+- Reproducibility: SOFTWARE_SCAFFOLD_ONLY
 
 ## Publication Readiness Review
 
-- Target journal fit: NOT_REVIEWED
-- Manuscript completeness: NOT_REVIEWED
-- Contribution clarity: NOT_REVIEWED
-- Limitations: NOT_REVIEWED
-- Figures/tables/references: NOT_REVIEWED
-- Expected reviewer concerns: 要検討
+- Target journal fit: plausible, not selected
+- Manuscript completeness: NOT_READY
+- Contribution clarity: PROVISIONAL
+- Limitations: documented
+- Figures/tables/references: incomplete
+- Expected concern: semantics may improve integration but not prediction; small number of buildings; ontology mapping cost; leakage through building identity。
 
 ## Critical Issues
 
 | Issue ID | Related RQ / Claim | Issue | Why Critical | Required Revision | Status |
 |---|---|---|---|---|---|
-| なし | - | - | - | - | - |
+| RF-002 | CL-01, CL-02 | no empirical evidence | central claims cannot be evaluated | acquire matched multi-building data and run predefined evaluation | OPEN |
 
 ## Major Issues
 
 | Issue ID | Related RQ / Claim | Issue | Required Revision | STATUS Task | Status |
 |---|---|---|---|---|---|
-| なし | - | - | - | - | - |
+| RF-001 | RQ-01 | target variable not fixed | fix after data feasibility | T-004 | OPEN |
+| RF-003 | Novelty | equivalent ablation may exist | deep review and citation-chain search | TBD | OPEN |
 
 ## Minor Issues
 
 | Issue ID | Issue | Suggested Revision | Status |
 |---|---|---|---|
-| なし | - | - | - |
+| RF-004 | toy graph predicates are generic, not Brick IRIs | replace with ontology profile in empirical implementation | OPEN |
 
 ## Falsification Attempts
 
-| Attempt ID | Claim | Counterexample / Failure Mode | Test or Evidence | Result | Impact |
+| Attempt ID | Claim | Counterexample / Failure Mode | Test | Result | Impact |
 |---|---|---|---|---|---|
-| FA-01 | 要検討 | 要検討 | 要検討 | NOT_RUN | 要検討 |
+| FA-01 | CL-01 | improvement is building-ID leakage | remove IDs, grouped split, permutation | NOT_RUN | critical |
+| FA-02 | CL-01 | gain comes only from feature count | matched-dimensional baseline | NOT_RUN | major |
+| FA-03 | CL-01 | wrong/incomplete graph worsens error | edge deletion/randomization | NOT_RUN | major |
+| FA-04 | CL-02 | ontology modeling effort exceeds saved setup time | include end-to-end labor | NOT_RUN | critical |
 
 ## Alternative Explanations
 
 | Claim / Result | Alternative Explanation | Discriminating Test | Status |
 |---|---|---|---|
-| 要検討 | 要検討 | 要検討 | OPEN |
+| future MAE gain | extra features rather than semantics | matched feature count/control | OPEN |
+| future cross-building gain | similar climate/building type | leave-climate/type-out sensitivity | OPEN |
+| future setup reduction | expert operator bias | counterbalanced operators | OPEN |
 
 ## Verification Concerns
 
-- Observable variable and falsification path: 要検討
-- Evaluation Criterion adequacy: 要検討
-- Baseline/reference adequacy: 要検討
-- Leakage/bias/artifact risk: 要検討
-- Independence of verification: 要検討
+- primary unit of generalization must be building, not row。
+- semantic mapping must be frozen without test-label knowledge。
+- missing graph relations must remain observable and enter error analysis。
+- uncertainty must be computed across buildings, not only timestamps。
 
 ## Required Revisions
 
 | Revision ID | Source Issue | Required Action | Owner / Role | Output | Status |
 |---|---|---|---|---|---|
-| 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | TODO |
+| REV-01 | RF-002 | acquire and validate dataset | Data Requirement | PROJECT/STATUS | BLOCKED |
+| REV-02 | RF-002 | run ablation and falsification | Analysis/Verification | results | BLOCKED |
+| REV-03 | RF-003 | deep closest-work review | Literature | LITERATURE.md | TODO |
 
 ## Resolved Issues
 
 | Issue ID | Resolution | Evidence | Rechecked By Referee | Date |
 |---|---|---|---|---|
-| なし | - | - | - | - |
+| Initial overclaim | changed from generic semantic application to incremental-value ablation | PROJECT.md | YES | 2026-09-16 |
 
 ## Final Referee Decision
 
-Allowed: `PASS / REVISION_REQUIRED / MAJOR_REVISION_REQUIRED / REFRAME_REQUIRED / NOT_READY`
-
-- Decision: NOT_READY
-- Rationale: Evidence and review are not yet available.
-- Unresolved CRITICAL: 0
-- Unresolved MAJOR: 0
+- Decision: MAJOR_REVISION_REQUIRED
+- Rationale: protocol is testable and scoped, but central evidence is absent。
+- Unresolved CRITICAL: 1
+- Unresolved MAJOR: 2
 - Gate 4 recommendation: NOT_READY
 
