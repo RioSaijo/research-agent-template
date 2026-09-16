@@ -19,7 +19,7 @@ for heading in "## PROJECT_STATUS" "## CURRENT_PHASE" "## CURRENT_GATE" "## Curr
   grep -Fqx "$heading" STATUS.md || { echo "[check] STATUS.md missing: $heading" >&2; exit 1; }
 done
 
-for heading in "## Literature Review Status" "## Foundational Work" "## Closest Prior Work" "## Recent Primary Studies" "## Systematic Reviews" "## Competing Methods" "## Negative Contradictory Evidence" "## Known Limitations" "## Relevant Standards" "## Cross-disciplinary References" "## Research Gap Synthesis" "## Novelty Assessment" "## Unresolved Literature Questions"; do
+for heading in "## Literature Review Status" "## Journal Search Log" "## Foundational Work" "## Closest Prior Work" "## Recent Primary Studies" "## Systematic Reviews" "## Competing Methods" "## Negative Contradictory Evidence" "## Known Limitations" "## Relevant Standards" "## Cross-disciplinary References" "## Research Gap Synthesis" "## Novelty Assessment" "## Unresolved Literature Questions"; do
   grep -Fqx "$heading" LITERATURE.md || { echo "[check] LITERATURE.md missing: $heading" >&2; exit 1; }
 done
 
@@ -32,6 +32,10 @@ test_files=()
 for path in tests/**/*; do
   [[ -f "$path" && "$(basename "$path")" != ".gitkeep" && "$path" != */__pycache__/* && "$path" != *.pyc ]] && test_files+=("$path")
 done
+
+grep -Fq "### Gate 5 — Report Delivery Gate" STATUS.md || { echo "[check] STATUS.md missing Gate 5 delivery checklist" >&2; exit 1; }
+grep -Fq '\bibliographystyle{unsrt}' paper/main.tex || { echo "[check] paper/main.tex must use numeric first-citation bibliography style" >&2; exit 1; }
+grep -Fq 'Citation format: NUMERIC_IN_TEXT' STATUS.md || { echo "[check] numeric in-text citation requirement missing" >&2; exit 1; }
 if (( ${#test_files[@]} > 0 )); then
   if command -v pytest >/dev/null 2>&1; then
     pytest -q

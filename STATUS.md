@@ -40,6 +40,9 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-002 | RQ-01 | closest prior workとgapを調べる | noveltyと問題定義を評価する | Literature Role | T-001 | Web / literature | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
 | T-003 | RQ-01 | data requirementと取得経路を設計する | feasibilityを評価する | Data Requirement Role | T-001 | Resource inventory | PROJECT.md | TODO | P1 | Input incomplete | Gate 2 |
 | T-004 | RQ-01 | method/evaluation/verificationを設計する | analysis前提を整える | Methodology Role | T-002, T-003 | Literature / data status | PROJECT.md | BLOCKED | P1 | Dependencies incomplete | Gate 2 |
+| T-005 | RQ-01 | journal掲載論文を検索・選定する | closest workと方法根拠を査読文献で確認する | Literature Role | T-001 | Publisher / DOI / scholarly index | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
+| T-006 | ALL | 引用番号付きPDFを生成・render検証する | 読める最終artifactを作る | Writer / Verification | Gate 4 | Manuscript / report source | results/reports/*.pdf | BLOCKED | P1 | Gate 4 incomplete | Gate 5 |
+| T-007 | ALL | PDFをGmail送信しdeliveryを記録する | workflowを完了する | Research Manager | T-006 | Gmail connection / runtime recipient | STATUS.md delivery record | BLOCKED | P1 | PDF not verified | Gate 5 |
 
 ## Blocked Tasks
 
@@ -90,6 +93,8 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 - [ ] Background defined
 - [ ] Motivation defined
 - [ ] Problem Definition supported by literature
+- [ ] Journal search log completed
+- [ ] Closest primary journal articles checked at original source
 - [ ] RQ defined
 - [ ] Closest Prior Work identified
 - [ ] Research Gap defined
@@ -123,27 +128,43 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Major Referee issues addressed
 - [ ] Figures and tables traceable
 - [ ] References verified
+- [ ] Numeric in-text citations correspond to reference list
 - [ ] Limitations documented
 - [ ] Conclusion supported
 - [ ] Manuscript internally consistent
 
+### Gate 5 — Report Delivery Gate
+
+- [ ] Final PDF generated under `results/reports/`
+- [ ] Every page render-checked
+- [ ] No clipping, overlap, missing glyph, or broken table/figure
+- [ ] Numeric citations and references verified in the PDF
+- [ ] Gmail authenticated account confirmed
+- [ ] Runtime recipient confirmed without committing personal information
+- [ ] PDF sent as attachment
+- [ ] Send response confirmed successful
+- [ ] Delivery record completed below
+
 ## Recent Changes
 
 - Repository initialized from specification.
+- Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 
 ## Decision Log
 
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-002 | 2026-09-16 | ALL | Completion workflow | Gate 4 ended at manuscript readiness | Gate 5 requires verified PDF and Gmail delivery | User required theme-to-email execution, journal search, and numeric citations | Explicit user instruction | Adds mandatory search, citation, rendering, and delivery controls | Approved |
 
 ## Next Actions
 
 1. `PROJECT.md`のrequired inputを確認する。
 2. 文献調査でclosest prior work、gap、noveltyを評価する。
-3. data requirement、取得経路、quality/provenanceを設計する。
-4. method、metric、criterion、baseline、verification planを設計する。
-5. Gate 1とGate 2を判定する。
+3. journal検索source、query、検索日、採否、DOIを記録する。
+4. data requirement、取得経路、quality/provenanceを設計する。
+5. method、metric、criterion、baseline、verification planを設計する。
+6. Gate 1からGate 5まで判定し、PDF送信記録を完了する。
 
 ## Final Report Delivery
 
@@ -152,3 +173,12 @@ Failure state: `TRIAGE / REFRAMING`
 - Routine phase approval: NOT_REQUIRED
 - Human pause conditions: RQ change / major scope change / human-only resource / critical direction decision / PARK
 - Report status: NOT_STARTED
+- Citation format: NUMERIC_IN_TEXT
+- Journal search status: NOT_STARTED
+- PDF path: NOT_CREATED
+- PDF render QA: NOT_RUN
+- Recipient source: NOT_CONFIGURED
+- Gmail account status: NOT_CHECKED
+- Sent timestamp: NOT_SENT
+- Gmail message ID: NOT_SENT
+- Delivery status: NOT_SENT

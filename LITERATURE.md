@@ -9,6 +9,14 @@
 - Search scope: 要検討
 - Stop criteria assessment: NOT_MET
 
+## Journal Search Log
+
+各検索ごとに記録する。journal掲載論文の検索を省略しない。
+
+| Search ID | Search Date | Source / Index / Publisher | Query | Coverage / Filters | Results Screened | Selected IDs | Selection / Exclusion Notes |
+|---|---|---|---|---|---|---|---|
+| JS-001 | 要検討 | 要検討 | 要検討 | peer-reviewed journal / date range要検討 | 0 | なし | NOT_STARTED |
+
 ## Foundational Work
 
 | ID | Source | Original Checked | Related RQ | Relevance | Evidence Label | Classification | Notes / External Module Reference |
@@ -23,9 +31,9 @@
 
 ## Recent Primary Studies
 
-| ID | Source | Date | Related RQ | Main Finding | Limitation | Evidence Label | Classification |
-|---|---|---|---|---|---|---|---|
-| 要検討 | 要検討 | 要検討 | RQ-01 | 要検討 | 要検討 | UNVERIFIED | NORMAL |
+| ID | Source | Journal / Year / Volume / Pages | DOI / Permanent URL | Original Checked | Related RQ | Main Finding | Limitation | Evidence Label | Classification |
+|---|---|---|---|---|---|---|---|---|---|
+| 要検討 | 要検討 | 要検討 | 要検討 | NO | RQ-01 | 要検討 | 要検討 | UNVERIFIED | NORMAL |
 
 ## Systematic Reviews
 
@@ -83,4 +91,6 @@
 - [ ] major competing methodsを確認する。
 - [ ] negative resultsとcounterexamplesを確認する。
 - [ ] methodology/evaluationの根拠を確認する。
+- [ ] journal検索source、query、date、selection decisionを記録する。
+- [ ] 採用論文のjournal metadataとDOIを確認する。
 

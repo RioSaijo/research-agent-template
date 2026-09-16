@@ -41,6 +41,9 @@ REFEREE_DECISION: NOT_READY
 - Contribution clarity: NOT_REVIEWED
 - Limitations: NOT_REVIEWED
 - Figures/tables/references: NOT_REVIEWED
+- Numeric in-text citation/reference correspondence: NOT_REVIEWED
+- Journal search coverage and primary-source verification: NOT_REVIEWED
+- PDF render quality: NOT_REVIEWED
 - Expected reviewer concerns: 要検討
 
 ## Critical Issues
@@ -102,4 +105,5 @@ Allowed: `PASS / REVISION_REQUIRED / MAJOR_REVISION_REQUIRED / REFRAME_REQUIRED 
 - Unresolved CRITICAL: 0
 - Unresolved MAJOR: 0
 - Gate 4 recommendation: NOT_READY
+- Gate 5 delivery recommendation: NOT_READY
 

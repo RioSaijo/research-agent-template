@@ -7,6 +7,8 @@
 - ChatGPT-first、Codex-on-demandを守る。Codexには必要最小限のfileとtaskだけを渡す。
 - 中心RQへ直接寄与しないmethodやtechnologyを追加しない。
 - referenceを捏造せず、数値・threshold・standard・novelty・method根拠は原典で確認する。
+- journal掲載論文の検索を必ず実施し、検索source、query、検索日、採否を`LITERATURE.md`へ記録する。
+- 報告書本文とmanuscriptは数字式引用`[1]`を使用し、引用番号とreference listを対応させる。
 - raw dataを変更しない。secret、個人情報、confidential data、再配布できないPDFをcommitしない。
 - negative resultを削除せず、結果に合わせてRQを書き換えない。
 - Evidenceの存在、Claimの支持、Independent Verificationを別々に判定する。
@@ -22,6 +24,7 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 5. CRITICAL/MAJOR referee issueをtaskへ変換する。
 6. human pause conditionでのみ人間へ明確な判断を求める。
 7. Completion Criteriaが揃うまで自動的に次のphaseへ進む。
+8. Gate 4通過後にPDFを生成・render検証し、指定recipientへ送信してGate 5を判定する。
 
 初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
 
@@ -33,6 +36,7 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 - intermediate updateは状態共有であり、作業停止点ではない。
 - human pause condition以外では、質問への回答を待たずに合理的な仮定と`要検討`表示を使って進める。
 - scientific completionに到達できない場合も、調査済み範囲、blocker、証拠、再開条件をまとめた最終研究報告書を提出する。
+- 最終PDFのemail送信はworkflowの一部であり、テーマ受領時に指定済みのrecipientまたは実行時の明示指定を使用する。recipientまたはGmail接続がない場合だけDelivery Gateで停止する。
 
 ## 3. Roles and context
 
@@ -51,6 +55,14 @@ roleは常設agentではなく必要時の責務である。
 ## 4. Literature protocol
 
 foundational、closest prior、recent primary、systematic review、competing methods、negative/contradictory results、limitations、benchmark、standards/regulations、adjacent fieldsを検索する。
+
+journal検索は必須とし、少なくとも次を含める。
+
+1. publisher、DOI、学術indexまたはjournal siteから査読論文を探索する。
+2. foundational、closest prior、recent primary、systematic review、competing method、negative resultを区別する。
+3. search source、search query、search date、coverage、selection decisionを`LITERATURE.md`へ記録する。
+4. 採用論文はtitle、authors、journal、year、volume/issue/pagesまたはarticle number、DOI/URL、original checked statusを記録する。
+5. abstract、snippet、secondary summaryだけでcentral claimを支えない。必要なsourceは原文を確認する。
 
 各sourceに原典確認状態、research relevance、related RQ、evidence label、分類`NORMAL / READ / DEEP_REVIEW / CRITICAL`を記録する。RQ・Problem Definition・Methodologyを変え得るsourceは`CRITICAL`。web snippetだけを証拠にしない。
 
@@ -103,7 +115,19 @@ Gate checklistは`STATUS.md`で管理する。Gate失敗を隠して先へ進ま
 
 WriterはearlyにIntroduction/Literature Positioning/Methodology、evidence後にResults/Discussion/Limitations、verification後にConclusion/Abstractを書く。ResultsとDiscussionを分け、negative resultとlimitationsを含め、未確認情報を埋めない。
 
-Gate 4と`SPECIFICATION.md`のCompletion Criteriaを満たし、Referee decisionがPASSで、未解決CRITICALがない時だけ`PROJECT_STATUS: COMPLETE`にする。最終成果には4正本、reproducible code（該当時）、results、Claim Evidence mapping、manuscript、reference、limitations、unresolved questionsを含める。
+本文引用は数字式`[1]`とし、LaTeXでは`\cite{...}`と`unsrt` bibliographyを用いて初出順の番号を生成する。referenceのない事実・数値・先行研究比較を残さない。
+
+Gate 4とGate 5、`SPECIFICATION.md`のCompletion Criteriaを満たし、Referee decisionがPASSで、未解決CRITICALがない時だけ`PROJECT_STATUS: COMPLETE`にする。最終成果には4正本、reproducible code（該当時）、results、Claim Evidence mapping、manuscript、reference、limitations、unresolved questions、検証済みPDF、delivery recordを含める。
+
+### PDF and email delivery
+
+1. `results/reports/`へ最終PDFを生成する。
+2. 全pageをrenderし、文字化け、clipping、overlap、表・図・引用番号・reference listを目視または画像検査する。
+3. Gmail connectorの認証accountとrecipientを確認する。recipientやcredentialをrepositoryへcommitしない。
+4. PDFを添付し、研究テーマを識別できるsubjectと短いsummaryを付けて送信する。
+5. Gmail responseで送信成功を確認する。
+6. `STATUS.md`にPDF path、recipient source、sent timestamp、message ID、delivery statusを記録する。email address、token、session情報は記録しない。
+7. 送信失敗時は`PROJECT_STATUS: COMPLETE`にせず、原因と再送条件を記録する。
 
 ### Final research report
 
@@ -118,6 +142,6 @@ Gate 4と`SPECIFICATION.md`のCompletion Criteriaを満たし、Referee decision
 7. Falsification Attempts and Referee Findings
 8. Negative Results, Limitations, and Unresolved Questions
 9. Reproducibility and Artifact Links
-10. Quality Gate, Project Status, and Recommended Next Work
+10. Quality Gate, Delivery Status, Project Status, and Recommended Next Work
 
 Claim Evidence Tableを超える断定をしない。未完了の場合は報告書を省略せず、完了した範囲と停止理由を明示する。`FINAL_REPORT.md`は常設正本として追加せず、必要な版管理artifactは`results/reports/`へ置く。

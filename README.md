@@ -14,9 +14,10 @@
 ## 開始方法
 
 1. 研究テーマをChatGPTへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
-2. ChatGPTは`AGENTS.md`を入口として、研究入力の整理、文献調査、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、執筆を自動的に進めます。
+2. ChatGPTは`AGENTS.md`を入口として、研究入力の整理、journal文献検索、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
 3. `STATUS.md`で現在のphase、quality gate、task、Claim Evidence Tableを確認します。
 4. 重要な研究方針変更や人間だけが取得できる資源が必要になった場合に限り、人間が判断します。
+5. Gate 4通過後、最終PDFを生成・render検証し、Gmailで指定recipientへ送信します。送信記録までが一連のworkflowです。
 
 ## Non-stop execution and final report
 
@@ -33,6 +34,8 @@
 - Referee findings、limitations、unresolved questions
 - quality gateとcompletion criteriaの状態
 - reproducibility情報と成果物へのlink
+- 本文中の数字式引用`[1]`と検証済みreference list
+- PDF render QAとGmail delivery status
 
 `FINAL_REPORT.md`は常設せず、Git repositoryの正本から最終応答として生成します。研究内容に応じて必要な場合は、`results/reports/`へ版管理可能な報告書artifactを作成できます。
 
@@ -72,11 +75,12 @@ research-agent-template/
 
 `code/`と`results/`の下位directoryは必要になった時だけ作ります。生データは原則Git管理せず、read-onlyとして扱い、入手元と処理履歴を`PROJECT.md`および成果物に記録します。
 
-## 4つのquality gate
+## 5つのquality gate
 
 1. Research Definition Gate
 2. Methodology Readiness Gate
 3. Evidence and Verification Gate
 4. Publication Readiness Gate
+5. Report Delivery Gate
 
-研究完了は論文の文章量ではなく、問題定義、新規性、方法、評価基準、証拠、検証、査読、再現性が揃ったことで判断します。
+研究完了は論文の文章量ではなく、問題定義、新規性、方法、評価基準、証拠、検証、査読、再現性、引用番号付きPDF、メール送信記録が揃ったことで判断します。

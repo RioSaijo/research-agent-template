@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.0.0
+Version: 1.1.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -46,13 +46,13 @@ resourceは`PROJECT.md`でURLs、DOI/Literature、PDFs、Datasets、Repositories
 
 入力を受けたら自動開始する。
 
-`research input → literature review → problem definition → gap → RQ assessment → data requirement → methodology → Gate 2 → analysis/implementation → primary evidence → verification → Claim Evidence update → Gate 3 → referee → revision loop → writer → Gate 4 → complete`
+`research input → journal literature search → literature synthesis → problem definition → gap → RQ assessment → data requirement → methodology → Gate 2 → analysis/implementation → primary evidence → verification → Claim Evidence update → Gate 3 → referee → revision loop → numbered-citation writing → Gate 4 → PDF generation and render QA → Gmail delivery → Gate 5 → complete`
 
 初期段階ではliterature review、problem definition、RQ assessment、data requirement、methodology designまで自動実行する。literature、data availability、method candidate、standards、software/API調査は並行化できる。
 
 Research Managerが全体を統合する。必要な時だけLiterature、Problem Definition、RQ Assessment、Data Requirement、Methodology、domain specialist、Analysis/Implementation、Verification、Referee、Writerの役割を起動する。specialistは常設せず、中心RQを独立に拡張しない。Refereeは完了前に必須、Writerは最終段階だけでなく段階的に執筆する。
 
-テーマ受領後はnon-stop executionを既定とする。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した研究報告書を最終応答として提出する。
+テーマ受領後はnon-stop executionを既定とする。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断、またはGmail接続・recipient不足に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、journal文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した引用番号付きPDFを生成し、指定recipientへ送信する。
 
 RQとmethodology readinessが不足する間はfull implementationを開始しない。Evaluation Criterionが未定義ならfinal analysisを開始しない。Evidenceがなければconclusionを書かない。
 
@@ -89,9 +89,13 @@ Verificationは`NOT_VERIFIED / INTERNALLY_VERIFIED / INDEPENDENTLY_VERIFIED`、C
 
 foundational、closest、recent primary、systematic review、competing methods、negative results、limitations、benchmark、standards/regulations、cross-disciplinary studiesを調べる。closest work、差、gap、競合method、counterexample、method supportが揃い、追加探索が研究判断を変えにくくなれば停止する。novelty不明、closest work不明、隣接分野の類似method、評価根拠不足、standard要件、Referee要求があれば継続する。
 
+journal掲載論文の検索はすべての研究テーマで必須である。publisher、DOI、学術index、journal siteを対象とし、検索source、query、date、coverage、selection decisionを`LITERATURE.md`へ記録する。採用sourceにはjournal名とDOIまたは恒久URLを含める。reviewだけでなくclosest primary studyを確認し、central claimに関係する論文は原文を確認する。
+
 research agentは発見・関連性・gap・novelty・競合methodを担当する。paper-reading-moduleはlibrary、reference numbering、keyword/field classification、brief review、paper-review-moduleはdeep reading、method/evidence/limitation比較を担当する。文献は`NORMAL / READ / DEEP_REVIEW / CRITICAL`に分類し、RQ・問題定義・方法を変え得る論文を`CRITICAL`とする。詳細noteを重複させない。
 
 source優先順位は原著査読論文、公式standard/regulation/specification、公式dataset/institutional report、publisher/DOI、author/institution repository、高品質review、その他secondaryの順。数値記述にはsourceが必要で、未確認値は`要検討`。`DIRECT_EVIDENCE / SECONDARY_EVIDENCE / INFERENCE / UNVERIFIED`を表示し、推論を明記する。novelty、method、metric根拠、threshold、standard要件、数値背景には原典を使う。referenceを捏造しない。web snippetだけを最終証拠にしない。
+
+報告書本文とmanuscriptは数字式引用`[1]`を使用する。引用番号はreference listと一意に対応させ、LaTeXでは`\cite{...}`と`unsrt` bibliographyを既定とする。事実、数値、先行研究、method選定根拠、standard要件には近接した本文引用を置く。
 
 ## 10. Referee and quality gates
 
@@ -101,6 +105,7 @@ RefereeはTopic Review、Scientific and Technical Review、Publication Readiness
 - Gate 2 Methodology Readiness: RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan。
 - Gate 3 Evidence and Verification: primary evidence、provenance、criterion適用、claim status、verification、alternative explanations、data quality。
 - Gate 4 Publication Readiness: Claim–Evidence整合、major issue対応、figure/table追跡、reference、limitations、支持されたconclusion、manuscript整合。
+- Gate 5 Report Delivery: 引用番号付きPDF生成、全page render QA、Gmail attachment、送信成功、delivery record。
 
 ## 11. State, task, and change control
 
@@ -130,10 +135,12 @@ API key、password、token、private key、session credential、認証情報、c
 
 manuscriptの正本は`paper/main.tex`。Claim Evidence Tableを超える強さで書かない。弱い証拠を誇張せず、未確認背景・数値を足さず、再現可能なmethod、results/discussion分離、negative result、limitationsを含め、未知を推測で埋めない。
 
+最終研究報告書は`results/reports/`へPDFとして出力する。送信前に全pageを画像renderし、文字化け、clipping、overlap、表・図、本文引用番号、reference listを検証する。検証済みPDFをGmailで実行時指定recipientへ添付送信し、成功responseを確認する。recipient、OAuth token、session credentialはcommitせず、`STATUS.md`にはrecipient source、sent timestamp、message ID、delivery statusだけを記録する。
+
 初期section候補はTitle、Abstract、Introduction、Literature Review/State of the Art、Methodology、Case Study/Experimental Setup、Results、Discussion、Limitations、Conclusion、References、Appendix。構成は柔軟とする。earlyにIntroduction/Literature Positioning/Methodology、evidence後にResults/Discussion/Limitations、verification後にConclusion/Abstractを書く。
 
 target journalは開始時必須ではなく、scope、contribution、method、audience、closest work、journal scopeから候補を作り、最終選択は人間が行う。
 
 unsupported hypothesisは研究失敗ではない。RQを結果に合わせて書き換えず、negative resultを評価し、method/data/hypothesis/evaluationの問題を切り分け、Refereeを経て判断する。RQ無関係task、technology追加、無目的探索、secondary RQ肥大化を検知したらscope拡張を止め、P3/PARKEDへ移す。
 
-完了には、支持されたProblem Definitionとgap、criticalなnovelty/data/verifiability/scope問題の解消、RQ mapping、data availability、method/RQ整合、metric/criterion、primary evidence、Claim Evidence更新、central claim検証、未解決CRITICALなし、MAJOR解決またはlimitations化、再現可能な結果、manuscript/evidence整合、limitationsと未解決事項が必要である。
+完了には、支持されたProblem Definitionとgap、journal文献検索記録、criticalなnovelty/data/verifiability/scope問題の解消、RQ mapping、data availability、method/RQ整合、metric/criterion、primary evidence、Claim Evidence更新、central claim検証、未解決CRITICALなし、MAJOR解決またはlimitations化、再現可能な結果、manuscript/evidence整合、数字式本文引用、limitationsと未解決事項、PDF render QA、Gmail送信成功、delivery recordが必要である。

@@ -132,6 +132,10 @@ RQ、Method、Data、Evaluationに必要な場合だけ記入する。専用の�
 - Candidate journal / venue: 要検討
 - Target audience: 要検討
 - Final journal selection: Human researcher
+- Citation style: Numeric `[1]`, first-citation order
+- Final report format: Render-verified PDF
+- Delivery channel: Gmail connector
+- Recipient source: Runtime configuration / explicit user instruction; do not commit address
 
 ## Security and Access
 
