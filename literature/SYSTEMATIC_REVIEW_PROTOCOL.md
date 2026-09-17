@@ -40,6 +40,7 @@
 
 - Bibliographic sources: Web of ScienceまたはScopus（利用可能時）、Engineering Village/Compendex、IEEE Xplore、ACM Digital Library、PubMed（IEQ/health）、TRID等からtopicに適合するもの。
 - Open discovery: Crossref、OpenAlex、Semantic Scholar等。open indexだけを完全な代替とみなさない。
+- Full-text retrieval: ユーザー確認済みの所属機関ScienceDirect accessをElsevier論文に優先利用する。認証状態は実行時に確認し、credentialや取得PDFをcommitしない。ScienceDirectをcross-publisher discoveryの唯一のsourceにしない。
 - Domain sources: ASHRAE、CIBSE、IBPSA、buildingSMART、W3C、ISO等の公式standard/proceedings/specification。査読論文と区別する。
 - Seed journals: `journal_scope.json`。対象誌は入口であり、検索の上限ではない。
 - Citation search: included/critical papersのbackward、forward、related-article探索。
@@ -84,6 +85,15 @@ gap候補には支持source、反証source、検索coverage、gapを閉じる最
 - contradictory/negative evidenceと隣接分野を検索した。
 - PRISMA countがrecordsと整合し、最終検索日が報告されている。
 - gapごとにevidence strength、反証可能性、最小検証designがある。
+
+## Volume and result-cap policy
+
+- 文献のretrieval、screening、eligibility、deep review、citationに固定の最大件数を設けない。
+- database/UI/APIの先頭100件、1000件等の表示上限で探索を止めない。pagination、year split、query split、ISSN splitを使い、`result_count`と`export_count`を一致させる。
+- corpusが大きい場合もscreening基準を狭めて件数だけを減らさず、protocol amendmentと再screening impactを記録する。
+- deep reviewは`CRITICAL`、closest work、contradictory evidence、method/evaluation根拠を優先するが、eligible studyを無言で捨てない。
+- default low-volume triggerはnon-niche topicでunique retrieval `<100`またはincluded primary study `<20`。発火時は検索漏れ監査を必須とし、niche topicとして妥当なら根拠とcoverage limitationを記録して解除する。
+- report reference listには本文で使用した全sourceを含める。見かけの件数を増やすためだけの未使用citationは追加しない。
 
 ## Machine-readable artifacts
 

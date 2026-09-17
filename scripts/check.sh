@@ -38,11 +38,11 @@ grep -Fq '\bibliographystyle{unsrt}' paper/main.tex || { echo "[check] paper/mai
 grep -Fq '\input{body}' paper/main.tex || { echo "[check] paper/main.tex must delegate adaptive structure to paper/body.tex" >&2; exit 1; }
 grep -Fq 'Citation format: NUMERIC_IN_TEXT' STATUS.md || { echo "[check] numeric in-text citation requirement missing" >&2; exit 1; }
 if command -v python >/dev/null 2>&1; then
-  python code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+  python code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json --search-log literature/search_log.csv
 elif command -v python3 >/dev/null 2>&1; then
-  python3 code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+  python3 code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json --search-log literature/search_log.csv
 elif command -v py >/dev/null 2>&1; then
-  py code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+  py code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json --search-log literature/search_log.csv
 else
   echo "[check] Python not found; systematic literature artifacts were not audited" >&2
 fi

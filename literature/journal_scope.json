@@ -94,6 +94,15 @@
     "Crossref",
     "OpenAlex"
   ],
+  "full_text_access_preferences": [
+    {
+      "platform": "ScienceDirect",
+      "status": "USER_CONFIRMED_INSTITUTIONAL_ACCESS_VERIFY_AT_RUNTIME",
+      "use_for": ["Elsevier full text", "critical paper deep review", "seed journal sweep", "reference chasing"],
+      "not_a_substitute_for": "cross-publisher bibliographic discovery",
+      "credential_policy": "Never commit credentials, cookies, session tokens, or licensed PDFs"
+    }
+  ],
   "expansion_rules": [
     "Add journals found repeatedly in included-study references or forward citations.",
     "Add domain journals when the RQ introduces health, controls, power systems, semantics, databases, or human factors.",

@@ -177,7 +177,8 @@ RQ、Method、Data、Evaluationに必要な場合だけ記入する。専用の�
 
 | Resource ID | Database / API / Connector | Purpose | Required for Central Claim | Access Status | Authentication / License Constraint | Alternative | Search / Retrieval Record |
 |---|---|---|---|---|---|---|---|
-| EXT-001 | 要検討 | 要検討 | 要検討 | NOT_CHECKED | 要検討 | 要検討 | `literature/search_log.csv` / STATUS.md |
+| EXT-001 | ScienceDirect | Elsevier journal sweep and full-text verification | Topic dependent | USER_CONFIRMED_INSTITUTIONAL_ACCESS; VERIFY_AT_RUNTIME | Use authenticated browser session; never store credentials/cookies | DOI, institutional repository, author manuscript | `literature/search_log.csv` / STATUS.md |
+| EXT-002 | Other bibliographic / domain databases | Cross-publisher discovery and citation coverage | Topic dependent | NOT_CHECKED | Subscription/API availability varies | OpenAlex, Crossref, publisher and repository search | `literature/search_log.csv` / STATUS.md |
 
 ## Security and Access
 

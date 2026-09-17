@@ -28,6 +28,15 @@
   "seed_journal_registry": "journal_scope.json",
   "dual_screening": true,
   "citation_chasing": {"backward": true, "forward": true, "iterations": 2},
+  "volume_policy": {
+    "maximum_records": null,
+    "maximum_included_studies": null,
+    "maximum_report_references": null,
+    "low_volume_trigger_unique_records": 100,
+    "low_volume_trigger_included_primary_studies": 20,
+    "trigger_is_audit_not_inclusion_quota": true,
+    "database_result_caps_must_be_exhausted_or_disclosed": true
+  },
   "quality_appraisal_tool": "SELECT_BY_STUDY_DESIGN",
   "synthesis_plan": "evidence map plus narrative synthesis; meta-analysis only when compatible",
   "amendments": []

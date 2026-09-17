@@ -164,6 +164,27 @@ def validate_registry(data: dict) -> list[str]:
     return issues
 
 
+def audit_search_exports(rows: list[dict[str, str]]) -> list[str]:
+    """Detect silent database/UI export caps without imposing a literature cap."""
+    issues: list[str] = []
+    for row in rows:
+        search_id = row.get("search_id", "UNKNOWN")
+        raw_hits = row.get("result_count", "").strip()
+        raw_exports = row.get("export_count", "").strip()
+        if not raw_hits and not raw_exports:
+            continue
+        try:
+            hits, exports = int(raw_hits), int(raw_exports)
+        except ValueError:
+            issues.append(f"non-integer result/export count: {search_id}")
+            continue
+        if exports < hits:
+            issues.append(
+                f"unresolved result/export cap: {search_id} has {hits} hits but {exports} exports"
+            )
+    return issues
+
+
 def cmd_dedupe(args: argparse.Namespace) -> int:
     rows = read_csv(Path(args.input))
     marked = mark_duplicates(rows)
@@ -185,6 +206,8 @@ def cmd_audit(args: argparse.Namespace) -> int:
     issues = validate_registry(registry) + audit_screening(
         records, decisions, require_complete=not args.allow_incomplete
     )
+    if args.search_log:
+        issues += audit_search_exports(read_csv(Path(args.search_log)))
     for issue in issues:
         print(f"[literature-audit] {issue}")
     return 1 if issues else 0
@@ -209,6 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--records", required=True)
     audit.add_argument("--decisions", required=True)
     audit.add_argument("--journals", required=True)
+    audit.add_argument("--search-log")
     audit.add_argument("--allow-incomplete", action="store_true")
     audit.set_defaults(func=cmd_audit)
     flow = sub.add_parser("flow")

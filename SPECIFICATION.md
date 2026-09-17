@@ -98,6 +98,10 @@ foundational、closest、recent primary、systematic review、competing methods�
 
 「すべて収集」は事前宣言したsource、journal、期間、言語、document type、citation-search範囲で全件screeningしたhigh-coverage corpusを意味する。無限定な完全性を主張しない。gapは論文数の少なさだけで決めず、`EVIDENCE / CONTRADICTION / METHOD / DATA / TRANSFER / IMPLEMENTATION / STANDARDIZATION`を区別し、支持研究、反証研究、coverage、quality、gapを閉じる最小research designを記録する。
 
+文献数に固定の最大値を設けない。retrieved corpusは定義した検索の全hit、eligible corpusは全適格研究、critical evidence setはRQ/gap/central claimを変え得る研究、report reference listは実際に本文で使用したsourceとして分離する。検索engine/APIの表示・export上限を文献上限として扱わず、pagination、期間分割、query分割、ISSN検索で全件取得を試み、hit数とexport数の差を監査する。
+
+件数は品質の代理ではないが、少なすぎるcorpusは検索漏れのsignalである。topic固有値をprotocolで定めない場合、non-niche topicでunique retrievalが100件未満、またはincluded primary studyが20件未満なら`LOW_VOLUME_REVIEW`を発火し、同義語、旧用語、隣接分野、database、seed journal、citation chasing、期間・言語制約を再監査する。これは無関係研究を水増しするminimum quotaではなく、Review Auditorが少数である理由を承認するまでgap claimを確定しないtriggerである。
+
 journal掲載論文の検索はすべての研究テーマで必須である。publisher、DOI、学術index、journal siteを対象とし、検索source、query、date、coverage、selection decisionを`LITERATURE.md`へ記録する。採用sourceにはjournal名とDOIまたは恒久URLを含める。reviewだけでなくclosest primary studyを確認し、central claimに関係する論文は原文を確認する。
 
 research agentは発見・関連性・gap・novelty・競合methodを担当する。paper-reading-moduleはlibrary、reference numbering、keyword/field classification、brief review、paper-review-moduleはdeep reading、method/evidence/limitation比較を担当する。文献は`NORMAL / READ / DEEP_REVIEW / CRITICAL`に分類し、RQ・問題定義・方法を変え得る論文を`CRITICAL`とする。詳細noteを重複させない。
@@ -145,6 +149,8 @@ API key、password、token、private key、session credential、認証情報、c
 外部tool、database、connector、APIは研究上必要なら使用する。recent literature、novelty、closest work、software/API documentation、standards、journal scope、dataset availability、repository/package情報はwebと利用可能な学術databaseで最新情報を確認する。read-onlyの検索・取得は通常workflowとして進め、sourceごとにaccess date、query、coverage、result、export、access limitationを記録する。認証済みconnectorまたは利用可能な契約databaseがあれば目的に適合する範囲で使用し、利用不能なsourceを検索済みと報告しない。
 
 database選択はRQと情報型から決める。bibliographic/citation、engineering、computing、health/IEQ、standards、datasets、code/repository、official statisticsを必要に応じて組み合わせる。認証、購読、API key、license、rate limit、利用規約または人間だけが行えるaccessが必要な場合は、公開index、DOI metadata、institutional repository、著者版、代替databaseを先に調べ、それでもcentral evidenceへ到達できない時だけ人間へaccessを依頼する。access制約とcoverageへの影響を報告書に残す。
+
+ユーザーが学生・所属機関のScienceDirect accessを利用できる場合、Elsevier収載論文のfull-text確認、critical paperのdeep review、`Energy and Buildings`等のjournal sweep、reference/cited-by追跡に認証済みsessionを優先利用する。ScienceDirectを分野全体の唯一のdiscovery sourceにはせず、Scopus/Web of Science/Compendex/OpenAlex/Crossrefおよびtopic-specific databaseで他publisherを補完する。credential、cookie、session token、取得PDFはrepositoryへ保存しない。
 
 ## 14. Writing, publication, and completion
 

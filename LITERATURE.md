@@ -39,6 +39,15 @@
 | Unique records | 0 |
 | Ambiguous duplicate pairs | 0 |
 
+## Literature Volume Adequacy
+
+- Fixed maximum number of records: NONE
+- Unique retrieval low-volume trigger: 100 unless protocol-specific value is justified
+- Included primary-study low-volume trigger: 20 unless protocol-specific value is justified
+- Current low-volume status: NOT_ASSESSED
+- Database result/export caps fully exhausted: NOT_ASSESSED
+- Low-volume explanation or search expansion performed: 要検討
+
 ## Screening and Eligibility
 
 - Calibration set: NOT_STARTED

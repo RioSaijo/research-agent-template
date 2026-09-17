@@ -103,6 +103,9 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 - [ ] Database-specific queries independently peer reviewed
 - [ ] Planned databases and topic-relevant seed journals searched
 - [ ] Search date, full query, filters, hits, and exports recorded
+- [ ] No arbitrary maximum-reference cap applied
+- [ ] Database/API result limits exhausted by pagination/query splitting or disclosed
+- [ ] LOW_VOLUME_REVIEW trigger cleared by search expansion or justified niche scope
 - [ ] Deduplication and related-report handling completed
 - [ ] Independent dual title/abstract and full-text screening completed
 - [ ] All conflicts resolved and exclusions have controlled reasons

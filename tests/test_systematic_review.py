@@ -63,3 +63,10 @@ def test_prisma_counts_preserve_retrievals_and_duplicates():
         "full_text_excluded": 0,
         "studies_included": 1,
     }
+
+
+def test_search_export_cap_is_not_silently_accepted():
+    issues = MODULE.audit_search_exports([
+        {"search_id": "S1", "result_count": "1500", "export_count": "1000"}
+    ])
+    assert any("unresolved result/export cap" in issue for issue in issues)
