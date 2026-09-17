@@ -126,6 +126,11 @@ Failure state: `TRIAGE / REFRAMING`
 
 - [ ] Claim Evidence consistency
 - [ ] Major Referee issues addressed
+- [ ] Every CRITICAL / MAJOR issue has a Response to Referee
+- [ ] Solution alternatives and selected rationale documented
+- [ ] Revised artifacts and manuscript locations linked to each response
+- [ ] Independent Referee re-review completed
+- [ ] No CRITICAL / MAJOR issue has REJECTED or unresolved disposition
 - [ ] Figures and tables traceable
 - [ ] References verified
 - [ ] Numeric in-text citations correspond to reference list

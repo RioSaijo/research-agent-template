@@ -9,6 +9,8 @@
 - Research Question (RQ) をData、Method、Evaluation、Evidence、Claimへ追跡します。
 - 評価基準を分析前に定義し、証拠の存在と主張の支持を区別します。
 - Refereeは確認より先に反証可能性、代替説明、データ品質問題を探します。
+- 各CRITICAL/MAJOR査読指摘に対し、Revision Leadが複数の解決候補、採用理由、具体的修正、追加証拠、残存リスクをResponse to Refereeとして提示し、Refereeが独立に再査読します。
+- 中心claimにはLiterature、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Refereeなど異なる視点をriskに応じて割り当て、単なるagent数ではなく検討の非重複性で研究の深度を確保します。
 - RQ、中心的問題、主要scope、中心的貢献の変更には人間の承認が必要です。
 
 ## 開始方法

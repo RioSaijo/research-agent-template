@@ -90,11 +90,25 @@ REFEREE_DECISION: NOT_READY
 |---|---|---|---|---|---|
 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | TODO |
 
+## Response to Referee
+
+査読への回答は文章上の返答だけでなく、実行可能な解決策と証拠を示す。RefereeとRevision Leadは別roleとして扱う。
+
+| Response ID | Issue ID | Reviewer Concern | Root Cause | Author Disposition | Solution Alternatives Considered | Selected Solution and Rationale | Actions / Changes | New Evidence | Artifact / Manuscript Location | Residual Risk | Revision Lead Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 要検討 | 要検討 | 要検討 | 要検討 | ACCEPT / PARTIAL / DISAGREE | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | TODO |
+
+## Referee Re-review
+
+| Re-review ID | Issue ID | Round | Revised Artifacts Checked | Tests / Evidence Checked | Referee Disposition | Reason | Follow-up Required | Date |
+|---|---|---|---|---|---|---|---|---|
+| 要検討 | 要検討 | 1 | 要検討 | 要検討 | ACCEPTED / PARTIALLY_ACCEPTED / REJECTED / SUPERSEDED | 要検討 | 要検討 | 要検討 |
+
 ## Resolved Issues
 
-| Issue ID | Resolution | Evidence | Rechecked By Referee | Date |
-|---|---|---|---|---|
-| なし | - | - | - | - |
+| Issue ID | Resolution | Evidence | Rechecked By Referee | Referee Disposition | Date |
+|---|---|---|---|---|---|
+| なし | - | - | - | - | - |
 
 ## Final Referee Decision
 

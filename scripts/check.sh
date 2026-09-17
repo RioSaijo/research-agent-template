@@ -23,7 +23,7 @@ for heading in "## Literature Review Status" "## Journal Search Log" "## Foundat
   grep -Fqx "$heading" LITERATURE.md || { echo "[check] LITERATURE.md missing: $heading" >&2; exit 1; }
 done
 
-for heading in "## Topic Review" "## Scientific and Technical Review" "## Publication Readiness Review" "## Critical Issues" "## Major Issues" "## Minor Issues" "## Falsification Attempts" "## Alternative Explanations" "## Verification Concerns" "## Required Revisions" "## Resolved Issues" "## Final Referee Decision"; do
+for heading in "## Topic Review" "## Scientific and Technical Review" "## Publication Readiness Review" "## Critical Issues" "## Major Issues" "## Minor Issues" "## Falsification Attempts" "## Alternative Explanations" "## Verification Concerns" "## Required Revisions" "## Response to Referee" "## Referee Re-review" "## Resolved Issues" "## Final Referee Decision"; do
   grep -Fqx "$heading" REFEREE.md || { echo "[check] REFEREE.md missing: $heading" >&2; exit 1; }
 done
 

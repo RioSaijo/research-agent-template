@@ -48,9 +48,15 @@ roleは常設agentではなく必要時の責務である。
 - Data Requirement: 必要data、取得経路、quality/provenance、代替を設計。
 - Methodology/Analysis: `PROJECT.md`, `STATUS.md`, 関連artifact。RQから必要証拠を逆算し、method/evaluation/verificationを設計・実行。
 - Specialist: RQ、method、data、evaluationが専門知識を必要とする場合だけ起動。結果は既存正本へ統合し、研究scopeを独立に拡張しない。
+- Evidence Auditor: central claimごとに原典、data provenance、数値、引用、Claim–Evidenceの到達可能性を監査する。
+- Methods Challenger: baseline、ablation、leakage、bias、交絡、感度分析、外的妥当性、代替methodを敵対的に検討する。Methodology/Analysisと同じ自己評価を再利用しない。
+- Reproducibility Auditor: code、parameter、seed、environment、data transformation、figure/table生成経路から再現可能性を独立に確認する。
 - Verification: criterion適用、再現性、代替説明、必要な独立確認。
 - Referee: conversationや自己評価ではなくartifactを読む。反証を先に試す。
+- Revision Lead: Referee issueごとに原因を診断し、複数の解決候補を比較してresponse案と修正taskを作る。Referee自身は兼任しない。
 - Writer: `PROJECT.md`, `STATUS.md`, `LITERATURE.md`, 関連manuscript。Claim Evidenceを上限として段階的に書く。
+
+追加roleは人数を増やすこと自体を目的にせず、central claimのriskに応じて起動する。少なくとも中心claimにはLiterature、Methods Challenger、Evidence AuditorまたはVerification、Referee、Revision Leadの相互に区別された視点を適用する。各roleは入力artifact、問い、出力、停止条件を明示し、結果を正本へ統合する。
 
 ## 4. Literature protocol
 
@@ -101,9 +107,15 @@ Topic Review、Scientific and Technical Review、Publication Readiness Reviewを
 2. 反例、data leakage、bias、artifact、assumption dependence、alternative explanation、literature conflict、novelty overclaim、falsification failureを探す。
 3. 反証試行に耐えた範囲だけvalidationする。
 4. issueにseverityと必要revisionを付ける。
-5. CRITICAL/MAJORを`STATUS.md`のtaskへ変換し、revision後のartifactから再確認する。
+5. CRITICAL/MAJORを`STATUS.md`のtaskへ変換する。
+6. Revision Leadが各issueについて、査読指摘の要約、根本原因、`ACCEPT / PARTIAL / DISAGREE`、検討した解決候補、選択した解決策と理由、具体的action、変更対象、必要証拠、残存riskを`REFEREE.md`のResponse to Refereeへ記録する。
+7. 修正を実行し、responseへartifact、結果、manuscriptの変更箇所を対応付ける。反論する場合も根拠を提示し、指摘を黙って却下しない。
+8. 元のReferee roleがrevision後のartifactだけから再査読し、各issueを`ACCEPTED / PARTIALLY_ACCEPTED / REJECTED / SUPERSEDED`で判定する。Revision Leadの自己判定だけでCLOSEDにしない。
+9. `REJECTED`または未解決CRITICAL/MAJORがあれば、解決案の再設計、追加分析、追加文献探索、claim縮小のいずれかを行い、次roundへ進む。
 
 Refereeは中心claimを肯定することを目的にしない。独立検証は全研究で機械的に必須化せず、claim riskとdesignに応じて評価する。
+
+修正ループは`issue → diagnosis → solution alternatives → response → revision → new evidence → independent re-review → disposition`である。文章だけを直して科学的な指摘を解決済みにしてはならない。各roundで解決しなかった理由と研究判断への影響を残す。
 
 ## 9. Quality gates and human pauses
 
