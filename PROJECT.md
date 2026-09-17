@@ -161,6 +161,24 @@ RQ、Method、Data、Evaluationに必要な場合だけ記入する。専用の�
 - Delivery channel: Gmail connector
 - Recipient source: Runtime configuration / explicit user instruction; do not commit address
 
+## Report Design
+
+- Report type: systematic review / evidence map / empirical study / method study / prototype validation / case study / negative or blocked report / mixed → 要検討
+- Primary audience: 要検討
+- Communication objective: 要検討
+- Adaptive outline: 要検討
+- Structure rationale: research type / evidence volume / result complexity / audience / venue → 要検討
+- Expected emphasis: 要検討
+- Sections intentionally merged, renamed, or omitted: 要検討
+- Length constraint: NONE unless user or target venue specifies one
+- Target venue formatting constraint: 要検討
+
+## Database and External Access Plan
+
+| Resource ID | Database / API / Connector | Purpose | Required for Central Claim | Access Status | Authentication / License Constraint | Alternative | Search / Retrieval Record |
+|---|---|---|---|---|---|---|---|
+| EXT-001 | 要検討 | 要検討 | 要検討 | NOT_CHECKED | 要検討 | 要検討 | `literature/search_log.csv` / STATUS.md |
+
 ## Security and Access
 
 - Default access classification: `PUBLIC / INTERNAL / CONFIDENTIAL / RESTRICTED` → 要検討

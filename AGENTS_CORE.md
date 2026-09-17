@@ -143,7 +143,7 @@ Gate checklistは`STATUS.md`で管理する。Gate失敗を隠して先へ進ま
 
 ## 10. Writing and completion
 
-WriterはearlyにIntroduction/Literature Positioning/Methodology、evidence後にResults/Discussion/Limitations、verification後にConclusion/Abstractを書く。ResultsとDiscussionを分け、negative resultとlimitationsを含め、未確認情報を埋めない。
+Writerは固定outlineを流用せず、研究type、結果、evidence量、読者、publication targetに応じてoutlineと分量を設計する。結果と解釈はheadingを分けるか本文内で明確に区別し、negative resultとlimitationsを含め、未確認情報を埋めない。該当しない章を水増しせず、必要な論証には十分な深さを与える。
 
 本文引用は数字式`[1]`とし、LaTeXでは`\cite{...}`と`unsrt` bibliographyを用いて初出順の番号を生成する。referenceのない事実・数値・先行研究比較を残さない。
 
@@ -161,17 +161,8 @@ Gate 4とGate 5、`SPECIFICATION.md`のCompletion Criteriaを満たし、Referee
 
 ### Final research report
 
-最終応答は、以下を一つの研究報告書として構成する。
+最終応答は一つの研究報告書として構成するが、固定された章名、順序、項目数、word/page数を要求しない。Writerは`PROJECT.md`のReport Designに従い、研究結果を最も正確に伝える構成を選ぶ。
 
-1. Executive Summary
-2. Research Background, Objective, and RQs
-3. Literature Positioning, Gap, and Novelty
-4. Data and Methodology
-5. Evaluation and Verification Design
-6. Results and Claim–Evidence Mapping
-7. Falsification Attempts and Referee Findings
-8. Negative Results, Limitations, and Unresolved Questions
-9. Reproducibility and Artifact Links
-10. Quality Gate, Delivery Status, Project Status, and Recommended Next Work
+構造にかかわらず、problem/RQ、systematic literature coverage、gap、data/source、method、evaluation、results、Claim–Evidence、反証・代替説明、Referee findings/response、negative results、limitations、未解決事項、再現性、artifact link、quality gate、delivery/project statusのうち該当する内容を追跡可能にする。該当しない内容は省略でき、密接な内容は統合できる。
 
 Claim Evidence Tableを超える断定をしない。未完了の場合は報告書を省略せず、完了した範囲と停止理由を明示する。`FINAL_REPORT.md`は常設正本として追加せず、必要な版管理artifactは`results/reports/`へ置く。

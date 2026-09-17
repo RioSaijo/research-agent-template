@@ -12,5 +12,6 @@
 8. 本文は数字式引用`[1]`を用い、すべてのreferenceを検証可能な原典へ結びつける。
 9. 最終成果は検証済みPDFとして生成し、実行時に指定されたrecipientへGmailで送信する。送信成功を確認し、`STATUS.md`へPDF path、送信日時、message IDを記録するまで完了としない。
 10. 最終応答は研究報告書として提出し、結論だけでなく根拠、反証試行、limitations、未解決事項、成果物link、delivery statusを含める。
+11. 報告書の章立てと分量は固定せず、研究type、結果、evidence量、読者、target venueに適応させる。必要なdatabase、API、connector、公式sourceは利用可能なら検索・取得し、利用不能なsourceを検索済みと扱わない。
 
 詳細な運用規則、role、quality gate、security、writing policyは`AGENTS_CORE.md`を正本とする。

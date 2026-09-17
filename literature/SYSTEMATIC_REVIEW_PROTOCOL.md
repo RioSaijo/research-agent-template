@@ -45,6 +45,8 @@
 - Citation search: included/critical papersのbackward、forward、related-article探索。
 - Grey literature: dataset、technical report、thesis、preprintは目的を定義して補助利用し、査読済みevidenceと区別する。
 
+必要なdatabase、API、connectorが利用可能または認証済みなら、RQとcoverageに寄与する範囲で実際に使用する。購読・認証・license等で利用不能なsourceは`NOT_ACCESSED`として理由を残し、同等の公開index、DOI metadata、repository、著者版を探索する。source名を計画へ書いただけで`SEARCHED`にしない。
+
 ## Eligibility and exclusion
 
 研究ごとにPopulation/Context、Concept/Intervention/Exposure、Comparator、Outcome、study typeを明示する。少なくとも次を事前定義する。

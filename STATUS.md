@@ -144,6 +144,9 @@ Failure state: `TRIAGE / REFRAMING`
 
 ### Gate 4 — Publication Readiness Gate
 
+- [ ] Report type, audience, adaptive outline, and structure rationale recorded
+- [ ] Report length and section depth follow evidence/result complexity rather than a fixed template
+- [ ] Inapplicable sections omitted or merged without losing traceability
 - [ ] Claim Evidence consistency
 - [ ] Major Referee issues addressed
 - [ ] Every CRITICAL / MAJOR issue has a Response to Referee
@@ -157,6 +160,7 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Limitations documented
 - [ ] Conclusion supported
 - [ ] Manuscript internally consistent
+- [ ] Database/API access limitations and their coverage impact disclosed
 
 ### Gate 5 — Report Delivery Gate
 

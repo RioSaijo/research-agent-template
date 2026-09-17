@@ -16,37 +16,11 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
-Write this section after the central claims have passed verification. Summarize the problem, method, evidence, principal result, and limitations without exceeding the Claim Evidence Table.
-\end{abstract}
-
-\section{Introduction}
-State the research background, problem, objective, questions, contribution, and scope with verified numeric citations. Use the LaTeX citation command for every source-backed statement.
-
-\section{Literature Review and State of the Art}
-Position the work against foundational studies, closest prior work, competing methods, and contradictory evidence.
-
-\section{Methodology}
-Describe data provenance, methods, baselines, evaluation metrics, predefined criteria, uncertainty, and verification so the study can be reproduced.
-
-\section{Case Study or Experimental Setup}
-Describe the building, system, dataset, simulation, software environment, or other study context as applicable. Rename or remove this section when not applicable.
-
-\section{Results}
-Report results, including relevant negative results. Link every central result to traceable artifacts.
-
-\section{Discussion}
-Interpret the evidence, compare it with prior work, and examine alternative explanations.
-
-\section{Limitations}
-State data, method, scope, validity, and generalizability limitations explicitly.
-
-\section{Conclusion}
-Write only after verification. Do not introduce claims that are absent from the Claim Evidence Table.
-
-\appendix
-\section{Reproducibility Details}
-Record software versions, parameters, random seeds, manual operations, and artifact-generation paths as applicable.
+% body.tex owns the complete report structure. It may define an abstract,
+% executive summary, conventional article sections, evidence-map structure,
+% technical report structure, or a negative/blocked-study structure.
+% Do not preserve sections merely because a template once contained them.
+\input{body}
 
 % Numeric references are ordered by first citation in the text.
 \bibliographystyle{unsrt}

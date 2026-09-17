@@ -13,6 +13,8 @@
 - 中心claimにはLiterature、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Refereeなど異なる視点をriskに応じて割り当て、単なるagent数ではなく検討の非重複性で研究の深度を確保します。
 - 文献レビューはPRISMA 2020/PRISMA-S/PRESSを参照し、protocol事前固定、複数databaseとseed journal、独立二重screening、quality appraisal、citation chasing、Gap Challenger、Review Auditorに分離します。
 - `Energy and Buildings`等の高impact誌を優先探索しますが、Impact Factorは年次更新される探索属性として記録し、個別論文の除外基準にはしません。
+- 報告書は固定章立てや固定分量に依存せず、研究type、結果、evidence量、読者、target venueからoutlineと長さを決めます。必須なのは内容の追跡可能性です。
+- RQに必要な学術database、公式API、標準、dataset、repository、認証済みconnectorは利用可能性に応じて使用し、アクセス不能なsourceとcoverageへの影響を明記します。
 - RQ、中心的問題、主要scope、中心的貢献の変更には人間の承認が必要です。
 
 ## 開始方法
@@ -76,6 +78,7 @@ research-agent-template/
 │   └── extraction.csv
 ├── paper/
 │   ├── main.tex
+│   ├── body.tex
 │   ├── refs.bib
 │   └── figures/
 ├── code/
