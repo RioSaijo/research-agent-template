@@ -11,6 +11,16 @@ REFEREE_DECISION: NOT_READY
 - RQ clarity: NOT_REVIEWED
 - Novelty: NOT_REVIEWED
 - Scope: NOT_REVIEWED
+- Systematic review protocol fixed before screening: NOT_REVIEWED
+- Database and seed-journal coverage: NOT_REVIEWED
+- Query peer review and known-paper recall: NOT_REVIEWED
+- Independent dual screening and adjudication: NOT_REVIEWED
+- PRISMA count consistency: NOT_REVIEWED
+- Quality appraisal and evidence extraction: NOT_REVIEWED
+- Citation chasing and update search: NOT_REVIEWED
+- Selection/publication/access bias: NOT_REVIEWED
+- Gap claim traceability and Gap Challenger decision: NOT_REVIEWED
+- Protocol deviations and re-screening impact: NOT_REVIEWED
 - Invalidity codes considered: `NOVELTY_INSUFFICIENT / DATA_INSUFFICIENT / NOT_VERIFIABLE / SCOPE_PROBLEM`
 
 ### Findings

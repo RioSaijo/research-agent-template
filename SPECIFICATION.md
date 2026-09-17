@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.1.0
+Version: 1.2.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -25,6 +25,7 @@ Version: 1.1.0
 - `PROJECT.md`: 安定した研究設計、resource、RQ mapping、data provenance。
 - `STATUS.md`: 現在状態、task、Claim Evidence Table、decision log。
 - `LITERATURE.md`: 研究判断に必要な文献map。
+- `literature/`: systematic reviewのprotocol、journal registry、search log、record、screening、extractionのmachine-readable artifact。role別の会話記録は置かない。
 - `REFEREE.md`: 独立した反証優先レビュー。
 - `paper/`: publication artifact。`main.tex`、`refs.bib`、`figures/`を含む。
 - `code/`: 再現可能な処理・実装。必要時のみ`preprocessing/`、`analysis/`、`simulation/`、`models/`、`integration/`、`utilities/`を作る。
@@ -46,11 +47,11 @@ resourceは`PROJECT.md`でURLs、DOI/Literature、PDFs、Datasets、Repositories
 
 入力を受けたら自動開始する。
 
-`research input → journal literature search → literature synthesis → problem definition → gap → RQ assessment → data requirement → methodology → Gate 2 → analysis/implementation → primary evidence → verification → Claim Evidence update → Gate 3 → independent referee → response-to-referee and solution design → revision → independent re-review → numbered-citation writing → Gate 4 → PDF generation and render QA → Gmail delivery → Gate 5 → complete`
+`research input → systematic review protocol lock → query peer review → database and seed-journal retrieval → deduplication → dual screening and adjudication → quality appraisal and extraction → citation chasing → gap synthesis and challenge → Literature Sub-gate → problem definition → RQ assessment → data requirement → methodology → Gate 2 → analysis/implementation → primary evidence → verification → Claim Evidence update → Gate 3 → independent referee → response-to-referee and solution design → revision → independent re-review → numbered-citation writing → Gate 4 → PDF generation and render QA → Gmail delivery → Gate 5 → complete`
 
 初期段階ではliterature review、problem definition、RQ assessment、data requirement、methodology designまで自動実行する。literature、data availability、method candidate、standards、software/API調査は並行化できる。
 
-Research Managerが全体を統合する。必要な時だけLiterature、Problem Definition、RQ Assessment、Data Requirement、Methodology、domain specialist、Analysis/Implementation、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Verification、Referee、Revision Lead、Writerの役割を起動する。specialistは常設せず、中心RQを独立に拡張しない。中心claimには複数の独立した視点を割り当て、RefereeとRevision Leadを同一roleにしない。Refereeは完了前に必須、Writerは最終段階だけでなく段階的に執筆する。
+Research Managerが全体を統合する。systematic reviewではReview Manager、Search Strategist、Search Peer Reviewer、Database/Journal Harvester、Citation Chaser、Metadata Curator、Screener A/B、Adjudicator、Quality Appraiser、Evidence Extractor、Gap Analyst/Challenger、Review Auditorを分離する。その後、必要な時だけProblem Definition、RQ Assessment、Data Requirement、Methodology、domain specialist、Analysis/Implementation、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Verification、Referee、Revision Lead、Writerの役割を起動する。specialistは常設せず、中心RQを独立に拡張しない。中心claimには複数の独立した視点を割り当て、RefereeとRevision Leadを同一roleにしない。Refereeは完了前に必須、Writerは最終段階だけでなく段階的に執筆する。
 
 テーマ受領後はnon-stop executionを既定とする。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断、またはGmail接続・recipient不足に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、journal文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した引用番号付きPDFを生成し、指定recipientへ送信する。
 
@@ -89,6 +90,14 @@ Verificationは`NOT_VERIFIED / INTERNALLY_VERIFIED / INDEPENDENTLY_VERIFIED`、C
 
 foundational、closest、recent primary、systematic review、competing methods、negative results、limitations、benchmark、standards/regulations、cross-disciplinary studiesを調べる。closest work、差、gap、競合method、counterexample、method supportが揃い、追加探索が研究判断を変えにくくなれば停止する。novelty不明、closest work不明、隣接分野の類似method、評価根拠不足、standard要件、Referee要求があれば継続する。
 
+全テーマで`literature/SYSTEMATIC_REVIEW_PROTOCOL.md`を適用する。検索前にreview question、PCC/PICO等のconcept、eligibility、database、seed journal、期間、言語、publication type、quality appraisal、synthesis、停止基準を`literature/protocol.json`へ固定する。変更はprotocol amendmentとして旧値、新値、理由、影響、再screening要否を残す。
+
+検索はPRISMA-Sに沿って再現可能に記録し、queryは別roleがPRESS観点で査読する。複数database/indexとtopic-relevantなseed journalを検索し、DOI/title/yearで重複を追跡可能に統合する。title/abstractとfull textはScreener A/Bが互いの初回票を見ずに判定し、disagreementだけをAdjudicatorが事前基準で解決する。included studyにはstudy-design別quality/risk-of-bias評価、evidence extraction、backward/forward citation chasing、central valueの原文監査を行う。PRISMA flowはmachine-readable recordsから生成する。
+
+初期domain scopeは建築設備・室内環境・HVAC・BMS/BEMS/BAS、建築情報・BIM/IFC・semantic model・digital twin・IoT、建築エネルギー・需要予測・制御・柔軟性・脱炭素とする。`Energy and Buildings`、`Building and Environment`、`Applied Energy`、`Automation in Construction`等を`journal_scope.json`のseedとし、テーマに応じて専門誌、会議、隣接分野を追加する。JIF/quartileは実行時に年、category、sourceとともに確認し、高impact journalを優先探索できるが、journal metricだけを適格性または論文品質の除外条件にしない。
+
+「すべて収集」は事前宣言したsource、journal、期間、言語、document type、citation-search範囲で全件screeningしたhigh-coverage corpusを意味する。無限定な完全性を主張しない。gapは論文数の少なさだけで決めず、`EVIDENCE / CONTRADICTION / METHOD / DATA / TRANSFER / IMPLEMENTATION / STANDARDIZATION`を区別し、支持研究、反証研究、coverage、quality、gapを閉じる最小research designを記録する。
+
 journal掲載論文の検索はすべての研究テーマで必須である。publisher、DOI、学術index、journal siteを対象とし、検索source、query、date、coverage、selection decisionを`LITERATURE.md`へ記録する。採用sourceにはjournal名とDOIまたは恒久URLを含める。reviewだけでなくclosest primary studyを確認し、central claimに関係する論文は原文を確認する。
 
 research agentは発見・関連性・gap・novelty・競合methodを担当する。paper-reading-moduleはlibrary、reference numbering、keyword/field classification、brief review、paper-review-moduleはdeep reading、method/evidence/limitation比較を担当する。文献は`NORMAL / READ / DEEP_REVIEW / CRITICAL`に分類し、RQ・問題定義・方法を変え得る論文を`CRITICAL`とする。詳細noteを重複させない。
@@ -105,7 +114,7 @@ RefereeはTopic Review、Scientific and Technical Review、Publication Readiness
 
 研究の深度はagent数ではなく、最低限次の異なる検討で担保する。(1) closest/contradictory literature、(2) methodとbaseline/ablationへの敵対的検討、(3) evidence/provenance監査、(4) alternative explanationとfalsification、(5) reproducibility、(6)独立Refereeとresponse再査読。中心claimごとに適用結果をartifactへ残し、同じ文章の反復を独立評価とみなさない。
 
-- Gate 1 Research Definition: background、motivation、文献で支えたproblem、RQ、closest work、gap、reasonable scope。
+- Gate 1 Research Definition: background、motivation、systematic review protocol、検索式査読、database/journal coverage、deduplication、dual screening、quality appraisal、citation chasing、PRISMA整合、gap challenge、文献で支えたproblem、RQ、closest work、gap、reasonable scope。
 - Gate 2 Methodology Readiness: RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan。
 - Gate 3 Evidence and Verification: primary evidence、provenance、criterion適用、claim status、verification、alternative explanations、data quality。
 - Gate 4 Publication Readiness: Claim–Evidence整合、全CRITICAL/MAJORへのResponse to Referee、独立再査読、figure/table追跡、reference、limitations、支持されたconclusion、manuscript整合。

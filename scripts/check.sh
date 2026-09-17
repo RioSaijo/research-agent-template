@@ -4,8 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml)
-required_dirs=(paper/figures code results tests)
+required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py)
+required_dirs=(paper/figures code results tests literature)
 
 for path in "${required_files[@]}"; do
   [[ -f "$path" ]] || { echo "[check] missing required file: $path" >&2; exit 1; }
@@ -19,7 +19,7 @@ for heading in "## PROJECT_STATUS" "## CURRENT_PHASE" "## CURRENT_GATE" "## Curr
   grep -Fqx "$heading" STATUS.md || { echo "[check] STATUS.md missing: $heading" >&2; exit 1; }
 done
 
-for heading in "## Literature Review Status" "## Journal Search Log" "## Foundational Work" "## Closest Prior Work" "## Recent Primary Studies" "## Systematic Reviews" "## Competing Methods" "## Negative Contradictory Evidence" "## Known Limitations" "## Relevant Standards" "## Cross-disciplinary References" "## Research Gap Synthesis" "## Novelty Assessment" "## Unresolved Literature Questions"; do
+for heading in "## Literature Review Status" "## Systematic Review Protocol" "## Database and Journal Coverage" "## Retrieval and Deduplication Summary" "## Screening and Eligibility" "## Quality Appraisal and Evidence Extraction" "## Citation Chasing and Search Saturation" "## PRISMA Flow" "## Evidence Gap Matrix" "## Journal Search Log" "## Foundational Work" "## Closest Prior Work" "## Recent Primary Studies" "## Systematic Reviews" "## Competing Methods" "## Negative Contradictory Evidence" "## Known Limitations" "## Relevant Standards" "## Cross-disciplinary References" "## Research Gap Synthesis" "## Novelty Assessment" "## Unresolved Literature Questions"; do
   grep -Fqx "$heading" LITERATURE.md || { echo "[check] LITERATURE.md missing: $heading" >&2; exit 1; }
 done
 
@@ -36,6 +36,15 @@ done
 grep -Fq "### Gate 5 — Report Delivery Gate" STATUS.md || { echo "[check] STATUS.md missing Gate 5 delivery checklist" >&2; exit 1; }
 grep -Fq '\bibliographystyle{unsrt}' paper/main.tex || { echo "[check] paper/main.tex must use numeric first-citation bibliography style" >&2; exit 1; }
 grep -Fq 'Citation format: NUMERIC_IN_TEXT' STATUS.md || { echo "[check] numeric in-text citation requirement missing" >&2; exit 1; }
+if command -v python >/dev/null 2>&1; then
+  python code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+elif command -v python3 >/dev/null 2>&1; then
+  python3 code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+elif command -v py >/dev/null 2>&1; then
+  py code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json
+else
+  echo "[check] Python not found; systematic literature artifacts were not audited" >&2
+fi
 if (( ${#test_files[@]} > 0 )); then
   if command -v pytest >/dev/null 2>&1; then
     pytest -q

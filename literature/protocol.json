@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "review_id": "SR-001",
+  "status": "DRAFT",
+  "protocol_locked_at": "TO_DEFINE",
+  "research_question": "TO_DEFINE",
+  "framework": "PCC_OR_PICO_TO_DEFINE",
+  "concept_blocks": [
+    {"name": "building_context", "terms": ["TO_DEFINE"]},
+    {"name": "technology_or_exposure", "terms": ["TO_DEFINE"]},
+    {"name": "outcome", "terms": ["TO_DEFINE"]}
+  ],
+  "eligibility": {
+    "inclusion": ["TO_DEFINE"],
+    "exclusion": ["TO_DEFINE"],
+    "date_from": "TO_DEFINE",
+    "date_to": "latest search date",
+    "languages": ["English", "Japanese_if_relevant"],
+    "publication_types": ["peer-reviewed journal article", "systematic review"]
+  },
+  "planned_sources": [
+    "Web of Science or Scopus where available",
+    "Engineering Village Compendex",
+    "Crossref",
+    "OpenAlex",
+    "topic-specific IEEE Xplore, ACM Digital Library, PubMed, or TRID"
+  ],
+  "seed_journal_registry": "journal_scope.json",
+  "dual_screening": true,
+  "citation_chasing": {"backward": true, "forward": true, "iterations": 2},
+  "quality_appraisal_tool": "SELECT_BY_STUDY_DESIGN",
+  "synthesis_plan": "evidence map plus narrative synthesis; meta-analysis only when compatible",
+  "amendments": []
+}

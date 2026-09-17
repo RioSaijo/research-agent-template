@@ -8,6 +8,7 @@
 - 中心RQへ直接寄与しないmethodやtechnologyを追加しない。
 - referenceを捏造せず、数値・threshold・standard・novelty・method根拠は原典で確認する。
 - journal掲載論文の検索を必ず実施し、検索source、query、検索日、採否を`LITERATURE.md`へ記録する。
+- 文献検索は`literature/SYSTEMATIC_REVIEW_PROTOCOL.md`に従い、single-agent narrative searchだけでGate 1を通過しない。
 - 報告書本文とmanuscriptは数字式引用`[1]`を使用し、引用番号とreference listを対応させる。
 - raw dataを変更しない。secret、個人情報、confidential data、再配布できないPDFをcommitしない。
 - negative resultを削除せず、結果に合わせてRQを書き換えない。
@@ -44,6 +45,17 @@ roleは常設agentではなく必要時の責務である。
 
 - Research Manager: `PROJECT.md`, `STATUS.md`。計画、統合、task、gate、decision、人間checkpoint。
 - Literature: `PROJECT.md`, `LITERATURE.md`, 関連RQの`STATUS.md`。closest work、gap、novelty、競合method、negative evidence、standards。
+- Review Protocol Lead: review question、eligibility、source、期間、quality、synthesis、停止条件を検索前に固定する。
+- Domain Vocabulary / Search Strategist: 建築設備、建築情報、エネルギーのconcept block、同義語、controlled vocabulary、database別queryを作る。
+- Search Peer Reviewer: query作成者と分離し、既知paper recall、Boolean、field、filter、表記揺れ、不要な制限を査読する。
+- Database / Journal Harvester: database、index、publisher、seed journalから全retrievalとsearch provenanceを保存する。
+- Metadata Curator: DOI、title、year、authorを正規化し、duplicateとrelated reportを追跡可能に統合する。
+- Screener A / B: title/abstractとfull textを相互の初回票を見ずに判定する。情報不足を自動除外しない。
+- Eligibility Adjudicator: disagreementだけを事前eligibilityで解決し、full-text exclusion reasonを記録する。
+- Quality Appraiser / Evidence Extractor: study-design別risk、data、method、baseline、metric、result、uncertainty、limitation、source locationを抽出する。
+- Citation Chaser: critical/included studyのbackward/forward searchを反復し、追加収量を記録する。
+- Gap Analyst / Gap Challenger: evidence matrixからgap候補を作り、用語漏れ、隣接分野、contradiction、既存研究でgapが消えないか別passで反証する。
+- Review Auditor: dual screening、coverage、PRISMA count、metadata、除外、quality、gap traceabilityを独立監査する。
 - Problem/RQ Assessment: 文献と研究入力から問題、gap、RQのnovelty/data/verifiability/scopeを評価。
 - Data Requirement: 必要data、取得経路、quality/provenance、代替を設計。
 - Methodology/Analysis: `PROJECT.md`, `STATUS.md`, 関連artifact。RQから必要証拠を逆算し、method/evaluation/verificationを設計・実行。
@@ -62,6 +74,12 @@ roleは常設agentではなく必要時の責務である。
 
 foundational、closest prior、recent primary、systematic review、competing methods、negative/contradictory results、limitations、benchmark、standards/regulations、adjacent fieldsを検索する。
 
+最初に`literature/protocol.json`をtopicへ適合させ、search前にlockする。Search StrategistのqueryはSearch Peer Reviewerが確認し、Database/Journal Harvesterは`search_log.csv`へ完全なquery、platform、date、coverage、filter、hit/export件数を保存する。topic-relevantな`journal_scope.json`のseed journalをすべてcoverage matrixへ入れ、database検索、journal sweep、backward/forward citation chasingを相補的に用いる。
+
+Metadata Curatorはretrieval rowを削除せずcanonical recordへ関連付ける。Screener A/Bはtitle/abstractとfull textを独立判定し、Adjudicatorが不一致だけを処理する。同一roleの即時再読をdual screeningとみなさない。included studyはquality appraisalとevidence extractionを完了し、Gap Analystの候補をGap Challengerが反証してからgapとして採用する。Review AuditorはPRISMA countとrecordを照合する。
+
+高JIF/Q1 journalは探索順序を優先できるが、metricは毎年変わるため年と公式sourceを記録し、eligibility除外条件には使わない。専門誌、conference、negative result、lower-metric journalにclosest workがあれば含める。
+
 journal検索は必須とし、少なくとも次を含める。
 
 1. publisher、DOI、学術indexまたはjournal siteから査読論文を探索する。
@@ -72,7 +90,7 @@ journal検索は必須とし、少なくとも次を含める。
 
 各sourceに原典確認状態、research relevance、related RQ、evidence label、分類`NORMAL / READ / DEEP_REVIEW / CRITICAL`を記録する。RQ・Problem Definition・Methodologyを変え得るsourceは`CRITICAL`。web snippetだけを証拠にしない。
 
-closest work、RQとの差、gap、主要競合method、counterexample、methodology supportが説明でき、追加検索が判断を変えにくければ停止する。noveltyやclosest workが不明、隣接分野の類似methodが疑われる、evaluation根拠不足、standard要件、Referee要求があれば継続する。
+planned sourceとseed journalの検索、query review、重複処理、二重screening、conflict解消、quality/extraction、citation chasing、contradictory evidence探索、PRISMA整合、gap challengeが完了し、連続2回のsearch/citation waveでgapを変えるstudyが見つからなければLiterature Sub-gateを判定できる。満たさない場合はcoverage limitationを明記し、無限定な網羅性を主張しない。noveltyやclosest workが不明、隣接分野の類似methodが疑われる、evaluation根拠不足、standard要件、Referee要求があれば継続する。
 
 ## 5. RQ readiness
 

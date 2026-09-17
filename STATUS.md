@@ -43,6 +43,14 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-005 | RQ-01 | journal掲載論文を検索・選定する | closest workと方法根拠を査読文献で確認する | Literature Role | T-001 | Publisher / DOI / scholarly index | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
 | T-006 | ALL | 引用番号付きPDFを生成・render検証する | 読める最終artifactを作る | Writer / Verification | Gate 4 | Manuscript / report source | results/reports/*.pdf | BLOCKED | P1 | Gate 4 incomplete | Gate 5 |
 | T-007 | ALL | PDFをGmail送信しdeliveryを記録する | workflowを完了する | Research Manager | T-006 | Gmail connection / runtime recipient | STATUS.md delivery record | BLOCKED | P1 | PDF not verified | Gate 5 |
+| T-008 | RQ-01 | systematic review protocolをlockする | review scopeとeligibilityを事前固定する | Review Protocol Lead | T-001 | Research theme | literature/protocol.json | TODO | P0 | Input incomplete | Gate 1 |
+| T-009 | RQ-01 | database別queryを設計・査読する | recallと再現性を確保する | Search Strategist / Search Peer Reviewer | T-008 | Vocabulary / sentinel papers | literature/search_log.csv | BLOCKED | P0 | Protocol not locked | Gate 1 |
+| T-010 | RQ-01 | databaseとseed journalを収集する | high-coverage corpusを構築する | Database / Journal Harvester | T-009 | Database / web access | literature/records.csv | BLOCKED | P0 | Query not approved | Gate 1 |
+| T-011 | RQ-01 | metadata統合と重複除去を行う | retrieval provenanceを保った一意corpusを作る | Metadata Curator | T-010 | Retrieved records | literature/records.csv | BLOCKED | P0 | No records | Gate 1 |
+| T-012 | RQ-01 | title/abstractとfull textを二重screeningする | 恣意的選定を抑える | Screener A / B / Adjudicator | T-011 | Eligibility criteria / full text | literature/screening_decisions.csv | BLOCKED | P0 | Dedup incomplete | Gate 1 |
+| T-013 | RQ-01 | quality appraisalとevidence extractionを行う | gap synthesisの証拠を構造化する | Quality Appraiser / Evidence Extractor | T-012 | Included studies | literature/extraction.csv | BLOCKED | P0 | Screening incomplete | Gate 1 |
+| T-014 | RQ-01 | citation chasingとgap challengeを完了する | 検索漏れと偽gapを反証する | Citation Chaser / Gap Analyst / Gap Challenger | T-013 | Included studies / citation graph | LITERATURE.md | BLOCKED | P0 | Extraction incomplete | Gate 1 |
+| T-015 | RQ-01 | systematic reviewを独立監査する | PRISMA、coverage、判定、gap traceabilityを確認する | Review Auditor | T-014 | Review artifacts | LITERATURE.md / results/literature/prisma_flow.json | BLOCKED | P0 | Gap challenge incomplete | Gate 1 |
 
 ## Blocked Tasks
 
@@ -90,6 +98,18 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ### Gate 1 — Research Definition Gate
 
+- [ ] Systematic review protocol locked before screening
+- [ ] Eligibility, date, language, publication type, sources, and synthesis plan defined
+- [ ] Database-specific queries independently peer reviewed
+- [ ] Planned databases and topic-relevant seed journals searched
+- [ ] Search date, full query, filters, hits, and exports recorded
+- [ ] Deduplication and related-report handling completed
+- [ ] Independent dual title/abstract and full-text screening completed
+- [ ] All conflicts resolved and exclusions have controlled reasons
+- [ ] Included studies quality-appraised and evidence-extracted
+- [ ] Backward/forward citation chasing and update search completed
+- [ ] PRISMA counts agree with machine-readable records
+- [ ] Gap candidates passed independent Gap Challenger review
 - [ ] Background defined
 - [ ] Motivation defined
 - [ ] Problem Definition supported by literature

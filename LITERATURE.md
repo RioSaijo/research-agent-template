@@ -9,6 +9,76 @@
 - Search scope: 要検討
 - Stop criteria assessment: NOT_MET
 
+## Systematic Review Protocol
+
+- Review ID: SR-001
+- Protocol: `literature/protocol.json`
+- Protocol status: DRAFT
+- Protocol lock date: 要検討
+- Search strategy peer review: NOT_STARTED
+- Reporting frameworks: PRISMA 2020 / PRISMA-S
+- Query review framework: PRESS
+- Deviations / amendments: なし
+
+## Database and Journal Coverage
+
+| Coverage ID | Domain | Source / Database / Journal | Planned | Searched | Search IDs | Coverage Limitation |
+|---|---|---|---|---|---|---|
+| COV-001 | 要検討 | `literature/journal_scope.json`から選定 | YES | NO | なし | 要検討 |
+
+高impact journalは優先探索するが、JIF/quartileは年、category、source、verified dateを記録し、除外条件には使わない。seed journalは検索入口でありallowlistではない。
+
+## Retrieval and Deduplication Summary
+
+| Metric | Count / Status |
+|---|---|
+| Records identified | 0 |
+| Exact DOI duplicates | 0 |
+| Title/year duplicate candidates | 0 |
+| Related reports retained | 0 |
+| Unique records | 0 |
+| Ambiguous duplicate pairs | 0 |
+
+## Screening and Eligibility
+
+- Calibration set: NOT_STARTED
+- Dual title/abstract screening: NOT_STARTED
+- Dual full-text screening: NOT_STARTED
+- Unresolved conflicts: 0
+- Full-text reports not retrieved: 0
+
+| Stage | Screened | Included / Advanced | Excluded | Awaiting | Conflicts Resolved |
+|---|---:|---:|---:|---:|---:|
+| Title / Abstract | 0 | 0 | 0 | 0 | 0 |
+| Full Text | 0 | 0 | 0 | 0 | 0 |
+
+## Quality Appraisal and Evidence Extraction
+
+| Study ID | Design | Appraisal Tool | Risk / Quality | Extracted | Independently Audited | Notes |
+|---|---|---|---|---|---|---|
+| なし | - | - | - | NO | NO | - |
+
+## Citation Chasing and Search Saturation
+
+| Wave | Seed / Included Set | Backward Results | Forward Results | New Eligible | New Gap Category | Search Date |
+|---|---|---:|---:|---:|---|---|
+| 1 | 要検討 | 0 | 0 | 0 | なし | 要検討 |
+
+- Required waves: 2以上
+- Saturation status: NOT_ASSESSED
+- Last update search: 要検討
+
+## PRISMA Flow
+
+- Machine-readable output: `results/literature/prisma_flow.json`
+- Record/count consistency: NOT_AUDITED
+
+## Evidence Gap Matrix
+
+| Gap ID | Gap Type | Description | Supporting Study IDs | Contradictory / Closing Study IDs | Coverage | Evidence Quality | Minimum Study to Close Gap | Challenger Decision | Confidence |
+|---|---|---|---|---|---|---|---|---|---|
+| GAP-001 | 要検討 | 要検討 | なし | なし | NOT_ASSESSED | NOT_ASSESSED | 要検討 | NOT_REVIEWED | LOW |
+
 ## Journal Search Log
 
 各検索ごとに記録する。journal掲載論文の検索を省略しない。

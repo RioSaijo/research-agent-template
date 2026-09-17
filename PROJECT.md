@@ -30,6 +30,30 @@
 - Out of scope: 要検討
 - Constraints (time, people, compute, measurement, access): 要検討
 
+## Systematic Evidence Review Scope
+
+- Review ID: SR-001
+- Review type: systematic review / systematic map / scoping review → 要検討
+- Review question and RQ mapping: 要検討
+- Framework: PCC / PICO / PICOC / SPIDER → 要検討
+- Protocol artifact: `literature/protocol.json`
+- Domain scope: building systems / indoor environment / building information / energy / topic-specific adjacent fields → 要検討
+- Date range: 要検討
+- Languages: 要検討
+- Publication types: 要検討
+- Planned databases and indexes: 要検討
+- Topic-relevant seed-journal domains: 要検討
+- Grey-literature and conference policy: 要検討
+- Quality appraisal method by study design: 要検討
+- Synthesis and gap taxonomy: 要検討
+- Protocol lock status: DRAFT
+
+### Protocol Amendments
+
+| Amendment ID | Date | Previous | New | Reason | Impact | Re-screening Required | Approval |
+|---|---|---|---|---|---|---|---|
+| なし | - | - | - | - | - | - | - |
+
 ## Expected Contribution
 
 開始時は未定でもよい。文献と問題定義で裏付けられるまで仮説として扱う。

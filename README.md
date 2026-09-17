@@ -11,12 +11,14 @@
 - Refereeは確認より先に反証可能性、代替説明、データ品質問題を探します。
 - 各CRITICAL/MAJOR査読指摘に対し、Revision Leadが複数の解決候補、採用理由、具体的修正、追加証拠、残存リスクをResponse to Refereeとして提示し、Refereeが独立に再査読します。
 - 中心claimにはLiterature、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Refereeなど異なる視点をriskに応じて割り当て、単なるagent数ではなく検討の非重複性で研究の深度を確保します。
+- 文献レビューはPRISMA 2020/PRISMA-S/PRESSを参照し、protocol事前固定、複数databaseとseed journal、独立二重screening、quality appraisal、citation chasing、Gap Challenger、Review Auditorに分離します。
+- `Energy and Buildings`等の高impact誌を優先探索しますが、Impact Factorは年次更新される探索属性として記録し、個別論文の除外基準にはしません。
 - RQ、中心的問題、主要scope、中心的貢献の変更には人間の承認が必要です。
 
 ## 開始方法
 
 1. 研究テーマをChatGPTへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
-2. ChatGPTは`AGENTS.md`を入口として、研究入力の整理、journal文献検索、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
+2. ChatGPTは`AGENTS.md`を入口として、systematic review protocol、検索式査読、文献収集、二重screening、quality/gap分析、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
 3. `STATUS.md`で現在のphase、quality gate、task、Claim Evidence Tableを確認します。
 4. 重要な研究方針変更や人間だけが取得できる資源が必要になった場合に限り、人間が判断します。
 5. Gate 4通過後、最終PDFを生成・render検証し、Gmailで指定recipientへ送信します。送信記録までが一連のworkflowです。
@@ -64,11 +66,20 @@ research-agent-template/
 ├── STATUS.md
 ├── LITERATURE.md
 ├── REFEREE.md
+├── literature/
+│   ├── SYSTEMATIC_REVIEW_PROTOCOL.md
+│   ├── protocol.json
+│   ├── journal_scope.json
+│   ├── search_log.csv
+│   ├── records.csv
+│   ├── screening_decisions.csv
+│   └── extraction.csv
 ├── paper/
 │   ├── main.tex
 │   ├── refs.bib
 │   └── figures/
 ├── code/
+│   └── literature/systematic_review.py
 ├── results/
 ├── tests/
 ├── scripts/check.sh

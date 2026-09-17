@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Seed journals for building systems, building information, indoor environment, controls, and energy. This is a search starting set, not an exclusion whitelist.",
+  "metric_policy": {
+    "priority": "At search time prioritize topic-relevant journals in the current JCR/Scopus top quartile or with strong field standing.",
+    "verification": "Record metric name, value or quartile, edition year, and official source at runtime.",
+    "prohibitions": [
+      "Do not hard-code a permanent Impact Factor threshold.",
+      "Do not exclude a relevant study solely because its journal has a lower metric.",
+      "Do not compare raw Impact Factors across unrelated categories as if field-normalized."
+    ]
+  },
+  "domains": [
+    {
+      "domain": "building_energy_and_performance",
+      "seed_journals": [
+        "Energy and Buildings",
+        "Building and Environment",
+        "Applied Energy",
+        "Journal of Building Engineering",
+        "Building Research & Information",
+        "Sustainable Cities and Society",
+        "Renewable and Sustainable Energy Reviews",
+        "Energy",
+        "Energy Conversion and Management",
+        "Building Simulation",
+        "Solar Energy"
+      ]
+    },
+    {
+      "domain": "hvac_indoor_environment_and_controls",
+      "seed_journals": [
+        "Indoor Air",
+        "Indoor Environments",
+        "Science and Technology for the Built Environment",
+        "Building Services Engineering Research and Technology",
+        "International Journal of Refrigeration",
+        "HVAC&R Research archive",
+        "Journal of Building Performance Simulation"
+      ]
+    },
+    {
+      "domain": "building_information_bim_and_automation",
+      "seed_journals": [
+        "Automation in Construction",
+        "Advanced Engineering Informatics",
+        "Journal of Computing in Civil Engineering",
+        "Journal of Information Technology in Construction",
+        "Computer-Aided Civil and Infrastructure Engineering",
+        "Journal of Web Semantics",
+        "Semantic Web",
+        "Data-Centric Engineering"
+      ]
+    },
+    {
+      "domain": "energy_informatics_iot_and_ai",
+      "seed_journals": [
+        "Energy and AI",
+        "Energy Informatics",
+        "IEEE Internet of Things Journal",
+        "IEEE Transactions on Automation Science and Engineering",
+        "Expert Systems with Applications",
+        "Applied Soft Computing",
+        "Internet of Things"
+      ]
+    },
+    {
+      "domain": "facilities_operations_and_lifecycle",
+      "seed_journals": [
+        "Facilities",
+        "Journal of Facilities Management",
+        "Reliability Engineering and System Safety",
+        "Resources, Conservation and Recycling",
+        "Journal of Cleaner Production"
+      ]
+    }
+  ],
+  "supplemental_venues": [
+    "CIB W78",
+    "EG-ICE",
+    "IBPSA Building Simulation Conference",
+    "ACM BuildSys",
+    "ACM SenSys",
+    "ASHRAE conferences",
+    "topic-relevant IEEE conferences"
+  ],
+  "discovery_sources": [
+    "Web of Science Core Collection",
+    "Scopus",
+    "Engineering Village Compendex",
+    "IEEE Xplore",
+    "ACM Digital Library",
+    "PubMed for indoor environment and health",
+    "Crossref",
+    "OpenAlex"
+  ],
+  "expansion_rules": [
+    "Add journals found repeatedly in included-study references or forward citations.",
+    "Add domain journals when the RQ introduces health, controls, power systems, semantics, databases, or human factors.",
+    "Search special issues and early-access/in-press records.",
+    "Record additions, rationale, date, and source in LITERATURE.md."
+  ]
+}
