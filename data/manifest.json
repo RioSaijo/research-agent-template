@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "policy": {
+    "raw_data_location": "data/raw/<DATA-ID>/ (gitignored, read-only)",
+    "raw_data_immutable": true,
+    "non_redistributable_files_must_stay_under_data_raw": true,
+    "never_record_credentials": true
+  },
+  "datasets": [
+    {
+      "data_id": "DATA-01",
+      "title": "TO_DEFINE",
+      "related_rq": ["RQ-01"],
+      "source": "TO_DEFINE",
+      "owner": "TO_DEFINE",
+      "access": "TO_DEFINE",
+      "license": "TO_DEFINE",
+      "redistributable": null,
+      "acquisition": {"method": "TO_DEFINE", "url": "", "retrieved_at": "", "retrieved_by": "", "source_note": ""},
+      "files": [],
+      "format": {
+        "type": "csv",
+        "delimiter": ",",
+        "encoding": "utf-8-sig",
+        "timestamp_column": "TO_DEFINE",
+        "timestamp_format": "",
+        "timezone": "TO_DEFINE",
+        "expected_interval": "TO_DEFINE"
+      },
+      "coverage": {"start": "TO_DEFINE", "end": "TO_DEFINE", "location": "TO_DEFINE"},
+      "variables": [
+        {
+          "name": "TO_DEFINE",
+          "description": "TO_DEFINE",
+          "dtype": "float",
+          "unit": "TO_DEFINE",
+          "min": null,
+          "max": null,
+          "max_flatline": null,
+          "equipment_or_space": "TO_DEFINE",
+          "sensor_or_point": "TO_DEFINE",
+          "calibration": "TO_DEFINE"
+        }
+      ],
+      "quality_thresholds": {},
+      "processing": []
+    }
+  ]
+}

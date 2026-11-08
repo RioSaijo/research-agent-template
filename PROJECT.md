@@ -127,13 +127,15 @@
 
 ## Data Inventory and Provenance
 
-行をdata source/assetごとに追加する。
+machine-readable正本は`data/manifest.json`。この表は要約として同じData IDで一致させる。取得は`code/data/acquire.py`、使用前検査は`code/data/quality.py`で行う。
 
 | Data ID | Data Source | Owner | Acquisition Method | Device / System | Variable | Unit | Sampling Interval | Timestamp / Timezone | Coverage | Location | Equipment / Room Mapping | Calibration | Missing / Outliers | Preprocessing / Aggregation / Exclusion | Version | Access | Related RQ |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | DATA-01 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | UNKNOWN | RQ-01 |
 
 ### Data quality pre-use checklist
+
+各項目は`code/data/quality.py profile`の結果（`results/data_quality/<DATA-ID>.json`）で確認する。train/test separationとleakageは`code/analysis/stats.py`のrolling-origin splitとtemporal leakage checkで確認する。
 
 - [ ] Unit consistency
 - [ ] Timestamp and timezone consistency

@@ -77,6 +77,8 @@ research-agent-template/
 │   ├── records.csv
 │   ├── screening_decisions.csv
 │   └── extraction.csv
+├── data/
+│   └── manifest.json        # raw data本体は data/raw/（gitignored）
 ├── evidence/
 │   ├── analysis_plan.json
 │   ├── runs.csv
@@ -89,7 +91,12 @@ research-agent-template/
 │   └── figures/
 ├── code/
 │   ├── literature/systematic_review.py
-│   └── evidence/evidence_audit.py
+│   ├── evidence/evidence_audit.py
+│   ├── data/acquire.py      # 取得・登録・hash検証
+│   ├── data/quality.py      # 使用前data quality profile
+│   ├── analysis/stats.py    # metric、bootstrap、比較検定、split
+│   └── analysis/record_run.py  # provenance付き実行記録
+├── requirements.txt
 ├── results/
 ├── tests/
 ├── scripts/check.sh
@@ -97,6 +104,16 @@ research-agent-template/
 ```
 
 `code/`と`results/`の下位directoryは必要になった時だけ作ります。生データは原則Git管理せず、read-onlyとして扱い、入手元と処理履歴を`PROJECT.md`および成果物に記録します。
+
+## Data collection and quantitative analysis
+
+| 段階 | tool | 出力 |
+|---|---|---|
+| 取得・登録 | `code/data/acquire.py fetch / register` | `data/raw/<ID>/`（read-only）、`data/manifest.json`のhash |
+| 検証 | `code/data/acquire.py verify` | manifest構造、access制約、raw file改変の検出 |
+| 使用前品質 | `code/data/quality.py profile` | `results/data_quality/<ID>.json`、DATA_QUALITY check |
+| 定量評価 | `code/analysis/stats.py evaluate` | metric、bootstrap CI、baseline比較、DM test |
+| 実行記録 | `code/analysis/record_run.py -- <command>` | `evidence/runs.csv`、`results/environments/` |
 
 ## 5つのquality gate
 

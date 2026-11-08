@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.4.0
+Version: 1.5.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -26,6 +26,7 @@ Version: 1.4.0
 - `STATUS.md`: 現在状態、task、Claim Evidence Table、decision log。
 - `LITERATURE.md`: 研究判断に必要な文献map。
 - `literature/`: systematic reviewのprotocol、journal registry、search log、record、screening、extractionのmachine-readable artifact。role別の会話記録は置かない。
+- `data/manifest.json`: data inventoryのmachine-readable正本。raw fileは`data/raw/<DATA-ID>/`（gitignored、read-only）に置き、manifestにはsource、license、access、acquisition、SHA-256、timestamp/timezone、sampling interval、variable/unit/valid rangeを記録する。
 - `evidence/`: Gate 3のmachine-readable正本。`analysis_plan.json`（事前固定したanalysis、criterion、required check、independence level）、`runs.csv`（実行provenanceとhash）、`checks.csv`（challenge/verification check）、`claims.csv`（claim registry）。
 - `REFEREE.md`: 独立した反証優先レビュー。
 - `paper/`: publication artifact。`main.tex`、`refs.bib`、`figures/`を含む。
@@ -78,6 +79,22 @@ RQは再評価可能だが変更には人間の承認が必要である。次の
 dataにはsource、owner、acquisition、device/system、variable、unit、sampling interval、timestamp/timezone、coverage、location、equipment/room mapping、calibration、missing/outlier、preprocessing/aggregation/exclusion、version、access、RQを記録する。使用前にunit/time/timezone、欠損、重複、sensor/calibration、mapping、sampling/coverage、outlier、traceability、train-test separation、leakageを確認する。raw dataはread-onlyとし`raw → processed → analysis → results`を追跡する。
 
 seed、major software version、simulation parameter、manual processing、negative result、figure/table生成元、claim supporting artifactを記録する。
+
+### 7.1 Data acquisition and pre-use quality
+
+- `PROJECT.md`のData Inventoryは要約とし、正本は`data/manifest.json`とする。dataset追加時はmanifestにentryを作ってから取得する。
+- `code/data/acquire.py fetch`はURLを`data/raw/<DATA-ID>/`へ取得し、最終URL、取得日時、SHA-256、sizeを記録する。BMS/BEMS export、測定、外部提供dataは`register`で同様に記録する。既存raw fileと異なる内容での上書きは拒否し、新versionは別file名または別data IDとする。
+- `acquire.py verify`はmanifest構造、access class、取得方法、numeric variableのunit、timestampとtimezoneの組、raw fileの存在とhash一致を検査する。再配布不可またはCONFIDENTIAL/RESTRICTEDのfileを`data/raw/`外に置くことを禁止する。
+- `code/data/quality.py profile`はPROJECT.mdのpre-use checklistをmachine checkとして実行する: 宣言column、unit、欠損率、重複row、timestamp parse、timezone、duplicate timestamp（DST等）、単調性、sampling interval、gap、coverage、物理range、flatline（stuck sensor）、robust spike。結果は`results/data_quality/<DATA-ID>.json`へ`PASS / WARN / FAIL`で出力し、`--record-check`で`evidence/checks.csv`のDATA_QUALITY rowとして登録する。`WARN`は`INCONCLUSIVE`として扱い、補正・除外・影響を記録して`PASS`の再判定を得るまでclaimを`SUPPORTED`にしない。`FAIL`のdataはconfirmatory analysisに使わない。
+- API keyやtokenはmanifest、command引数、logへ書かない。認証が必要な取得はenvironment variable、secret manager、または認証済みconnector/proxyを使う。
+
+### 7.2 Quantitative analysis and run recording
+
+- `code/analysis/stats.py`はRQに必要な定量評価の共通部品である: MAE、RMSE、MAPE、R2、ASHRAE Guideline 14形式のCV(RMSE)とNMBE（fraction、parameter数p対応）、seed固定のpercentile bootstrap CI、自己相関のある時系列向けmoving-block bootstrap、paired bootstrap差、sign-flip permutation test、Diebold-Mariano test（HLN補正、normal近似）、skill score、Cohen's d_z、Cliff's delta、Holm/Benjamini-Hochberg補正、gap付きrolling-origin split、temporal leakage check。合否thresholdはcodeに埋め込まず`evidence/analysis_plan.json`のcriterionで定める。
+- 時系列dataにはrandom splitではなくrolling-origin等の時間順splitを既定とし、i.i.d.前提のbootstrap/permutationを自己相関dataへ適用する場合は理由を記録する。複数のmodel、metric、subgroupを検定する場合はplanで補正法を事前に決める。
+- `stats.py evaluate`はobserved/predicted（任意でbaseline）のCSVから点推定、CI、baseline比較をJSONで出力し、`claims.csv`のobserved_valueとuncertaintyの根拠artifactとする。
+- confirmatory runは`code/analysis/record_run.py`経由で実行する。plan未lock、未commitのtracked code、seed未指定、入力欠損を拒否し、子processへ`RESEARCH_SEED`と`PYTHONHASHSEED`を渡し、実行前後の入力hash一致、出力生成を確認し、`pip freeze`を`results/environments/<RUN-ID>.txt`へ保存して`evidence/runs.csv`へ追記する。失敗したcommandはevidenceとして記録しない。
+- domain固有の処理（weather正規化、simulation、FDD、model学習等）は`code/analysis/`または`code/preprocessing/`にRQ単位で追加し、共通部品を再実装しない。
 
 ## 8. Evidence and claims
 

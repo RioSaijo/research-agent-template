@@ -111,6 +111,14 @@ RQ変更案は提案まで行えるが、人間承認前は確定しない。
 
 data使用前にunit、timestamp/timezone、欠損、重複、sensor/calibration、spatial/equipment mapping、sampling/coverage、outlier、preprocessing trace、train-test separation、leakageを確認する。問題があればimpact、correction、alternative data/method、最後に`DATA_INSUFFICIENT`の順で扱う。
 
+### Data and analysis toolkit
+
+1. Data Requirement roleは`data/manifest.json`へdataset entry（source、owner、access、license、variable、unit、valid range、timestamp column、timezone、expected interval）を作り、`python code/data/acquire.py fetch|register`で取得・登録する。raw dataは`data/raw/`でread-onlyとし、commitしない。
+2. 使用前に`python code/data/quality.py profile --data-id <ID> --record-check <CHECK-ID> --claim-id <CL>`を実行する。WARN/FAILは補正、除外、代替dataのいずれかとその影響を記録する。
+3. Analysis roleは`code/analysis/stats.py`の共通metric、bootstrap、比較検定、multiplicity補正、rolling-origin splitを使い、閾値はanalysis planから読む。
+4. confirmatory runは`python code/analysis/record_run.py ... -- <command>`で実行し、手でruns.csvを書かない。
+5. Gate 3前に`python code/data/acquire.py verify`（raw dataのあるenvironmentで）とstrict evidence auditを実行する。
+
 ## 7. Evidence and verification
 
 Evidence Type、Verification、Claim Statusは`SPECIFICATION.md`のenumだけを使う。Claimを`SUPPORTED`にするには事前Criterionを満たす必要がある。independent verificationは設計上必要なclaimで実施し、primary evidenceと同じ処理の単純再実行を独立確認とみなさない。

@@ -4,8 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py)
-required_dirs=(paper/figures code results tests literature evidence)
+required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py data/manifest.json code/data/acquire.py code/data/quality.py code/analysis/stats.py code/analysis/record_run.py tests/test_data_analysis.py requirements.txt)
+required_dirs=(paper/figures code results tests literature evidence data)
 
 for path in "${required_files[@]}"; do
   [[ -f "$path" ]] || { echo "[check] missing required file: $path" >&2; exit 1; }
@@ -43,6 +43,8 @@ for candidate in python python3 py; do
 done
 if [[ -n "$python_bin" ]]; then
   "$python_bin" code/evidence/evidence_audit.py audit --allow-incomplete --status STATUS.md
+  # raw data is gitignored, so CI validates manifest structure only; run without --skip-files where data exists
+  "$python_bin" code/data/acquire.py verify --allow-incomplete --skip-files
 else
   echo "[check] Python not found; evidence artifacts were not audited" >&2
 fi
@@ -56,7 +58,9 @@ else
   echo "[check] Python not found; systematic literature artifacts were not audited" >&2
 fi
 if (( ${#test_files[@]} > 0 )); then
-  if command -v pytest >/dev/null 2>&1; then
+  if [[ -n "$python_bin" ]] && "$python_bin" -c "import pytest" >/dev/null 2>&1; then
+    "$python_bin" -m pytest -q
+  elif command -v pytest >/dev/null 2>&1; then
     pytest -q
   elif command -v python3 >/dev/null 2>&1; then
     python3 -m unittest discover -s tests -v

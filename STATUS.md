@@ -51,6 +51,8 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-013 | RQ-01 | quality appraisalとevidence extractionを行う | gap synthesisの証拠を構造化する | Quality Appraiser / Evidence Extractor | T-012 | Included studies | literature/extraction.csv | BLOCKED | P0 | Screening incomplete | Gate 1 |
 | T-014 | RQ-01 | citation chasingとgap challengeを完了する | 検索漏れと偽gapを反証する | Citation Chaser / Gap Analyst / Gap Challenger | T-013 | Included studies / citation graph | LITERATURE.md | BLOCKED | P0 | Extraction incomplete | Gate 1 |
 | T-015 | RQ-01 | systematic reviewを独立監査する | PRISMA、coverage、判定、gap traceabilityを確認する | Review Auditor | T-014 | Review artifacts | LITERATURE.md / results/literature/prisma_flow.json | BLOCKED | P0 | Gap challenge incomplete | Gate 1 |
+| T-020 | RQ-01 | data manifestを作成しraw dataを取得・登録する | provenanceとhash付きでdataを確保する | Data Requirement Role | T-003 | Data source / access | data/manifest.json / data/raw/ | BLOCKED | P1 | Data requirement incomplete | Gate 2 |
+| T-021 | RQ-01 | pre-use data quality profileを実行する | unit、時刻、欠損、range、sensor異常を分析前に検出する | Data Requirement Role | T-020 | Raw data | results/data_quality/ / evidence/checks.csv | BLOCKED | P1 | No data | Gate 2 |
 | T-016 | RQ-01 | analysis planをlockする | 結果を見る前にcriterion、claim type、required check、independence levelを固定する | Methodology Role | T-004 | PROJECT.md evaluation plan | evidence/analysis_plan.json | BLOCKED | P1 | Methodology incomplete | Gate 2 |
 | T-017 | RQ-01 | primary analysisを実行しrunを記録する | provenanceとhash付きprimary evidenceを作る | Analysis Role | T-016 | Data / code | evidence/runs.csv / results/ | BLOCKED | P1 | Plan not locked | Gate 3 |
 | T-018 | RQ-01 | challenge checkを実施する | 代替説明、sensitivity、falsification、leakageを分析者以外が検査する | Methods Challenger | T-017 | Primary run | evidence/checks.csv | BLOCKED | P1 | No primary run | Gate 3 |
@@ -134,6 +136,10 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] RQ Data Method mapping complete
 - [ ] Required Data identified
 - [ ] Reasonable acquisition path exists
+- [ ] Every dataset has a `data/manifest.json` entry (source, access, license, units, valid ranges, timezone, interval)
+- [ ] Raw files acquired/registered with SHA-256 via `code/data/acquire.py`
+- [ ] Pre-use quality profile run for every dataset; WARN/FAIL dispositions recorded
+- [ ] Time-ordered split, multiplicity correction, and uncertainty method specified in the analysis plan
 - [ ] Evaluation Metric defined
 - [ ] Evaluation Criterion defined
 - [ ] Baseline / Reference defined when required
@@ -148,7 +154,8 @@ Per-claim gate. Machine-readable source: `evidence/`. Judge with
 
 - [ ] Analysis plan locked before every confirmatory run; amendments recorded with re-analysis impact
 - [ ] Every planned analysis has a PRIMARY run; every pre-registered claim reported, including negative results
-- [ ] Every run records git commit, command, environment, seed, and input/output SHA-256
+- [ ] Every run records git commit, command, environment, seed, and input/output SHA-256 (via `code/analysis/record_run.py`)
+- [ ] `code/data/acquire.py verify` passes: raw data unchanged since registration
 - [ ] Recorded inputs/outputs exist and hashes match (no stale results)
 - [ ] Criterion applied exactly as pre-registered; numeric criteria auto-evaluated without contradiction
 - [ ] Uncertainty reported for every SUPPORTED / PARTIALLY_SUPPORTED claim
@@ -199,12 +206,14 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - Repository initialized from specification.
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 - Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
+- Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
 
 ## Decision Log
 
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-004 | 2026-11-08 | ALL | Data and analysis toolkit | Manual data inventory and ad hoc analysis | Data manifest, acquisition with hashes, automated quality profile, shared statistics, recorded runs | Data collection and quantitative analysis lacked reproducible tooling | Template review | Gate 2/3 data and analysis items become machine-checkable | Template change |
 | D-003 | 2026-11-08 | ALL | Gate 3 evidence control | Self-declared 7-item checklist | Locked analysis plan, run/check/claim registries, strict machine audit | Gate 3 lacked pre-registration, provenance hashes, check coverage, role separation, and independence levels | Template review | Gate 3 becomes per-claim and machine-verifiable | Template change |
 | D-002 | 2026-09-16 | ALL | Completion workflow | Gate 4 ended at manuscript readiness | Gate 5 requires verified PDF and Gmail delivery | User required theme-to-email execution, journal search, and numeric citations | Explicit user instruction | Adds mandatory search, citation, rendering, and delivery controls | Approved |
 
