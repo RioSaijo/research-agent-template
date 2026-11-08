@@ -59,7 +59,7 @@ roleは常設agentではなく必要時の責務である。
 - Problem/RQ Assessment: 文献と研究入力から問題、gap、RQのnovelty/data/verifiability/scopeを評価。
 - Data Requirement: RQ、gap、analysis planから必要evidenceと変数・解像度・coverage・品質要件を逆算し`data/requirements.csv`へ記録する。
 - Data Source Scout: requirementごとにpublic data、literature data、API、measurement/BMS/BIM、simulation、proxy、external provider、design changeのpathwayを探索し`data/source_search_log.csv`へ記録する。
-- Data Screener: candidate datasetをfit、coverage、resolution、quality、access、cost、reproducibilityで評価し、選定・却下理由を`data/candidates.csv`へ記録する。Data Source Scoutと別passで行う。
+- Data Screener: candidate datasetを`data/screening_rubric.json`のanchorに従いfit、coverage、resolution、quality、access、cost、reproducibilityで0-3評価し、anchorを引用したrationaleと選定・却下理由を`data/candidates.csv`へ記録する。Data Source Scoutと別passで行い、MUST requirementの選定は別roleが再採点する。
 - Methodology/Analysis: `PROJECT.md`, `STATUS.md`, 関連artifact。RQから必要証拠を逆算し、method/evaluation/verificationを設計・実行。
 - Specialist: RQ、method、data、evaluationが専門知識を必要とする場合だけ起動。結果は既存正本へ統合し、研究scopeを独立に拡張しない。
 - Evidence Auditor: central claimごとに原典、data provenance、数値、引用、Claim–Evidenceの到達可能性を監査する。

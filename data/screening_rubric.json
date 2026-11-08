@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "rubric_version": "DSR-1.0",
+  "purpose": "Anchored 0-3 scoring of candidate datasets against one data requirement in data/requirements.csv. Score against the requirement, not against the dataset's general reputation.",
+  "scoring_rules": [
+    "Score each criterion separately; do not let a high score on one criterion raise another.",
+    "Pick the highest level whose description is fully met. If unsure between two levels, take the lower and say why in score_rationale.",
+    "score_rationale cites the anchor for every criterion, e.g. 'fit=2: all MUST variables, office only (requirement: office+retail)'.",
+    "Unverified metadata (not checked in the dataset documentation or files) cannot support a level above 1 for quality, access, or reproducibility.",
+    "A candidate scored for several requirements needs a separate row per requirement when the scores differ."
+  ],
+  "criteria": {
+    "score_fit": {
+      "question": "Does the dataset contain the MUST variables in the required context (building type, system, climate, occupancy)?",
+      "levels": {
+        "0": "A MUST variable is absent, or the context is different in a way that changes the phenomenon (e.g. residential data for a commercial HVAC RQ).",
+        "1": "Only some MUST variables, or the context differs enough that use requires a proxy argument.",
+        "2": "All MUST variables present; part of the context differs (e.g. one climate zone of the two required).",
+        "3": "All MUST variables present in the full required context."
+      }
+    },
+    "score_coverage": {
+      "question": "Does the data span the minimum coverage in the requirement (period, seasons, number of buildings/zones/devices)?",
+      "levels": {
+        "0": "Below 50% of the minimum coverage.",
+        "1": "50% to below 100% of the minimum coverage, or a required season/condition missing.",
+        "2": "Meets the minimum coverage.",
+        "3": "Exceeds it enough to allow held-out, sensitivity, or transfer analysis (e.g. an extra year, building, or climate)."
+      }
+    },
+    "score_resolution": {
+      "question": "Do temporal and spatial resolution match the requirement?",
+      "levels": {
+        "0": "Coarser than required and the analysis cannot be done (e.g. monthly bills for an hourly forecasting RQ).",
+        "1": "Coarser than required; a changed aggregation or method could partly answer the RQ.",
+        "2": "Equal to the required resolution.",
+        "3": "Finer than required, allowing an aggregation sensitivity check."
+      }
+    },
+    "score_quality": {
+      "question": "Are provenance and measurement quality documented?",
+      "levels": {
+        "0": "Origin, measurement method, or units unknown.",
+        "1": "Origin known, but sensors, calibration, timezone, or missing-data handling undocumented.",
+        "2": "Units, timezone, measurement points/equipment mapping, and missing-data handling documented.",
+        "3": "Level 2 plus documented calibration or QC procedure, and a peer-reviewed data paper or use in several independent studies."
+      }
+    },
+    "score_access": {
+      "question": "Can the project legally obtain and use the data for this research?",
+      "levels": {
+        "0": "Not obtainable, or the license forbids this research use.",
+        "1": "Needs an application, contract, payment, or access only a human can perform.",
+        "2": "Obtainable after registration, or usable but not redistributable.",
+        "3": "Open license (e.g. CC-BY, CC0, ODbL) with direct download or API access."
+      }
+    },
+    "score_cost": {
+      "question": "How much time, money, and preprocessing does use require? Higher is cheaper.",
+      "levels": {
+        "0": "Not feasible within the project's time or budget.",
+        "1": "Major cost: new measurement campaign, purchase, or extensive cleaning/semantic mapping.",
+        "2": "Moderate preprocessing (format conversion, alignment, point mapping).",
+        "3": "Usable as is or with minor preprocessing."
+      }
+    },
+    "score_reproducibility": {
+      "question": "Can a third party obtain exactly the same data later?",
+      "levels": {
+        "0": "No fixed version; the same data cannot be obtained again (e.g. live dashboard only).",
+        "1": "Obtainable, but without version or persistent identifier.",
+        "2": "Persistent URL or explicit version.",
+        "3": "DOI for a fixed version, and acquisition can be scripted (code/data/acquire.py fetch)."
+      }
+    }
+  },
+  "decision_rules": {
+    "cannot_select": "score_fit = 0 or score_access = 0.",
+    "satisfied_requires": "A requirement is SATISFIED only by a SELECTED candidate with score_fit, score_coverage, and score_resolution all >= 2; otherwise the requirement is PARTIAL or PROXY with notes.",
+    "must_requirement_verification": "A SELECTED candidate for a MUST requirement is re-scored by a second role (verified_by_role) that did not do the first scoring.",
+    "backup": "Keep the best non-selected viable candidate as BACKUP so a later access or quality failure has a recorded alternative.",
+    "rubric_change": "Changing anchors creates a new rubric_version; candidates scored with an older version are re-scored."
+  }
+}

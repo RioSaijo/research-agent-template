@@ -35,8 +35,10 @@ SEARCHES = [
 ]
 CAND = {"candidate_id": "DC-01", "requirement_ids": "DR-01", "name": "x", "search_id": "DS-01",
         "literature_record_id": "", "license": "CC-BY-4.0", "access": "PUBLIC",
-        **{s: "2" for s in MODULE.SCORES}, "decision": "SELECTED", "decision_reason": "best fit",
-        "screener_role": "Data Screener", "data_id": "DATA-01"}
+        **{s: "2" for s in MODULE.SCORES}, "score_rationale": "fit=2: all MUST variables", "rubric_version": "DSR-1.0",
+        "decision": "SELECTED", "decision_reason": "best fit", "screener_role": "Data Screener",
+        "verified_by_role": "Data Verifier", "duplicate_of": "", "data_id": "DATA-01"}
+RUBRIC = __import__("json").loads((ROOT / "data/screening_rubric.json").read_text())
 
 
 def chain(**over):
@@ -46,6 +48,7 @@ def chain(**over):
         "lit_records": [{"record_id": "R1"}], "requirements": [REQ], "searches": SEARCHES, "candidates": [CAND],
         "plan": {"analyses": [{"analysis_id": "AN-01", "rq_id": "RQ-01", "data_ids": ["DATA-01"]}]},
         "manifest": {"datasets": [{"data_id": "DATA-01", "related_rq": ["RQ-01"]}]},
+        "rubric": RUBRIC,
         "root": ROOT,
     }
     base.update(over)
@@ -122,15 +125,17 @@ def test_rq_table_parser(tmp_path):
 
 
 def test_datacite_search_paginates_and_logs_pending_candidates(tmp_path):
-    pages = {
-        1: {"meta": {"total": 3}, "data": [{"attributes": {"doi": "10.1/a", "titles": [{"title": "A"}],
-                                                           "publisher": "P", "rightsList": [{"rightsIdentifier": "cc-by-4.0"}],
-                                                           "publicationYear": 2024}}] * 2},
-        2: {"meta": {"total": 3}, "data": [{"attributes": {"doi": "10.1/b", "titles": [{"title": "B"}]}}]},
-    }
+    first = {"meta": {"total": 3}, "links": {"next": "https://api.datacite.org/dois?page%5Bcursor%5D=NEXT"},
+             "data": [{"attributes": {"doi": "10.5281/a", "titles": [{"title": "A"}], "publisher": "P",
+                                      "rightsList": [{"rightsIdentifier": "cc-by-4.0"}], "publicationYear": 2024}},
+                      {"attributes": {"doi": "10.5281/A", "titles": [{"title": "A again"}]}}]}
+    second = {"meta": {"total": 3}, "links": {},
+              "data": [{"attributes": {"doi": "10.5281/b", "titles": [{"title": "B"}]}}]}
+    seen = []
 
     def fake_fetch(url):
-        return pages[2 if "page%5Bnumber%5D=2" in url else 1]
+        seen.append(url)
+        return second if "cursor%5D=NEXT" in url else first
 
     (tmp_path / "data").mkdir()
     args = MODULE.build_parser().parse_args(["search", "--source", "datacite", "--query", "building load",
@@ -139,9 +144,45 @@ def test_datacite_search_paginates_and_logs_pending_candidates(tmp_path):
     assert MODULE.run_search(args, fetch=fake_fetch) == 0
     cands = MODULE.read_csv(tmp_path / "data/candidates.csv")
     log = MODULE.read_csv(tmp_path / "data/source_search_log.csv")
-    assert len(cands) == 3 and all(c["decision"] == "PENDING" for c in cands)
+    assert "page%5Bcursor%5D=1" in seen[0] and len(seen) == 2
+    assert [c["decision"] for c in cands] == ["PENDING", "DUPLICATE", "PENDING"]
+    assert cands[1]["duplicate_of"] == cands[0]["candidate_id"]
     assert log[0]["result_count"] == "3" and log[0]["retrieved_count"] == "3"
-    assert cands[0]["doi_or_url"] == "https://doi.org/10.1/a"
+    assert cands[0]["doi_or_url"] == "https://doi.org/10.5281/a"
+
+
+def test_zenodo_uses_anonymous_page_size_and_window():
+    urls = []
+
+    def fake_fetch(url):
+        urls.append(url)
+        return {"hits": {"total": 50_000, "hits": [{"doi": f"10.5281/z.{len(urls)}", "metadata": {"title": "t"}}] * 25}}
+
+    hits, total = MODULE.search_zenodo("q", fake_fetch)
+    assert total == 50_000 and len(hits) == 10_000
+    assert all("size=25" in u for u in urls) and len(urls) == 400
+
+
+def test_satisfied_needs_fit_coverage_resolution_two():
+    cand = dict(CAND, score_coverage="1")
+    assert any("use PARTIAL or PROXY" in m for m in messages(candidates=[cand]))
+
+
+def test_must_selection_needs_second_role():
+    cand = dict(CAND, verified_by_role="Data Screener")
+    assert any("verified_by_role other than the screener" in m for m in messages(candidates=[cand]))
+
+
+def test_scores_need_rationale_and_current_rubric():
+    cand = dict(CAND, score_rationale="", rubric_version="DSR-0.9")
+    issues = messages(candidates=[cand])
+    assert any("score_rationale" in m for m in issues)
+    assert any("current DSR-1.0" in m for m in issues)
+
+
+def test_rubric_defines_all_score_levels():
+    assert set(RUBRIC["criteria"]) == set(MODULE.SCORES)
+    assert all(set(c["levels"]) == {"0", "1", "2", "3"} for c in RUBRIC["criteria"].values())
 
 
 def test_repository_templates_pass_incomplete_audit():

@@ -51,13 +51,16 @@ PATHWAY_GROUPS = {
 }
 # Minimum discovery before a MUST requirement leaves SEARCHING.
 MUST_SOURCE_TYPES = {"DATA_REPOSITORY", "LITERATURE_DATA"}
-DECISIONS = {"PENDING", "SELECTED", "BACKUP", "REJECTED"}
+DECISIONS = {"PENDING", "SELECTED", "BACKUP", "REJECTED", "DUPLICATE"}
 SCORES = ["score_fit", "score_coverage", "score_resolution", "score_quality", "score_access",
           "score_cost", "score_reproducibility"]
+# A SATISFIED requirement needs a selected candidate at or above these levels; otherwise PARTIAL or PROXY.
+SATISFIED_MINIMUM = {"score_fit": 2, "score_coverage": 2, "score_resolution": 2}
+RUBRIC_PATH = "data/screening_rubric.json"
 CANDIDATE_FIELDS = ["candidate_id", "requirement_ids", "name", "source", "doi_or_url", "search_id",
                     "literature_record_id", "license", "access", "variables_covered", "temporal_resolution",
-                    "coverage", "context", "provenance_quality", *SCORES, "decision", "decision_reason",
-                    "screener_role", "data_id"]
+                    "coverage", "context", "provenance_quality", *SCORES, "score_rationale", "rubric_version",
+                    "decision", "decision_reason", "screener_role", "verified_by_role", "duplicate_of", "data_id"]
 SEARCH_FIELDS = ["search_id", "search_date", "role", "requirement_ids", "source", "source_type", "query",
                  "filters", "result_count", "retrieved_count", "file_or_url", "access_limitation", "notes"]
 USER_AGENT = "research-agent-template/1.0 (data discovery)"
@@ -131,6 +134,7 @@ def load_chain(root: Path) -> dict:
         "candidates": read_csv(root / "data/candidates.csv"),
         "plan": json.loads(plan_path.read_text(encoding="utf-8")) if plan_path.exists() else {},
         "manifest": json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {},
+        "rubric": json.loads((root / RUBRIC_PATH).read_text(encoding="utf-8")) if (root / RUBRIC_PATH).exists() else {},
         "root": root,
     }
 
@@ -206,12 +210,27 @@ def audit_chain(chain: dict, strict: bool = True) -> list[tuple[str, str]]:
         if got < hits and not search.get("notes"):
             issues.append((sid, f"{hits} hits but {got} retrieved without justification (no result cap)"))
 
+    rubric = chain.get("rubric", {})
+    rubric_version = rubric.get("rubric_version", "")
+    if rubric:
+        criteria = set(rubric.get("criteria", {}))
+        if criteria != set(SCORES):
+            issues.append(("RUBRIC", f"rubric criteria differ from score columns: {sorted(criteria ^ set(SCORES))}"))
+        for name, spec in rubric.get("criteria", {}).items():
+            if set(spec.get("levels", {})) != {"0", "1", "2", "3"}:
+                issues.append(("RUBRIC", f"{name} must define levels 0-3"))
+    must_reqs = {rid for rid, r in requirements.items() if r.get("priority") == "MUST"}
+    candidate_ids = {c.get("candidate_id", "") for c in candidates}
     selected_by_req: dict[str, list[dict]] = defaultdict(list)
     for cand in candidates:
         cid = cand.get("candidate_id", "UNKNOWN")
         decision = cand.get("decision", "")
         if decision not in DECISIONS:
             issues.append((cid, f"invalid decision: {decision}"))
+        if decision == "DUPLICATE":
+            if cand.get("duplicate_of") not in candidate_ids - {cid}:
+                issues.append((cid, "DUPLICATE without a valid duplicate_of"))
+            continue
         if not (cand.get("search_id") in searches or cand.get("literature_record_id") in lit_record_ids):
             issues.append((cid, "candidate not traceable to a data search or literature record"))
         for rid in ids(cand.get("requirement_ids", "")):
@@ -223,6 +242,10 @@ def audit_chain(chain: dict, strict: bool = True) -> list[tuple[str, str]]:
             for field in SCORES:
                 if cand.get(field, "") not in {"0", "1", "2", "3"}:
                     issues.append((cid, f"{field} must be 0-3 once screened"))
+            if not cand.get("score_rationale"):
+                issues.append((cid, "screened candidate has no score_rationale citing rubric anchors"))
+            if rubric_version and cand.get("rubric_version") != rubric_version:
+                issues.append((cid, f"scored with rubric {cand.get('rubric_version') or 'none'}, current {rubric_version}"))
         if decision == "REJECTED" and not cand.get("decision_reason"):
             issues.append((cid, "rejected candidate has no decision_reason"))
         if decision == "SELECTED":
@@ -230,6 +253,10 @@ def audit_chain(chain: dict, strict: bool = True) -> list[tuple[str, str]]:
                 issues.append((cid, "selected candidate scores 0 on fit or access"))
             if placeholder(cand.get("license", "")) or placeholder(cand.get("access", "")):
                 issues.append((cid, "selected candidate has undefined license/access"))
+            if set(ids(cand.get("requirement_ids", ""))) & must_reqs:
+                verifier = cand.get("verified_by_role", "")
+                if not verifier or verifier == cand.get("screener_role"):
+                    issues.append((cid, "selection for a MUST requirement needs verified_by_role other than the screener"))
             did = cand.get("data_id", "")
             if did not in datasets:
                 issues.append((cid, f"selected candidate has no manifest dataset: {did or 'none'}"))
@@ -270,6 +297,12 @@ def audit_chain(chain: dict, strict: bool = True) -> list[tuple[str, str]]:
             if not satisfied_by:
                 issues.append((rid, f"{status} without satisfied_by data_id"))
             selected_ids = {c.get("data_id") for c in selected_by_req[rid]}
+            if status == "SATISFIED":
+                for cand in selected_by_req[rid]:
+                    low = [f for f, m in SATISFIED_MINIMUM.items() if cand.get(f, "0").isdigit() and int(cand[f]) < m]
+                    if low:
+                        issues.append((rid, f"SATISFIED but {cand.get('candidate_id')} scores below 2 on "
+                                            f"{', '.join(low)}; use PARTIAL or PROXY"))
             for did in satisfied_by:
                 if did not in datasets:
                     issues.append((rid, f"satisfied_by {did} not in data/manifest.json"))
@@ -346,11 +379,13 @@ def http_json(url: str) -> dict:
         return json.load(response)
 
 
-def search_datacite(query: str, fetch: Fetcher, page_size: int = 100, max_pages: int = 50):
+def search_datacite(query: str, fetch: Fetcher, page_size: int = 100, max_pages: int = 1000):
+    """Cursor pagination (page-number pagination is limited to the first 10,000 records)."""
     hits, total, page = [], 0, 1
-    while page <= max_pages:
-        params = {"query": query, "resource-type-id": "dataset", "page[size]": page_size, "page[number]": page}
-        data = fetch("https://api.datacite.org/dois?" + urllib.parse.urlencode(params))
+    params = {"query": query, "resource-type-id": "dataset", "page[size]": page_size, "page[cursor]": 1}
+    url = "https://api.datacite.org/dois?" + urllib.parse.urlencode(params)
+    while url and page <= max_pages:
+        data = fetch(url)
         total = int(data.get("meta", {}).get("total", 0))
         batch = data.get("data", [])
         for item in batch:
@@ -364,12 +399,18 @@ def search_datacite(query: str, fetch: Fetcher, page_size: int = 100, max_pages:
                          "coverage": str(attr.get("publicationYear", ""))})
         if not batch or len(hits) >= total:
             break
+        url = data.get("links", {}).get("next", "")
         page += 1
     return hits, total
 
 
-def search_zenodo(query: str, fetch: Fetcher, page_size: int = 100, max_pages: int = 50):
+ZENODO_PAGE_SIZE = 25  # anonymous API rejects larger pages
+ZENODO_WINDOW = 10_000  # deeper pages are rejected; split the query (e.g. publication_date ranges)
+
+
+def search_zenodo(query: str, fetch: Fetcher, page_size: int = ZENODO_PAGE_SIZE, max_pages: int = 1000):
     hits, total, page = [], 0, 1
+    max_pages = min(max_pages, ZENODO_WINDOW // page_size)
     while page <= max_pages:
         params = {"q": query, "type": "dataset", "size": page_size, "page": page}
         data = fetch("https://zenodo.org/api/records?" + urllib.parse.urlencode(params))
@@ -393,6 +434,11 @@ def search_zenodo(query: str, fetch: Fetcher, page_size: int = 100, max_pages: i
 ADAPTERS = {"datacite": search_datacite, "zenodo": search_zenodo}
 
 
+def doi_key(value: str) -> str:
+    match = re.search(r"10\.\d{4,9}/\S+", value or "", flags=re.IGNORECASE)
+    return match.group(0).lower().rstrip(".") if match else ""
+
+
 def run_search(args: argparse.Namespace, fetch: Fetcher = http_json) -> int:
     root = Path(args.root)
     log_path, cand_path = root / "data/source_search_log.csv", root / "data/candidates.csv"
@@ -403,18 +449,34 @@ def run_search(args: argparse.Namespace, fetch: Fetcher = http_json) -> int:
     raw.parent.mkdir(parents=True, exist_ok=True)
     raw.write_text(json.dumps({"query": args.query, "total": total, "hits": hits}, ensure_ascii=False, indent=2) + "\n",
                    encoding="utf-8")
-    existing = len(read_csv(cand_path))
-    rows = [{**hit, "candidate_id": f"DC-{existing + i:05d}", "requirement_ids": args.requirement_ids,
-             "search_id": args.search_id, "decision": "PENDING"} for i, hit in enumerate(hits, start=1)]
+    existing_rows = read_csv(cand_path)
+    by_doi = {doi_key(c.get("doi_or_url", "")): c.get("candidate_id", "") for c in existing_rows
+              if doi_key(c.get("doi_or_url", "")) and c.get("decision") != "DUPLICATE"}
+    rows, duplicates = [], 0
+    for i, hit in enumerate(hits, start=1):
+        cid = f"DC-{len(existing_rows) + i:05d}"
+        row = {**hit, "candidate_id": cid, "requirement_ids": args.requirement_ids,
+               "search_id": args.search_id, "decision": "PENDING"}
+        key = doi_key(hit.get("doi_or_url", ""))
+        if key and key in by_doi:
+            row.update(decision="DUPLICATE", duplicate_of=by_doi[key])
+            duplicates += 1
+        elif key:
+            by_doi[key] = cid
+        rows.append(row)
     append_rows(cand_path, CANDIDATE_FIELDS, rows)
     append_rows(log_path, SEARCH_FIELDS, [{
         "search_id": args.search_id, "search_date": datetime.now(timezone.utc).date().isoformat(),
         "role": args.role, "requirement_ids": args.requirement_ids, "source": args.source,
         "source_type": "DATA_REPOSITORY", "query": args.query, "filters": "resource type = dataset",
         "result_count": total, "retrieved_count": len(hits), "file_or_url": str(raw.relative_to(root)),
-        "notes": "" if len(hits) >= total else f"stopped at max_pages={args.max_pages}; split the query",
+        "notes": "; ".join(filter(None, [
+            f"{duplicates} DOI duplicates of earlier candidates" if duplicates else "",
+            "" if len(hits) >= total else "API window/page limit reached; split the query (date ranges, terms)",
+        ])),
     }])
-    print(f"[discovery] {args.source}: {total} hits, {len(hits)} logged as PENDING candidates")
+    print(f"[discovery] {args.source}: {total} hits, {len(hits)} retrieved, {duplicates} duplicates, "
+          f"{len(hits) - duplicates} new PENDING candidates")
     return 0
 
 

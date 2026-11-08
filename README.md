@@ -82,7 +82,8 @@ research-agent-template/
 │   ├── manifest.json        # raw data本体は data/raw/（gitignored）
 │   ├── requirements.csv
 │   ├── source_search_log.csv
-│   └── candidates.csv
+│   ├── candidates.csv
+│   └── screening_rubric.json  # candidate dataset採点基準（0-3 anchor）
 ├── evidence/
 │   ├── analysis_plan.json
 │   ├── runs.csv

@@ -144,6 +144,7 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Reasonable acquisition path exists
 - [ ] Every RQ has MUST data requirements derived from gap, metric, criterion, and baseline (`data/requirements.csv`)
 - [ ] Each MUST requirement searched in data repositories and in data used by included studies; other pathways logged
+- [ ] Candidate datasets scored against `data/screening_rubric.json` with cited anchors; MUST selections re-scored by a second role
 - [ ] Candidate datasets screened and scored; selections have license, access, and manifest entry
 - [ ] `DATA_INSUFFICIENT` declared only after every pathway was assessed
 - [ ] Strict `code/data/discovery.py audit` passes; `results/traceability/chain.json` generated
@@ -225,6 +226,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-006 | 2026-11-08 | ALL | Dataset screening rubric | Unanchored 0-3 scores | Anchored rubric DSR-1.0, rationale, second-role verification, SATISFIED minimum scores, cross-source DOI dedupe | Scores varied by screener and could not be audited | Live DataCite/Zenodo test and rubric review | Data selection becomes reproducible across screeners | Template change |
 | D-005 | 2026-11-08 | ALL | Problem-to-data chain | Gap, RQ, and data needs linked only by prose | gaps.csv, requirements.csv, source search log, candidate screening, chain audit and matrix | Gap identification and data judgement, search, and selection were not traceable | Template review | Gate 1/2 gap and data decisions become auditable | Template change |
 | D-004 | 2026-11-08 | ALL | Data and analysis toolkit | Manual data inventory and ad hoc analysis | Data manifest, acquisition with hashes, automated quality profile, shared statistics, recorded runs | Data collection and quantitative analysis lacked reproducible tooling | Template review | Gate 2/3 data and analysis items become machine-checkable | Template change |
 | D-003 | 2026-11-08 | ALL | Gate 3 evidence control | Self-declared 7-item checklist | Locked analysis plan, run/check/claim registries, strict machine audit | Gate 3 lacked pre-registration, provenance hashes, check coverage, role separation, and independence levels | Template review | Gate 3 becomes per-claim and machine-verifiable | Template change |
