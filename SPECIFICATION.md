@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.3.0
+Version: 1.4.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -26,6 +26,7 @@ Version: 1.3.0
 - `STATUS.md`: 現在状態、task、Claim Evidence Table、decision log。
 - `LITERATURE.md`: 研究判断に必要な文献map。
 - `literature/`: systematic reviewのprotocol、journal registry、search log、record、screening、extractionのmachine-readable artifact。role別の会話記録は置かない。
+- `evidence/`: Gate 3のmachine-readable正本。`analysis_plan.json`（事前固定したanalysis、criterion、required check、independence level）、`runs.csv`（実行provenanceとhash）、`checks.csv`（challenge/verification check）、`claims.csv`（claim registry）。
 - `REFEREE.md`: 独立した反証優先レビュー。
 - `paper/`: publication artifact。`main.tex`、`refs.bib`、`figures/`を含む。
 - `code/`: 再現可能な処理・実装。必要時のみ`preprocessing/`、`analysis/`、`simulation/`、`models/`、`integration/`、`utilities/`を作る。
@@ -84,7 +85,21 @@ Evidence Typeは`LITERATURE / STANDARD / MEASUREMENT / BMS_DATA / EXPERIMENT / S
 
 Verificationは`NOT_VERIFIED / INTERNALLY_VERIFIED / INDEPENDENTLY_VERIFIED`、Claim Statusは`OPEN / PRELIMINARY / SUPPORTED / PARTIALLY_SUPPORTED / UNSUPPORTED`とする。`SUPPORTED`には事前定義したEvaluation Criterionの充足が必要である。Evidenceが存在してもClaimが支持されるとは限らず、Claimが支持されても独立検証済みとは限らない。独立検証は全caseで必須ではなく、設計上必要なclaimに割り当てる。
 
-`STATUS.md`のClaim Evidence TableでClaim ID、RQ、Claim、Evidence Type、Primary Evidence、Independent Check、Verification、Claim Status、Refereeを追跡する。
+`STATUS.md`のClaim Evidence TableでClaim ID、RQ、Claim、Evidence Type、Primary Evidence、Independent Check、Verification、Claim Status、Refereeを追跡する。machine-readableな正本は`evidence/claims.csv`とし、両者の不一致はGate 3 failureとする。
+
+### 8.1 Pre-registered analysis and evidence registry
+
+Gate 2の最後に`evidence/analysis_plan.json`を`LOCKED`にする。lockはconfirmatory run（`PRIMARY / REPRODUCTION / VERIFICATION / SENSITIVITY`）より前でなければならず、lock前の実行は`EXPLORATORY`としてclaimの支持に使わない。criterion、claim type、required check、independence levelのlock後変更はamendmentとDecision Logに残し、影響するrunを再実行する。
+
+claim typeは`DESCRIPTIVE / ASSOCIATIONAL / CAUSAL / PREDICTIVE / COMPARATIVE / GENERALIZATION / FEASIBILITY`とし、主張の強さをevidence designの範囲に留める。claim typeごとの最低checkはplanで省略できない: 全claimに`DATA_QUALITY`、central claimに`ALTERNATIVE_EXPLANATION`と`SENSITIVITY`、`CAUSAL`に`FALSIFICATION`、`PREDICTIVE`に`LEAKAGE`と`BASELINE`、`COMPARATIVE`に`BASELINE`、`GENERALIZATION`に`TRANSFER`。
+
+criterionは`>= / > / <= / < / == / BETWEEN / MANUAL`で記述する。数値criterionはauditがobserved valueから自動判定し、自己申告`criterion_met`との矛盾をfailureとする。MANUAL criterionは記述を事前固定し、判定には別roleのpassing independent checkを要する。
+
+verification independence levelは`NONE < RERUN < ALTERNATIVE_METHOD < INDEPENDENT_IMPLEMENTATION < INDEPENDENT_DATA < EXTERNAL`。同一code・同一dataの再実行（RERUN）は再現性確認でありindependent verificationではない。`INDEPENDENTLY_VERIFIED`にはprimary analystと異なるroleによる`INDEPENDENT_IMPLEMENTATION`以上を要し、planがそのlevelを要求するclaimはそれまで`SUPPORTED`にできない。
+
+`ALTERNATIVE_EXPLANATION / FALSIFICATION / NEGATIVE_CONTROL / INDEPENDENT_VERIFICATION`はprimary analystと別roleが実施する。各runはgit commit、command、environment、seed、input/outputのSHA-256を記録し、Gate 3判定時にhash一致でstale resultを検出する。pre-registerされていないpost-hoc claimは`PRELIMINARY`を上限とし、pre-registerしたclaimとplanned analysisはnegative resultを含めすべて報告する。
+
+`code/evidence/evidence_audit.py`がこれらのruleを検査し、`results/evidence/gate3_report.json`にclaim別のGate 3判定を出力する。CIは進行中研究を許容する`--allow-incomplete`で構造を検査し、Gate 3判定は`--allow-incomplete`なし、`--verify-files`付きのstrict auditで行う。
 
 ## 9. Literature and sources
 
@@ -119,8 +134,8 @@ RefereeはTopic Review、Scientific and Technical Review、Publication Readiness
 研究の深度はagent数ではなく、最低限次の異なる検討で担保する。(1) closest/contradictory literature、(2) methodとbaseline/ablationへの敵対的検討、(3) evidence/provenance監査、(4) alternative explanationとfalsification、(5) reproducibility、(6)独立Refereeとresponse再査読。中心claimごとに適用結果をartifactへ残し、同じ文章の反復を独立評価とみなさない。
 
 - Gate 1 Research Definition: background、motivation、systematic review protocol、検索式査読、database/journal coverage、deduplication、dual screening、quality appraisal、citation chasing、PRISMA整合、gap challenge、文献で支えたproblem、RQ、closest work、gap、reasonable scope。
-- Gate 2 Methodology Readiness: RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan。
-- Gate 3 Evidence and Verification: primary evidence、provenance、criterion適用、claim status、verification、alternative explanations、data quality。
+- Gate 2 Methodology Readiness: RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan、`evidence/analysis_plan.json`のlock。
+- Gate 3 Evidence and Verification（claim別）: lock後のconfirmatory runによるprimary evidence、hash付きprovenance、事前criterionの適用と自動判定、uncertainty、claim typeごとの最低check、challengeとverificationのrole分離、planどおりのindependence level、post-hoc claimの制限、negative resultを含む全planned analysisの報告、STATUS.mdとの一致、strict evidence auditのissueなし。
 - Gate 4 Publication Readiness: Claim–Evidence整合、全CRITICAL/MAJORへのResponse to Referee、独立再査読、figure/table追跡、reference、limitations、支持されたconclusion、manuscript整合。
 - Gate 5 Report Delivery: 引用番号付きPDF生成、全page render QA、Gmail attachment、送信成功、delivery record。
 

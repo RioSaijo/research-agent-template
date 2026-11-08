@@ -4,8 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py)
-required_dirs=(paper/figures code results tests literature)
+required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py)
+required_dirs=(paper/figures code results tests literature evidence)
 
 for path in "${required_files[@]}"; do
   [[ -f "$path" ]] || { echo "[check] missing required file: $path" >&2; exit 1; }
@@ -37,6 +37,15 @@ grep -Fq "### Gate 5 — Report Delivery Gate" STATUS.md || { echo "[check] STAT
 grep -Fq '\bibliographystyle{unsrt}' paper/main.tex || { echo "[check] paper/main.tex must use numeric first-citation bibliography style" >&2; exit 1; }
 grep -Fq '\input{body}' paper/main.tex || { echo "[check] paper/main.tex must delegate adaptive structure to paper/body.tex" >&2; exit 1; }
 grep -Fq 'Citation format: NUMERIC_IN_TEXT' STATUS.md || { echo "[check] numeric in-text citation requirement missing" >&2; exit 1; }
+python_bin=""
+for candidate in python python3 py; do
+  if command -v "$candidate" >/dev/null 2>&1; then python_bin="$candidate"; break; fi
+done
+if [[ -n "$python_bin" ]]; then
+  "$python_bin" code/evidence/evidence_audit.py audit --allow-incomplete --status STATUS.md
+else
+  echo "[check] Python not found; evidence artifacts were not audited" >&2
+fi
 if command -v python >/dev/null 2>&1; then
   python code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json --search-log literature/search_log.csv
 elif command -v python3 >/dev/null 2>&1; then

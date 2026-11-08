@@ -77,13 +77,19 @@ research-agent-template/
 │   ├── records.csv
 │   ├── screening_decisions.csv
 │   └── extraction.csv
+├── evidence/
+│   ├── analysis_plan.json
+│   ├── runs.csv
+│   ├── checks.csv
+│   └── claims.csv
 ├── paper/
 │   ├── main.tex
 │   ├── body.tex
 │   ├── refs.bib
 │   └── figures/
 ├── code/
-│   └── literature/systematic_review.py
+│   ├── literature/systematic_review.py
+│   └── evidence/evidence_audit.py
 ├── results/
 ├── tests/
 ├── scripts/check.sh
@@ -96,7 +102,7 @@ research-agent-template/
 
 1. Research Definition Gate
 2. Methodology Readiness Gate
-3. Evidence and Verification Gate
+3. Evidence and Verification Gate（事前固定したanalysis plan、hash付きrun記録、claim type別check、検証independence levelをclaimごとにmachine audit）
 4. Publication Readiness Gate
 5. Report Delivery Gate
 

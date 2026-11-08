@@ -117,6 +117,17 @@ Evidence Type、Verification、Claim Statusは`SPECIFICATION.md`のenumだけを
 
 code、processed data、result、figure/table、paper sectionをClaim IDとRQ IDへ結びつける。seed、software version、parameter、manual processing、negative resultを残す。
 
+### Gate 3 evidence control
+
+`evidence/`をGate 3のmachine-readable正本とし、`STATUS.md`のClaim Evidence Tableはその要約として一致させる。
+
+1. Methodology roleはconfirmatory runの前に`evidence/analysis_plan.json`をlockする。各analysisにclaim ID、claim type（`DESCRIPTIVE / ASSOCIATIONAL / CAUSAL / PREDICTIVE / COMPARATIVE / GENERALIZATION / FEASIBILITY`）、metric、数値またはMANUAL criterion、baseline、expected direction、uncertainty method、required check、verification independence levelを固定する。lock後の変更はamendmentとして旧値、新値、理由、再分析要否を残す。
+2. Analysis roleはすべての実行を`evidence/runs.csv`へ記録する（run type、role、時刻、git commit、command、environment、seed、input/output pathとSHA-256）。lock前のrunは`EXPLORATORY`だけとし、confirmatory evidenceに使わない。
+3. Methods ChallengerとVerificationは`evidence/checks.csv`へcheckを記録する。`ALTERNATIVE_EXPLANATION`、`FALSIFICATION`、`NEGATIVE_CONTROL`、`INDEPENDENT_VERIFICATION`はprimary analystと別roleが行う。
+4. claim typeごとの最低checkはplanから削除できない。DATA_QUALITYは常に、central claimはALTERNATIVE_EXPLANATIONとSENSITIVITY、CAUSALはFALSIFICATION、PREDICTIVEはLEAKAGEとBASELINE、COMPARATIVEはBASELINE、GENERALIZATIONはTRANSFERを要する。
+5. independence levelは`NONE < RERUN < ALTERNATIVE_METHOD < INDEPENDENT_IMPLEMENTATION < INDEPENDENT_DATA < EXTERNAL`とする。RERUNとALTERNATIVE_METHODは`INTERNALLY_VERIFIED`まで、`INDEPENDENTLY_VERIFIED`には別roleによるINDEPENDENT_IMPLEMENTATION以上を要する。
+6. Evidence Auditorは`python code/evidence/evidence_audit.py report --status STATUS.md --verify-files`を`--allow-incomplete`なしで実行し、全issueを解消するか、claimを縮小・`PARTIALLY_SUPPORTED`・`UNSUPPORTED`へ下げる。pre-registerされていないclaimは`PRELIMINARY`を上限とし、negative resultを`claims.csv`から削除しない。
+
 ## 8. Referee protocol
 
 Topic Review、Scientific and Technical Review、Publication Readiness Reviewを行う。各roundは次の順にする。

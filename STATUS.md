@@ -51,6 +51,10 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-013 | RQ-01 | quality appraisalとevidence extractionを行う | gap synthesisの証拠を構造化する | Quality Appraiser / Evidence Extractor | T-012 | Included studies | literature/extraction.csv | BLOCKED | P0 | Screening incomplete | Gate 1 |
 | T-014 | RQ-01 | citation chasingとgap challengeを完了する | 検索漏れと偽gapを反証する | Citation Chaser / Gap Analyst / Gap Challenger | T-013 | Included studies / citation graph | LITERATURE.md | BLOCKED | P0 | Extraction incomplete | Gate 1 |
 | T-015 | RQ-01 | systematic reviewを独立監査する | PRISMA、coverage、判定、gap traceabilityを確認する | Review Auditor | T-014 | Review artifacts | LITERATURE.md / results/literature/prisma_flow.json | BLOCKED | P0 | Gap challenge incomplete | Gate 1 |
+| T-016 | RQ-01 | analysis planをlockする | 結果を見る前にcriterion、claim type、required check、independence levelを固定する | Methodology Role | T-004 | PROJECT.md evaluation plan | evidence/analysis_plan.json | BLOCKED | P1 | Methodology incomplete | Gate 2 |
+| T-017 | RQ-01 | primary analysisを実行しrunを記録する | provenanceとhash付きprimary evidenceを作る | Analysis Role | T-016 | Data / code | evidence/runs.csv / results/ | BLOCKED | P1 | Plan not locked | Gate 3 |
+| T-018 | RQ-01 | challenge checkを実施する | 代替説明、sensitivity、falsification、leakageを分析者以外が検査する | Methods Challenger | T-017 | Primary run | evidence/checks.csv | BLOCKED | P1 | No primary run | Gate 3 |
+| T-019 | RQ-01 | 独立検証とGate 3 auditを行う | plan指定のindependence levelでclaimを検証し、strict auditを通す | Verification / Evidence Auditor | T-018 | Checks / runs | evidence/claims.csv / results/evidence/gate3_report.json | BLOCKED | P1 | Checks incomplete | Gate 3 |
 
 ## Blocked Tasks
 
@@ -134,16 +138,29 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Evaluation Criterion defined
 - [ ] Baseline / Reference defined when required
 - [ ] Verification Plan defined
+- [ ] `evidence/analysis_plan.json` LOCKED (claim type, criterion, required checks, independence level) before any confirmatory run
 
 ### Gate 3 — Evidence and Verification Gate
 
-- [ ] Primary Evidence exists
-- [ ] Evidence provenance traceable
-- [ ] Evaluation Criterion applied
-- [ ] Claim Status assigned
-- [ ] Verification performed
-- [ ] Alternative explanations examined
-- [ ] Critical data quality issues addressed
+Per-claim gate. Machine-readable source: `evidence/`. Judge with
+`python code/evidence/evidence_audit.py report --status STATUS.md --verify-files`
+(no `--allow-incomplete`); output `results/evidence/gate3_report.json`.
+
+- [ ] Analysis plan locked before every confirmatory run; amendments recorded with re-analysis impact
+- [ ] Every planned analysis has a PRIMARY run; every pre-registered claim reported, including negative results
+- [ ] Every run records git commit, command, environment, seed, and input/output SHA-256
+- [ ] Recorded inputs/outputs exist and hashes match (no stale results)
+- [ ] Criterion applied exactly as pre-registered; numeric criteria auto-evaluated without contradiction
+- [ ] Uncertainty reported for every SUPPORTED / PARTIALLY_SUPPORTED claim
+- [ ] Claim-type minimum checks passed (DATA_QUALITY; central: ALTERNATIVE_EXPLANATION, SENSITIVITY; CAUSAL: FALSIFICATION; PREDICTIVE: LEAKAGE, BASELINE; COMPARATIVE: BASELINE; GENERALIZATION: TRANSFER)
+- [ ] Challenge and independent verification performed by roles other than the primary analyst
+- [ ] Verification level matches the plan (RERUN is reproduction, not independent verification)
+- [ ] Post-hoc claims kept at PRELIMINARY or lower
+- [ ] FAIL / INCONCLUSIVE checks record their impact on the claim
+- [ ] STATUS.md Claim Evidence Table matches `evidence/claims.csv`
+- [ ] Strict evidence audit returns no issues
+
+Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when criterion or claim type must change
 
 ### Gate 4 — Publication Readiness Gate
 
@@ -181,12 +198,14 @@ Failure state: `TRIAGE / REFRAMING`
 
 - Repository initialized from specification.
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
+- Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
 
 ## Decision Log
 
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-003 | 2026-11-08 | ALL | Gate 3 evidence control | Self-declared 7-item checklist | Locked analysis plan, run/check/claim registries, strict machine audit | Gate 3 lacked pre-registration, provenance hashes, check coverage, role separation, and independence levels | Template review | Gate 3 becomes per-claim and machine-verifiable | Template change |
 | D-002 | 2026-09-16 | ALL | Completion workflow | Gate 4 ended at manuscript readiness | Gate 5 requires verified PDF and Gmail delivery | User required theme-to-email execution, journal search, and numeric citations | Explicit user instruction | Adds mandatory search, citation, rendering, and delivery controls | Approved |
 
 ## Next Actions

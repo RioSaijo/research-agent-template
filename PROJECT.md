@@ -123,6 +123,8 @@
 |---|---|---|---|---|---|---|
 | RQ-01 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 | 要検討 |
 
+この表の確定値はGate 2の最後に`evidence/analysis_plan.json`へ転記してlockする。lock後の変更はplanのamendmentとして記録する。
+
 ## Data Inventory and Provenance
 
 行をdata source/assetごとに追加する。
