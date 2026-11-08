@@ -51,6 +51,10 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-013 | RQ-01 | quality appraisalとevidence extractionを行う | gap synthesisの証拠を構造化する | Quality Appraiser / Evidence Extractor | T-012 | Included studies | literature/extraction.csv | BLOCKED | P0 | Screening incomplete | Gate 1 |
 | T-014 | RQ-01 | citation chasingとgap challengeを完了する | 検索漏れと偽gapを反証する | Citation Chaser / Gap Analyst / Gap Challenger | T-013 | Included studies / citation graph | LITERATURE.md | BLOCKED | P0 | Extraction incomplete | Gate 1 |
 | T-015 | RQ-01 | systematic reviewを独立監査する | PRISMA、coverage、判定、gap traceabilityを確認する | Review Auditor | T-014 | Review artifacts | LITERATURE.md / results/literature/prisma_flow.json | BLOCKED | P0 | Gap challenge incomplete | Gate 1 |
+| T-022 | RQ-01 | gapを`literature/gaps.csv`へ記録し独立にchallengeする | RQの根拠となるgapを反証可能にする | Gap Analyst / Gap Challenger | T-013 | Extraction / search log | literature/gaps.csv | BLOCKED | P0 | Extraction incomplete | Gate 1 |
+| T-023 | RQ-01 | data requirementを逆算する | RQに必要なdataだけを定義する | Data Requirement Role | T-022, T-016 | Gaps / analysis plan | data/requirements.csv | BLOCKED | P1 | Gap not accepted | Gate 2 |
+| T-024 | RQ-01 | pathway別にdata sourceを探索する | public/literature/API/measurement/simulation/proxyを網羅する | Data Source Scout | T-023 | Repositories / connectors / web | data/source_search_log.csv / data/candidates.csv | BLOCKED | P1 | No requirements | Gate 2 |
+| T-025 | RQ-01 | candidate datasetを採点・選定する | fit、coverage、quality、access、reproducibilityで選ぶ | Data Screener | T-024 | Candidates | data/candidates.csv / data/manifest.json | BLOCKED | P1 | No candidates | Gate 2 |
 | T-020 | RQ-01 | data manifestを作成しraw dataを取得・登録する | provenanceとhash付きでdataを確保する | Data Requirement Role | T-003 | Data source / access | data/manifest.json / data/raw/ | BLOCKED | P1 | Data requirement incomplete | Gate 2 |
 | T-021 | RQ-01 | pre-use data quality profileを実行する | unit、時刻、欠損、range、sensor異常を分析前に検出する | Data Requirement Role | T-020 | Raw data | results/data_quality/ / evidence/checks.csv | BLOCKED | P1 | No data | Gate 2 |
 | T-016 | RQ-01 | analysis planをlockする | 結果を見る前にcriterion、claim type、required check、independence levelを固定する | Methodology Role | T-004 | PROJECT.md evaluation plan | evidence/analysis_plan.json | BLOCKED | P1 | Methodology incomplete | Gate 2 |
@@ -119,6 +123,8 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 - [ ] Backward/forward citation chasing and update search completed
 - [ ] PRISMA counts agree with machine-readable records
 - [ ] Gap candidates passed independent Gap Challenger review
+- [ ] `literature/gaps.csv` records supporting/contradicting appraised studies, search IDs, and minimum closing design
+- [ ] Every RQ references an ACCEPTED / NARROWED gap in PROJECT.md
 - [ ] Background defined
 - [ ] Motivation defined
 - [ ] Problem Definition supported by literature
@@ -136,6 +142,11 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] RQ Data Method mapping complete
 - [ ] Required Data identified
 - [ ] Reasonable acquisition path exists
+- [ ] Every RQ has MUST data requirements derived from gap, metric, criterion, and baseline (`data/requirements.csv`)
+- [ ] Each MUST requirement searched in data repositories and in data used by included studies; other pathways logged
+- [ ] Candidate datasets screened and scored; selections have license, access, and manifest entry
+- [ ] `DATA_INSUFFICIENT` declared only after every pathway was assessed
+- [ ] Strict `code/data/discovery.py audit` passes; `results/traceability/chain.json` generated
 - [ ] Every dataset has a `data/manifest.json` entry (source, access, license, units, valid ranges, timezone, interval)
 - [ ] Raw files acquired/registered with SHA-256 via `code/data/acquire.py`
 - [ ] Pre-use quality profile run for every dataset; WARN/FAIL dispositions recorded
@@ -207,12 +218,14 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 - Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
 - Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
+- Problem-to-data chain added: machine-readable gaps, data requirements, data source search, candidate screening, and chain audit.
 
 ## Decision Log
 
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-005 | 2026-11-08 | ALL | Problem-to-data chain | Gap, RQ, and data needs linked only by prose | gaps.csv, requirements.csv, source search log, candidate screening, chain audit and matrix | Gap identification and data judgement, search, and selection were not traceable | Template review | Gate 1/2 gap and data decisions become auditable | Template change |
 | D-004 | 2026-11-08 | ALL | Data and analysis toolkit | Manual data inventory and ad hoc analysis | Data manifest, acquisition with hashes, automated quality profile, shared statistics, recorded runs | Data collection and quantitative analysis lacked reproducible tooling | Template review | Gate 2/3 data and analysis items become machine-checkable | Template change |
 | D-003 | 2026-11-08 | ALL | Gate 3 evidence control | Self-declared 7-item checklist | Locked analysis plan, run/check/claim registries, strict machine audit | Gate 3 lacked pre-registration, provenance hashes, check coverage, role separation, and independence levels | Template review | Gate 3 becomes per-claim and machine-verifiable | Template change |
 | D-002 | 2026-09-16 | ALL | Completion workflow | Gate 4 ended at manuscript readiness | Gate 5 requires verified PDF and Gmail delivery | User required theme-to-email execution, journal search, and numeric citations | Explicit user instruction | Adds mandatory search, citation, rendering, and delivery controls | Approved |

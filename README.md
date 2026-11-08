@@ -76,9 +76,13 @@ research-agent-template/
 │   ├── search_log.csv
 │   ├── records.csv
 │   ├── screening_decisions.csv
-│   └── extraction.csv
+│   ├── extraction.csv
+│   └── gaps.csv
 ├── data/
-│   └── manifest.json        # raw data本体は data/raw/（gitignored）
+│   ├── manifest.json        # raw data本体は data/raw/（gitignored）
+│   ├── requirements.csv
+│   ├── source_search_log.csv
+│   └── candidates.csv
 ├── evidence/
 │   ├── analysis_plan.json
 │   ├── runs.csv
@@ -92,6 +96,7 @@ research-agent-template/
 ├── code/
 │   ├── literature/systematic_review.py
 │   ├── evidence/evidence_audit.py
+│   ├── data/discovery.py    # gap→RQ→requirement→candidate chain、repository検索
 │   ├── data/acquire.py      # 取得・登録・hash検証
 │   ├── data/quality.py      # 使用前data quality profile
 │   ├── analysis/stats.py    # metric、bootstrap、比較検定、split
@@ -105,10 +110,22 @@ research-agent-template/
 
 `code/`と`results/`の下位directoryは必要になった時だけ作ります。生データは原則Git管理せず、read-onlyとして扱い、入手元と処理履歴を`PROJECT.md`および成果物に記録します。
 
+## Problem → gap → RQ → data
+
+```text
+Problem Definition ─▶ gap（literature/gaps.csv、Gap Challengerが判定）
+  ─▶ RQ（PROJECT.md Gap IDs列）─▶ data requirement（data/requirements.csv）
+  ─▶ pathway別探索（data/source_search_log.csv: repository、文献のdata、API、BMS/BIM、simulation、proxy…）
+  ─▶ candidate採点・選定（data/candidates.csv）─▶ 取得（data/manifest.json）─▶ quality profile
+```
+
+`python code/data/discovery.py audit`がchainの断絶（未challengeのgap、gapのないRQ、根拠のないdata収集、全pathway未評価の`DATA_INSUFFICIENT`等）を検出し、`matrix`がRQ別の追跡表を出力します。
+
 ## Data collection and quantitative analysis
 
 | 段階 | tool | 出力 |
 |---|---|---|
+| 探索 | `code/data/discovery.py search --source datacite\|zenodo` | 全hitをpaginationで取得しcandidateへ記録 |
 | 取得・登録 | `code/data/acquire.py fetch / register` | `data/raw/<ID>/`（read-only）、`data/manifest.json`のhash |
 | 検証 | `code/data/acquire.py verify` | manifest構造、access制約、raw file改変の検出 |
 | 使用前品質 | `code/data/quality.py profile` | `results/data_quality/<ID>.json`、DATA_QUALITY check |

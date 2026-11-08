@@ -57,7 +57,9 @@ roleは常設agentではなく必要時の責務である。
 - Gap Analyst / Gap Challenger: evidence matrixからgap候補を作り、用語漏れ、隣接分野、contradiction、既存研究でgapが消えないか別passで反証する。
 - Review Auditor: dual screening、coverage、PRISMA count、metadata、除外、quality、gap traceabilityを独立監査する。
 - Problem/RQ Assessment: 文献と研究入力から問題、gap、RQのnovelty/data/verifiability/scopeを評価。
-- Data Requirement: 必要data、取得経路、quality/provenance、代替を設計。
+- Data Requirement: RQ、gap、analysis planから必要evidenceと変数・解像度・coverage・品質要件を逆算し`data/requirements.csv`へ記録する。
+- Data Source Scout: requirementごとにpublic data、literature data、API、measurement/BMS/BIM、simulation、proxy、external provider、design changeのpathwayを探索し`data/source_search_log.csv`へ記録する。
+- Data Screener: candidate datasetをfit、coverage、resolution、quality、access、cost、reproducibilityで評価し、選定・却下理由を`data/candidates.csv`へ記録する。Data Source Scoutと別passで行う。
 - Methodology/Analysis: `PROJECT.md`, `STATUS.md`, 関連artifact。RQから必要証拠を逆算し、method/evaluation/verificationを設計・実行。
 - Specialist: RQ、method、data、evaluationが専門知識を必要とする場合だけ起動。結果は既存正本へ統合し、研究scopeを独立に拡張しない。
 - Evidence Auditor: central claimごとに原典、data provenance、数値、引用、Claim–Evidenceの到達可能性を監査する。
@@ -102,6 +104,17 @@ planned sourceとseed journalの検索、query review、重複処理、二重scr
 - `SCOPE_PROBLEM`: 非必須task削除、対象縮小、RQ分割、primary/secondary分離、future work化の順で解く。
 
 RQ変更案は提案まで行えるが、人間承認前は確定しない。
+
+### Problem-to-data chain
+
+`Problem → Gap → RQ → Data Requirement → Search → Candidate → Manifest → Quality`を`SPECIFICATION.md` 6.1に従って記録し、`python code/data/discovery.py audit`で検査する。
+
+1. Gap Analystが`literature/gaps.csv`へgap候補を書き、Gap Challengerが別passでcounter-searchして判定する。支持studyはextraction済みでなければならない。
+2. RQ表のGap IDs列にaccepted gapを記入する。gapが棄却されたRQは人間判断へ送る。
+3. Data Requirement roleがgap type、metric、criterion、baselineからrequirementを逆算する。
+4. Data Source Scoutが`discovery.py search`とconnector/web/APIでpathwayを探索する。included studyの`data_availability`を必ず追う。
+5. Data Screenerがcandidateを採点・選定し、選定dataを`acquire.py`で取得、`quality.py`で検査する。
+6. `discovery.py matrix`でchainを出力し、Gate 2で`--allow-incomplete`なしのauditを通す。
 
 ## 6. Method and data protocol
 

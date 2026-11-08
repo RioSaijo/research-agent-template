@@ -102,7 +102,8 @@ gap候補には支持source、反証source、検索coverage、gapを閉じる最
 - `search_log.csv`: 実行した全query。
 - `records.csv`: retrievalとdeduplicationのmaster record。
 - `screening_decisions.csv`: reviewer別判定。
-- `extraction.csv`: quality/evidence/gap抽出。
+- `extraction.csv`: quality/evidence/gap抽出。`data_availability`列にはstudyが使用したdatasetの名称、DOI/URL、license、公開状態を記録し、data discoveryの`LITERATURE_DATA`探索に使う。
+- `gaps.csv`: gap候補、支持/矛盾study、search coverage、最小closing design、Gap Challenger判定。
 - `results/literature/prisma_flow.json`: flow count。
 
 `code/literature/systematic_review.py`でdeduplication、flow集計、dual-screening auditを実行する。

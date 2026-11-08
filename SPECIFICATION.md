@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.5.0
+Version: 1.6.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -69,6 +69,18 @@ RQは再評価可能だが変更には人間の承認が必要である。次の
 - `SCOPE_PROBLEM`: 一研究として過大、独立RQ混在、資源超過、実装が科学的問いを覆う、validation深度不足等。非必須task削除、対象縮小、RQ分割、primary/secondary分離、future work移動、最後にRQ変更提案の順で解決する。
 
 `PROJECT.md`の各RQはRQ ID、Research Question、Hypothesis、Motivation、Required/Available/Missing Data、Acquisition Method、Method、Evaluation Metric、Evaluation Criterion、Expected Evidence、Independent Verification、Expected Claim、Main Riskを持つ。
+
+### 6.1 Problem-to-data chain
+
+研究の論理を`Problem Definition → Research Gap → RQ → Data Requirement → Data Source Search → Candidate Screening → Acquisition → Quality Profile → Analysis`の一本のchainとしてmachine-readableに管理し、`code/data/discovery.py audit`で検査する。`matrix`は`results/traceability/chain.json`へRQごとのgap、requirement、検索したsource type、candidate、選定data、quality statusを出力する。
+
+1. Gap identification（`literature/gaps.csv`）: Gap Analystがevidence matrixからgap候補を作り、`EVIDENCE / CONTRADICTION / METHOD / DATA / TRANSFER / IMPLEMENTATION / STANDARDIZATION`に分類する。gapは支持study（quality appraisalとextraction済み）、矛盾study、根拠となった文献search ID、evidence quality、gapを閉じる最小study designを持つ。「検索で見つからない」だけをgapの根拠にしない。Gap Analystと別roleのGap Challengerが同義語、旧用語、隣接分野、contradictionでcounter-searchし、`ACCEPTED / NARROWED / REJECTED`とその根拠を記録する。
+2. RQ grounding（`PROJECT.md`のResearch Questions表のGap IDs列）: 各RQは少なくとも一つの`ACCEPTED / NARROWED` gapに基づく。gapが`REJECTED`になったRQはRQ変更提案として人間判断へ送る。
+3. Data requirement derivation（`data/requirements.csv`）: Data Requirement roleはRQ、gap、analysis planのmetric/criterion/baselineから逆算し、必要なevidence、変数、unit、時間・空間解像度、最小coverage（期間、季節、建物数、気候等）、context（building type、system、occupancy）、品質要件、priority `MUST / SHOULD / COULD`、derivation（なぜ必要か）を記録する。gapの種類はrequirementを規定する。例: `TRANSFER_GAP`は複数建物・複数気候のdata、`CONTRADICTION_GAP`は矛盾studyの条件を再現できるdata、`METHOD_GAP`は共通baselineとbenchmark data、`DATA_GAP`は欠けている変数・metadata自体を要する。
+4. Data source search（`data/source_search_log.csv`）: Data Source Scoutはrequirementごとに次のpathwayを順に探索し、source、source type、query、filter、hit数、取得数、access limitationを記録する: public data（data repository: DataCite、Zenodo等、data paper、included studyが使用・公開したdata = `LITERATURE_DATA`、official statistics、standard/benchmark）、API、measurement（BMS/BEMS/IoT、BIM/IFC、追加測定計画）、simulation、proxy、external provider、design change。`MUST` requirementは少なくとも`DATA_REPOSITORY`と`LITERATURE_DATA`を検索してから判断する。literature extractionの`data_availability`列がLITERATURE_DATA探索の入口になる。hit数と取得数の差は理由を記録し、表示上限を探索上限としない。`code/data/discovery.py search --source datacite|zenodo`はpaginationで全hitを取得し、candidateとして記録する。
+5. Candidate screening（`data/candidates.csv`）: Data Screenerは各candidateをfit、coverage、resolution、quality/provenance、access、cost、reproducibilityで0-3評価し、`SELECTED / BACKUP / REJECTED`と理由を記録する。fitまたはaccessが0のcandidateは選定しない。選定にはlicenseとaccess classの確認、`data/manifest.json` entry、manifestのrelated_rqとの一致を要する。
+6. Requirement status: `SATISFIED / PARTIAL / PROXY`は選定candidate経由のmanifest datasetを要し、`PARTIAL`と`PROXY`は不足またはproxy妥当性を記録する。`INSUFFICIENT`（`DATA_INSUFFICIENT`）は全pathwayを評価した後にだけ宣言できる。
+7. Collection discipline: manifestのdatasetとanalysis planのdata IDはいずれかのrequirementに正当化されていなければならない。RQに結びつかないdata収集をしない。
 
 ## 7. Method, data, and reproducibility
 
@@ -150,8 +162,8 @@ RefereeはTopic Review、Scientific and Technical Review、Publication Readiness
 
 研究の深度はagent数ではなく、最低限次の異なる検討で担保する。(1) closest/contradictory literature、(2) methodとbaseline/ablationへの敵対的検討、(3) evidence/provenance監査、(4) alternative explanationとfalsification、(5) reproducibility、(6)独立Refereeとresponse再査読。中心claimごとに適用結果をartifactへ残し、同じ文章の反復を独立評価とみなさない。
 
-- Gate 1 Research Definition: background、motivation、systematic review protocol、検索式査読、database/journal coverage、deduplication、dual screening、quality appraisal、citation chasing、PRISMA整合、gap challenge、文献で支えたproblem、RQ、closest work、gap、reasonable scope。
-- Gate 2 Methodology Readiness: RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan、`evidence/analysis_plan.json`のlock。
+- Gate 1 Research Definition: background、motivation、systematic review protocol、検索式査読、database/journal coverage、deduplication、dual screening、quality appraisal、citation chasing、PRISMA整合、gap challenge（`literature/gaps.csv`で別roleが判定）、文献で支えたproblem、accepted gapに基づくRQ、closest work、gap、reasonable scope。
+- Gate 2 Methodology Readiness: 各RQのMUST data requirement、pathway別data source search、candidate screening、選定dataのmanifest登録とquality profile、strict `discovery.py audit`、RQ mapping、data、取得経路、metric、criterion、必要なbaseline、verification plan、`evidence/analysis_plan.json`のlock。
 - Gate 3 Evidence and Verification（claim別）: lock後のconfirmatory runによるprimary evidence、hash付きprovenance、事前criterionの適用と自動判定、uncertainty、claim typeごとの最低check、challengeとverificationのrole分離、planどおりのindependence level、post-hoc claimの制限、negative resultを含む全planned analysisの報告、STATUS.mdとの一致、strict evidence auditのissueなし。
 - Gate 4 Publication Readiness: Claim–Evidence整合、全CRITICAL/MAJORへのResponse to Referee、独立再査読、figure/table追跡、reference、limitations、支持されたconclusion、manuscript整合。
 - Gate 5 Report Delivery: 引用番号付きPDF生成、全page render QA、Gmail attachment、送信成功、delivery record。

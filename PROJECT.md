@@ -20,9 +20,11 @@
 
 ## Research Questions
 
-| RQ ID | Research Question | Type | Status |
-|---|---|---|---|
-| RQ-01 | 要検討 | Primary | DRAFT |
+各RQは`literature/gaps.csv`でGap Challengerが`ACCEPTED / NARROWED`としたgapに基づく。Gap IDs列は`code/data/discovery.py audit`が検査する。
+
+| RQ ID | Research Question | Gap IDs | Type | Status |
+|---|---|---|---|---|
+| RQ-01 | 要検討 | 要検討 | Primary | DRAFT |
 
 ## Initial Scope
 
