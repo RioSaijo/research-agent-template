@@ -5,7 +5,7 @@
 ## 運用原則
 
 - Git repositoryを唯一の正本とし、会話履歴に研究状態を依存させません。
-- ChatGPTが研究判断と管理を担当し、Codexはrepository-wideな実装等が必要な場合だけ使います。
+- ChatGPT、Claude Code、Codexなどを併用できます。role定義は`agents/roles.json`を唯一の正本とし、各platform用のagent fileはそこから生成します。
 - Research Question (RQ) をData、Method、Evaluation、Evidence、Claimへ追跡します。
 - 評価基準を分析前に定義し、証拠の存在と主張の支持を区別します。
 - Refereeは確認より先に反証可能性、代替説明、データ品質問題を探します。
@@ -20,8 +20,8 @@
 
 ## 開始方法
 
-1. 研究テーマをChatGPTへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
-2. ChatGPTは`AGENTS.md`を入口として、systematic review protocol、検索式査読、文献収集、二重screening、quality/gap分析、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
+1. 研究テーマを、ChatGPT、Claude Code、Codexのいずれかで動くResearch Managerへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
+2. Research Managerは`AGENTS.md`（Claude Codeでは`CLAUDE.md`経由）を入口として、必要なexpert roleを起動しながら、systematic review protocol、検索式査読、文献収集、二重screening、quality/gap分析、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
 3. `STATUS.md`で現在のphase、quality gate、task、Claim Evidence Tableを確認します。
 4. 重要な研究方針変更や人間だけが取得できる資源が必要になった場合に限り、人間が判断します。
 5. Gate 4通過後、最終PDFを生成・render検証し、Gmailで指定recipientへ送信します。送信記録までが一連のworkflowです。
@@ -46,6 +46,18 @@
 
 `FINAL_REPORT.md`は常設せず、Git repositoryの正本から最終応答として生成します。研究内容に応じて必要な場合は、`results/reports/`へ版管理可能な報告書artifactを作成できます。
 
+## Expert agents on every platform
+
+30のexpert role（Research Manager、Screener A/B、Gap Challenger、Data Screener、Methods Challenger、Independent Verifier、Refereeなど）を`agents/roles.json`に一度だけ定義し、各platform用fileを生成します。
+
+| Platform | 使うfile | 起動方法 |
+|---|---|---|
+| Claude Code | `.claude/agents/<id>.md` | subagentとして起動（`CLAUDE.md`が`AGENTS.md`をimport） |
+| ChatGPT | `agents/portable/<id>.md` | Project / custom GPTの指示に使う、またはrepositoryから読ませる |
+| Codex / その他 | `agents/portable/<id>.md` | `AGENTS.md`の一覧から該当fileを読ませて、そのroleだけを実行 |
+
+role定義を変える時は`agents/roles.json`を編集し、`python code/agents/build_agents.py`を実行します。CIは生成物のずれを`--check`で検出します。独立性が必要なroleは別のagent実行で起動し、platformをまたいでも構いません（例: Screener AをClaude Code、Screener BをChatGPT）。
+
 ## Multiple research projects
 
 このrepository自体には個別研究のdata、文献、結果を保存しません。新しい研究テーマごとに、このtemplateから`research-<topic-slug>`という独立repositoryを作成します。
@@ -65,6 +77,11 @@ research-agent-template/
 ├── SPECIFICATION.md
 ├── AGENTS.md
 ├── AGENTS_CORE.md
+├── CLAUDE.md                # Claude Code入口（AGENTS.mdをimport）
+├── agents/
+│   ├── roles.json           # role定義の正本
+│   └── portable/            # 生成: platform非依存の指示文
+├── .claude/agents/          # 生成: Claude Code subagent
 ├── PROJECT.md
 ├── STATUS.md
 ├── LITERATURE.md
@@ -96,6 +113,7 @@ research-agent-template/
 │   └── figures/
 ├── code/
 │   ├── literature/systematic_review.py
+│   ├── agents/build_agents.py  # role定義から各platform用fileを生成・検査
 │   ├── evidence/evidence_audit.py
 │   ├── data/discovery.py    # gap→RQ→requirement→candidate chain、repository検索
 │   ├── data/acquire.py      # 取得・登録・hash検証

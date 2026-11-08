@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.6.1
+Version: 1.7.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -12,11 +12,15 @@ Version: 1.6.1
 
 ## 2. Execution environment
 
-運用はChatGPT-first、Codex-on-demandとする。
+運用はplatform-neutralとする。ChatGPT、Claude Code、Codex、その他のagentのいずれでもResearch Managerと各roleを実行でき、複数platformを必ず併用可能な状態に保つ。
 
-- ChatGPT: 計画、文献探索・統合、問題定義、RQ・gap・novelty評価、データ要件、方法・評価・検証設計、専門レビュー、Claim–Evidence管理、解釈、査読、執筆、task管理。
-- Codex: repository-wide変更、複数file実装、local code実行、複雑なdebug、test/CI、module実装、大規模refactor。ChatGPTで合理的に完了できない場合だけ使い、必要最小限のfileとscopeを渡す。
-- CodexはRQ、Problem Definition、Central Claim、scope、central contributionを独立に変更しない。
+- role定義の正本は`agents/roles.json`とする。`code/agents/build_agents.py`がClaude Code subagent（`.claude/agents/<id>.md`）、platform非依存の指示文（`agents/portable/<id>.md`）、`AGENTS.md`のrole一覧を同じ定義から生成し、`--check`で整合をCI検査する。platform別のrole定義を手で編集しない。
+- 入口はplatform共通の`AGENTS.md`とする。Claude Codeは`CLAUDE.md`から`AGENTS.md`をimportする。platform固有の入口fileに独自の研究規則を書かない。
+- platformの得意分野で分担してよい（例: 対話的な文献探索・執筆、repository-wideな実装・local code実行・test）が、分担は固定しない。どのplatformも同じ正本、同じaudit script、同じgateに従い、platformによって合否基準を変えない。
+- 独立性が必要なrole（`independent_of`）は別のagent実行・別contextで行う。platformをまたいでよい（例: Screener AをClaude Code、Screener BをChatGPT）。異なるplatformやmodelでの実行は独立性を高めるが必須ではない。同じcontextで両roleを続けて担当しない。
+- 記録のrole列にはplatform名ではなくrole名（`agents/roles.json`のtitle）を書く。必要ならnotesに実行platformを残す。
+- どのplatformのagentもRQ、Problem Definition、Central Claim、scope、central contributionを独立に変更しない。
+- platform固有の機能（subagent、connector、tool、sandbox）は、正本の内容とaudit結果を変えない範囲で使う。connectorやtoolがないplatformでは、その作業を利用可能なplatformへ渡し、未実施を実施済みと報告しない。
 
 ## 3. Persistent architecture
 
@@ -35,7 +39,10 @@ Version: 1.6.1
 - `tests/`: machine-verifiable checks。
 - `scripts/check.sh`と`.github/workflows/ci.yml`: local/CI検証。
 
-新しい`DATA.md`やrole別の常設Markdownを作らない。不要なfileを増やさない。
+- `agents/roles.json`: role定義の正本。`agents/portable/`、`.claude/agents/`、`AGENTS.md`のrole一覧は生成物。
+- `CLAUDE.md`: Claude Code用の入口。`AGENTS.md`をimportするだけで独自規則を持たない。
+
+新しい`DATA.md`を作らない。role定義以外のrole別常設Markdown（role別の作業log、会話記録、研究状態）を作らず、研究状態は既存正本とmachine-readable artifactへ記録する。不要なfileを増やさない。
 
 ## 4. Required research input and resources
 

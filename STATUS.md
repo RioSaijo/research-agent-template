@@ -219,6 +219,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 - Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
 - Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
+- Expert agent roles single-sourced in `agents/roles.json` and generated for Claude Code and portable (ChatGPT / Codex) use.
 - Problem-to-data chain added: machine-readable gaps, data requirements, data source search, candidate screening, and chain audit.
 
 ## Decision Log
@@ -226,6 +227,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-007 | 2026-11-08 | ALL | Agent platform policy | ChatGPT-first, Codex-on-demand; roles only in prose | Platform-neutral roles single-sourced in agents/roles.json, generated for Claude Code and portable use, CI sync check | User required agents usable across platforms | Explicit user instruction | Any platform can run any role with identical rules and audits | Approved |
 | D-006 | 2026-11-08 | ALL | Dataset screening rubric | Unanchored 0-3 scores | Anchored rubric DSR-1.0, rationale, second-role verification, SATISFIED minimum scores, cross-source DOI dedupe | Scores varied by screener and could not be audited | Live DataCite/Zenodo test and rubric review | Data selection becomes reproducible across screeners | Template change |
 | D-005 | 2026-11-08 | ALL | Problem-to-data chain | Gap, RQ, and data needs linked only by prose | gaps.csv, requirements.csv, source search log, candidate screening, chain audit and matrix | Gap identification and data judgement, search, and selection were not traceable | Template review | Gate 1/2 gap and data decisions become auditable | Template change |
 | D-004 | 2026-11-08 | ALL | Data and analysis toolkit | Manual data inventory and ad hoc analysis | Data manifest, acquisition with hashes, automated quality profile, shared statistics, recorded runs | Data collection and quantitative analysis lacked reproducible tooling | Template review | Gate 2/3 data and analysis items become machine-checkable | Template change |

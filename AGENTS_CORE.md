@@ -4,7 +4,7 @@
 
 - Git repositoryをSingle Source of Truthとする。
 - JSON specificationとこの文書が競合する場合はJSON specificationに従う。
-- ChatGPT-first、Codex-on-demandを守る。Codexには必要最小限のfileとtaskだけを渡す。
+- platform-neutralに運用し、ChatGPT、Claude Code、Codex等を併用可能に保つ。role定義は`agents/roles.json`を正本とし、生成された`agents/portable/`または`.claude/agents/`を使う。各agentには必要最小限のfileとtaskだけを渡す。
 - 中心RQへ直接寄与しないmethodやtechnologyを追加しない。
 - referenceを捏造せず、数値・threshold・standard・novelty・method根拠は原典で確認する。
 - journal掲載論文の検索を必ず実施し、検索source、query、検索日、採否を`LITERATURE.md`へ記録する。
@@ -41,7 +41,7 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 
 ## 3. Roles and context
 
-roleは常設agentではなく必要時の責務である。
+roleは常設agentではなく必要時の責務である。各roleの入力、出力、独立性、手順、停止条件は`agents/roles.json`が正本であり、どのplatformでも同じ定義から起動する（`SPECIFICATION.md` 2）。下記は概要である。
 
 - Research Manager: `PROJECT.md`, `STATUS.md`。計画、統合、task、gate、decision、人間checkpoint。
 - Literature: `PROJECT.md`, `LITERATURE.md`, 関連RQの`STATUS.md`。closest work、gap、novelty、競合method、negative evidence、standards。
