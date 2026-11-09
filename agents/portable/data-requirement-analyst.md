@@ -36,6 +36,7 @@ RQ、gap type、analysis planのmetric/criterion/baselineから必要なdata（�
 1. gap typeから必要なdataの性質を決める（例: TRANSFER_GAPは複数建物・気候、METHOD_GAPは共通baselineとbenchmark）。
 2. criterionを検定・評価できる最小coverageと解像度を決める。
 3. 各requirementにpriority（MUST/SHOULD/COULD）とderivation（なぜ必要か）を記録する。
+4. requirementごとに、生成dataで代替可能か、代替した場合に答えられなくなる問いは何かをnotesに記録する。
 
 ## してはいけないこと
 

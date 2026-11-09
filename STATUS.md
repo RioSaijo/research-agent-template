@@ -28,9 +28,11 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ## Claim Evidence Table
 
-| Claim ID | RQ | Claim | Evidence Type | Primary Evidence | Independent Check | Verification | Claim Status | Referee |
-|---|---|---|---|---|---|---|---|---|
-| CL-01 | RQ-01 | 要検討 | LITERATURE | なし | 要検討 | NOT_VERIFIED | OPEN | NOT_REVIEWED |
+Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaimは、生成dataに基づくことを本文でも明示する。
+
+| Claim ID | RQ | Claim | Evidence Type | Data Origin | Primary Evidence | Independent Check | Verification | Claim Status | Referee |
+|---|---|---|---|---|---|---|---|---|---|
+| CL-01 | RQ-01 | 要検討 | LITERATURE | 要検討 | なし | 要検討 | NOT_VERIFIED | OPEN | NOT_REVIEWED |
 
 ## Current Tasks
 
@@ -55,6 +57,7 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-023 | RQ-01 | data requirementを逆算する | RQに必要なdataだけを定義する | Data Requirement Role | T-022, T-016 | Gaps / analysis plan | data/requirements.csv | BLOCKED | P1 | Gap not accepted | Gate 2 |
 | T-024 | RQ-01 | pathway別にdata sourceを探索する | public/literature/API/measurement/simulation/proxyを網羅する | Data Source Scout | T-023 | Repositories / connectors / web | data/source_search_log.csv / data/candidates.csv | BLOCKED | P1 | No requirements | Gate 2 |
 | T-025 | RQ-01 | candidate datasetを採点・選定する | fit、coverage、quality、access、reproducibilityで選ぶ | Data Screener | T-024 | Candidates | data/candidates.csv / data/manifest.json | BLOCKED | P1 | No candidates | Gate 2 |
+| T-026 | RQ-01 | 収集不能なdataを生成・検証する（必要時のみ） | 全collection pathway失敗後にラベル付き生成dataで研究を継続する | Data Generator / Generated Data Validator | T-024 | Observed reference data / generator | data/generated/ / results/data_validation/ / evidence/checks.csv | BLOCKED | P2 | Collection pathways not exhausted | Gate 2 |
 | T-020 | RQ-01 | data manifestを作成しraw dataを取得・登録する | provenanceとhash付きでdataを確保する | Data Requirement Role | T-003 | Data source / access | data/manifest.json / data/raw/ | BLOCKED | P1 | Data requirement incomplete | Gate 2 |
 | T-021 | RQ-01 | pre-use data quality profileを実行する | unit、時刻、欠損、range、sensor異常を分析前に検出する | Data Requirement Role | T-020 | Raw data | results/data_quality/ / evidence/checks.csv | BLOCKED | P1 | No data | Gate 2 |
 | T-016 | RQ-01 | analysis planをlockする | 結果を見る前にcriterion、claim type、required check、independence levelを固定する | Methodology Role | T-004 | PROJECT.md evaluation plan | evidence/analysis_plan.json | BLOCKED | P1 | Methodology incomplete | Gate 2 |
@@ -147,6 +150,9 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Candidate datasets scored against `data/screening_rubric.json` with cited anchors; MUST selections re-scored by a second role
 - [ ] Candidate datasets screened and scored; selections have license, access, and manifest entry
 - [ ] `DATA_INSUFFICIENT` declared only after every pathway was assessed
+- [ ] Generated data used only for requirements whose collection pathways (public data, API, measurement, external provider) were all attempted; requirement status is GENERATED, never SATISFIED
+- [ ] Generated datasets carry provenance_class, the fixed label, a data_origin column on every row, and a provenance sidecar under `data/generated/`
+- [ ] Fidelity criteria fixed before generation; validation PASS recorded by a role other than the generator
 - [ ] Strict `code/data/discovery.py audit` passes; `results/traceability/chain.json` generated
 - [ ] Every dataset has a `data/manifest.json` entry (source, access, license, units, valid ranges, timezone, interval)
 - [ ] Raw files acquired/registered with SHA-256 via `code/data/acquire.py`
@@ -177,6 +183,7 @@ Per-claim gate. Machine-readable source: `evidence/`. Judge with
 - [ ] Post-hoc claims kept at PRELIMINARY or lower
 - [ ] FAIL / INCONCLUSIVE checks record their impact on the claim
 - [ ] STATUS.md Claim Evidence Table matches `evidence/claims.csv`
+- [ ] Claims using generated data carry `generated_data_disclosure` and Data Origin GENERATED / MIXED; claims on generated data alone are limited to statements about the model (no SUPPORTED causal or generalization claims)
 - [ ] Strict evidence audit returns no issues
 
 Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when criterion or claim type must change
@@ -200,6 +207,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - [ ] Conclusion supported
 - [ ] Manuscript internally consistent
 - [ ] Database/API access limitations and their coverage impact disclosed
+- [ ] Every generated dataset used by a claim is labeled with `\GeneratedData{ID}` in text, figures, and tables (`code/data/generate.py check-disclosure`)
 
 ### Gate 5 — Report Delivery Gate
 
@@ -207,6 +215,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - [ ] Every page render-checked
 - [ ] No clipping, overlap, missing glyph, or broken table/figure
 - [ ] Numeric citations and references verified in the PDF
+- [ ] Generated-data labels visible in the rendered PDF wherever generated data or derived results appear
 - [ ] Gmail authenticated account confirmed
 - [ ] Runtime recipient confirmed without committing personal information
 - [ ] PDF sent as attachment
@@ -219,6 +228,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 - Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
 - Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
+- Generated data policy added: last-resort generation with mandatory labeling and separate-role fidelity validation.
 - Expert agent roles single-sourced in `agents/roles.json` and generated for Claude Code and portable (ChatGPT / Codex) use.
 - Problem-to-data chain added: machine-readable gaps, data requirements, data source search, candidate screening, and chain audit.
 
@@ -227,6 +237,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-008 | 2026-11-09 | ALL | Generated data policy | Uncollectable data led only to PROXY or DATA_INSUFFICIENT | Simulated / synthetic / augmented data allowed after all collection pathways fail, with mandatory labels in manifest, file rows, sidecar, runs, claims, STATUS.md, manuscript, and PDF, and separate-role fidelity validation | User asked to generate, validate, and use data when collection fails, always marked as generated | Explicit user instruction | Research can proceed without observed data while generated data stays distinguishable and claim strength is limited | Approved |
 | D-007 | 2026-11-08 | ALL | Agent platform policy | ChatGPT-first, Codex-on-demand; roles only in prose | Platform-neutral roles single-sourced in agents/roles.json, generated for Claude Code and portable use, CI sync check | User required agents usable across platforms | Explicit user instruction | Any platform can run any role with identical rules and audits | Approved |
 | D-006 | 2026-11-08 | ALL | Dataset screening rubric | Unanchored 0-3 scores | Anchored rubric DSR-1.0, rationale, second-role verification, SATISFIED minimum scores, cross-source DOI dedupe | Scores varied by screener and could not be audited | Live DataCite/Zenodo test and rubric review | Data selection becomes reproducible across screeners | Template change |
 | D-005 | 2026-11-08 | ALL | Problem-to-data chain | Gap, RQ, and data needs linked only by prose | gaps.csv, requirements.csv, source search log, candidate screening, chain audit and matrix | Gap identification and data judgement, search, and selection were not traceable | Template review | Gate 1/2 gap and data decisions become auditable | Template change |

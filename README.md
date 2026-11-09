@@ -118,6 +118,7 @@ research-agent-template/
 │   ├── data/discovery.py    # gap→RQ→requirement→candidate chain、repository検索
 │   ├── data/acquire.py      # 取得・登録・hash検証
 │   ├── data/quality.py      # 使用前data quality profile
+│   ├── data/generate.py     # 生成dataの登録・検証・開示チェック
 │   ├── analysis/stats.py    # metric、bootstrap、比較検定、split
 │   └── analysis/record_run.py  # provenance付き実行記録
 ├── requirements.txt
@@ -150,6 +151,20 @@ Problem Definition ─▶ gap（literature/gaps.csv、Gap Challengerが判定）
 | 使用前品質 | `code/data/quality.py profile` | `results/data_quality/<ID>.json`、DATA_QUALITY check |
 | 定量評価 | `code/analysis/stats.py evaluate` | metric、bootstrap CI、baseline比較、DM test |
 | 実行記録 | `code/analysis/record_run.py -- <command>` | `evidence/runs.csv`、`results/environments/` |
+
+## 生成data（集められない場合の扱い）
+
+必要dataが公開data、API、計測、外部提供のどれでも取得できない場合は、simulation・synthetic・augmentedの生成dataを作成し、検証してから活用できます。生成dataであることは次のすべてで明示され、auditが欠落を検出します。
+
+| 場所 | 表示 |
+|---|---|
+| `data/manifest.json` | `provenance_class`、固定label `GENERATED DATA - not observed measurements`、生成方法・seed・理由・限界 |
+| data file | `data/generated/<ID>/`に分離、全行の`data_origin`列、`.provenance.json` sidecar |
+| 実行記録 | `evidence/runs.csv`の`input_data_origin`（自動） |
+| claim | `claims.csv`の`generated_data_disclosure`、STATUS.mdのData Origin列 |
+| 原稿・PDF | `\GeneratedData{ID}`の可視label（`generate.py check-disclosure`で検査） |
+
+生成と検証は別roleが行い（Data Generator / Generated Data Validator）、fidelity基準は生成前に固定します。生成dataだけに基づくclaimは、modelについての記述に限られ、因果や一般化の結論にはできません。
 
 ## 5つのquality gate
 

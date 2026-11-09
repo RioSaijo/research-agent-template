@@ -46,6 +46,7 @@ lock済みplanに従いanalysis codeを実装し、record_run.py経由でPRIMARY
 2. codeをcommitしてから`record_run.py`でPRIMARY runを実行する。
 3. `stats.py evaluate`等の出力からobserved_valueとuncertaintyをclaims.csvへ記録する。negative resultもUNSUPPORTEDとして残す。
 4. post-hocの発見はPRELIMINARYまでとする。
+5. 生成dataを使うrunには`input_data_origin`が自動で付く。そのclaimでは`generated_data_disclosure`を記入し、STATUS.mdのData OriginをGENERATEDまたはMIXEDにする。生成dataだけのclaimはmodelについての記述に留める。
 
 ## してはいけないこと
 

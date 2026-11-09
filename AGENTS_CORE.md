@@ -33,7 +33,7 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 
 - テーマ受領をworkflow開始の指示として扱う。各phaseの開始許可を繰り返し求めない。
 - あるtaskがblockedでも、同じRQまたはquality gateに属する別の実行可能taskへ進む。
-- 不足resourceには、代替source、公開dataset、API、追加測定案、simulation、proxy、design変更案の順で対応可能性を調べる。
+- 不足resourceには、代替source、公開dataset、API、追加測定案、simulation・synthetic等の生成data（必ず生成dataと明示）、proxy、design変更案の順で対応可能性を調べる。
 - intermediate updateは状態共有であり、作業停止点ではない。
 - human pause condition以外では、質問への回答を待たずに合理的な仮定と`要検討`表示を使って進める。
 - scientific completionに到達できない場合も、調査済み範囲、blocker、証拠、再開条件をまとめた最終研究報告書を提出する。
@@ -131,6 +131,7 @@ data使用前にunit、timestamp/timezone、欠損、重複、sensor/calibration
 3. Analysis roleは`code/analysis/stats.py`の共通metric、bootstrap、比較検定、multiplicity補正、rolling-origin splitを使い、閾値はanalysis planから読む。
 4. confirmatory runは`python code/analysis/record_run.py ... -- <command>`で実行し、手でruns.csvを書かない。
 5. Gate 3前に`python code/data/acquire.py verify`（raw dataのあるenvironmentで）とstrict evidence auditを実行する。
+6. 全collection pathwayで取得できないdataは、`SPECIFICATION.md` 7.3に従い生成して検証・活用できる。Data Generatorがfidelity基準を先に固定して`code/data/generate.py`で登録し、別roleのGenerated Data Validatorが検証する。生成dataであることはmanifest、file行、sidecar、runs、claims、STATUS.md、原稿（`\GeneratedData{ID}`）、PDFのすべてで明示し、observed dataとして記述しない。
 
 ## 7. Evidence and verification
 

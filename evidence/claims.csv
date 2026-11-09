@@ -1,1 +1,1 @@
-claim_id,rq_id,analysis_id,claim,scope_limits,evidence_type,primary_run_id,observed_value,uncertainty,criterion_met,verification,verification_check_id,claim_status,limitation,referee_status
+claim_id,rq_id,analysis_id,claim,scope_limits,evidence_type,primary_run_id,observed_value,uncertainty,criterion_met,verification,verification_check_id,claim_status,limitation,generated_data_disclosure,referee_status

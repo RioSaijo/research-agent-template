@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Iterable
 
 FIELDS = ["run_id", "analysis_id", "run_type", "role", "run_at", "git_commit", "command", "environment",
-          "seed", "inputs", "input_sha256", "outputs", "output_sha256", "notes"]
+          "seed", "inputs", "input_sha256", "outputs", "output_sha256", "input_data_origin", "notes"]
 RUN_TYPES = {"PRIMARY", "REPRODUCTION", "VERIFICATION", "SENSITIVITY", "EXPLORATORY"}
 
 
@@ -49,6 +49,18 @@ def git(root: Path, *args: str) -> str:
 
 def split(value: str) -> list[str]:
     return [p.strip() for p in value.split(";") if p.strip()]
+
+
+def input_origin(root: Path, inputs: list[str]) -> str:
+    """Label the run with the origin of its input data (OBSERVED / GENERATED / MIXED / NOT_REGISTERED)."""
+    if any(p.startswith("data/generated/") for p in inputs) and not (root / "data/manifest.json").exists():
+        return "GENERATED"
+    if not inputs or not (root / "data/manifest.json").exists():
+        return "NOT_REGISTERED"
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data"))
+    import generate  # noqa: E402
+    manifest = json.loads((root / "data/manifest.json").read_text(encoding="utf-8"))
+    return generate.path_origin(manifest, inputs)
 
 
 def preflight(args: argparse.Namespace, root: Path) -> list[str]:
@@ -127,6 +139,7 @@ def run(args: argparse.Namespace) -> int:
         "seed": "" if args.seed is None else str(args.seed),
         "inputs": ";".join(inputs), "input_sha256": ";".join(before),
         "outputs": ";".join(outputs), "output_sha256": ";".join(sha256_file(root / p) for p in outputs),
+        "input_data_origin": input_origin(root, inputs),
         "notes": notes,
     }
     runs_path = root / args.runs
@@ -136,6 +149,8 @@ def run(args: argparse.Namespace) -> int:
         if new_file:
             writer.writeheader()
         writer.writerow(row)
+    if row["input_data_origin"] in {"GENERATED", "MIXED"}:
+        print(f"[record-run] NOTE: inputs include generated data ({row['input_data_origin']}); outputs must be labeled as such")
     print(f"[record-run] recorded {args.run_id} ({args.run_type}) at {commit[:12] or 'no-commit'}")
     return 0
 

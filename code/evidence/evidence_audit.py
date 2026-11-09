@@ -47,8 +47,24 @@ RUN_TYPES = {"PRIMARY", "REPRODUCTION", "VERIFICATION", "SENSITIVITY", "EXPLORAT
 CHECK_TYPES = {
     "DATA_QUALITY", "LEAKAGE", "BASELINE", "ABLATION", "ALTERNATIVE_EXPLANATION",
     "SENSITIVITY", "ROBUSTNESS", "FALSIFICATION", "NEGATIVE_CONTROL", "TRANSFER",
-    "REPRODUCTION", "INDEPENDENT_VERIFICATION",
+    "REPRODUCTION", "INDEPENDENT_VERIFICATION", "GENERATED_DATA_VALIDATION",
 }
+GENERATED_CLASSES = {"SIMULATED", "SYNTHETIC", "AUGMENTED"}
+# Claims resting only on generated data may be SUPPORTED only as statements about a model or method.
+MODEL_EVIDENCE_TYPES = {"SIMULATION", "ANALYTICAL", "SOFTWARE_TEST", "BENCHMARK"}
+GENERATED_CANNOT_SUPPORT = {"CAUSAL", "GENERALIZATION"}
+
+
+def data_origin(manifest: dict, data_ids) -> str:
+    """OBSERVED, GENERATED, MIXED, or UNKNOWN for the datasets an analysis uses."""
+    by_id = {d.get("data_id"): d for d in manifest.get("datasets", [])}
+    classes = {by_id.get(i, {}).get("provenance_class", "") for i in data_ids}
+    if not classes or classes & {"", "TO_DEFINE"}:
+        return "UNKNOWN"
+    generated = classes & GENERATED_CLASSES
+    if not generated:
+        return "OBSERVED"
+    return "GENERATED" if classes <= {"SIMULATED", "SYNTHETIC"} else "MIXED"
 CHECK_RESULTS = {"PASS", "FAIL", "INCONCLUSIVE", "NOT_RUN"}
 
 # Independence levels, weakest to strongest. RERUN is reproducibility, not independence.
@@ -197,6 +213,7 @@ def audit_evidence(
     strict: bool = True,
     root: Path | None = None,
     status_claims: dict[str, dict[str, str]] | None = None,
+    manifest: dict | None = None,
 ) -> list[tuple[str, str]]:
     """Return (scope, message) issues. ``root`` enables artifact existence and hash checks."""
     issues = audit_plan(plan, strict)
@@ -223,6 +240,9 @@ def audit_evidence(
             for field in ("git_commit", "command", "role"):
                 if not run.get(field):
                     issues.append((rid, f"confirmatory run missing {field}"))
+        if any(p.startswith("data/generated/") for p in split_list(run.get("inputs", ""))) and \
+                run.get("input_data_origin") not in {"GENERATED", "MIXED"}:
+            issues.append((rid, "run reads data/generated/ but input_data_origin is not GENERATED or MIXED"))
         for kind in ("inputs", "outputs"):
             paths = split_list(run.get(kind, ""))
             hashes = split_list(run.get(f"{kind[:-1]}_sha256", ""))
@@ -343,6 +363,29 @@ def audit_evidence(
         if status == "SUPPORTED" and planned_level in INDEPENDENT_LEVELS and verification != "INDEPENDENTLY_VERIFIED":
             issues.append((clid, f"plan requires {planned_level} verification before SUPPORTED"))
 
+        if manifest is not None:
+            used = analysis.get("data_ids", [])
+            origin = data_origin(manifest, used)
+            by_id = {d.get("data_id"): d for d in manifest.get("datasets", [])}
+            generated_ids = [d for d in used if by_id.get(d, {}).get("provenance_class") in GENERATED_CLASSES]
+            if generated_ids:
+                if not claim.get("generated_data_disclosure"):
+                    issues.append((clid, f"uses generated data ({', '.join(generated_ids)}) without generated_data_disclosure"))
+                if positive:
+                    for did in generated_ids:
+                        validated = any(c.get("check_type") == "GENERATED_DATA_VALIDATION" and c.get("data_id") == did
+                                        and c.get("result") == "PASS" for c in checks)
+                        if not validated or by_id[did].get("generation", {}).get("validation_status") != "PASS":
+                            issues.append((clid, f"generated dataset {did} has no passing GENERATED_DATA_VALIDATION"))
+                if origin == "GENERATED" and status == "SUPPORTED":
+                    if claim.get("evidence_type") not in MODEL_EVIDENCE_TYPES:
+                        issues.append((clid, "claim rests only on generated data; SUPPORTED needs evidence_type "
+                                             "SIMULATION/ANALYTICAL/SOFTWARE_TEST/BENCHMARK (a statement about the model)"))
+                    if analysis.get("claim_type") in GENERATED_CANNOT_SUPPORT:
+                        issues.append((clid, f"{analysis.get('claim_type')} claim cannot be SUPPORTED by generated data alone"))
+            if status_claims is not None and clid in status_claims and origin in {"GENERATED", "MIXED"}:
+                if status_claims[clid].get("data_origin") != origin:
+                    issues.append((clid, f"STATUS.md Data Origin must show {origin}"))
         if status_claims is not None:
             mirror = status_claims.get(clid)
             if mirror is None:
@@ -393,6 +436,7 @@ def parse_status_claims(path: Path) -> dict[str, dict[str, str]]:
         result[row.get("Claim ID", "")] = {
             "claim_status": row.get("Claim Status", ""),
             "verification": row.get("Verification", ""),
+            "data_origin": row.get("Data Origin", ""),
         }
     return result
 
@@ -430,8 +474,10 @@ def run_audit(args: argparse.Namespace):
     plan, runs, checks, claims = load_all(args)
     root = Path(args.root) if args.verify_files else None
     status_claims = parse_status_claims(Path(args.status)) if args.status else None
+    manifest_path = Path(args.root) / "data/manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else None
     issues = audit_evidence(plan, runs, checks, claims, strict=not args.allow_incomplete,
-                            root=root, status_claims=status_claims)
+                            root=root, status_claims=status_claims, manifest=manifest)
     return claims, issues
 
 

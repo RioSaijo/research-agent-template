@@ -48,6 +48,7 @@ data requirementごとにpublic data、文献で使われたdata、API、BMS/BIM
 2. 残りのpathwayも評価し、source_type、query、hit数、取得数、access limitationを記録する。
 3. API window上限に当たったqueryは期間・用語で分割する。
 4. 見つけた候補はdecision `PENDING`で追加する。
+5. 全collection pathwayで取得できない場合は、生成dataの可能性（Data Generator）を報告に含める。生成dataを候補としてcandidates.csvへ入れない。
 
 ## してはいけないこと
 

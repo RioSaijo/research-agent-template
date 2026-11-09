@@ -36,6 +36,7 @@ Gate 4通過後に最終PDFを生成、全pageをrender検査し、Gmail connect
 2. `results/reports/`へPDFを生成し、全pageを画像renderして文字化け、clipping、overlap、表・図、引用番号、reference listを確認する。
 3. Gmailの認証accountとrecipient（実行時指定）を確認し、PDFを添付して送信する。
 4. 送信成功responseを確認し、PDF path、recipient source、sent timestamp、message IDをSTATUS.mdへ記録する（email addressは記録しない）。
+5. render済みPDFで、生成dataのlabel（`[Generated data: ID]`）が該当する本文・図表に表示されていることを確認する。
 
 ## してはいけないこと
 

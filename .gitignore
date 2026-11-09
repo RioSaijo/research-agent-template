@@ -31,5 +31,6 @@ paper/main.pdf
 
 # Local/raw data and temporary output
 data/raw/
+data/generated/
 tmp/
 

@@ -694,7 +694,8 @@
       "procedure": [
         "gap typeから必要なdataの性質を決める（例: TRANSFER_GAPは複数建物・気候、METHOD_GAPは共通baselineとbenchmark）。",
         "criterionを検定・評価できる最小coverageと解像度を決める。",
-        "各requirementにpriority（MUST/SHOULD/COULD）とderivation（なぜ必要か）を記録する。"
+        "各requirementにpriority（MUST/SHOULD/COULD）とderivation（なぜ必要か）を記録する。",
+        "requirementごとに、生成dataで代替可能か、代替した場合に答えられなくなる問いは何かをnotesに記録する。"
       ],
       "must_not": [
         "RQに寄与しないdataを要件にする。"
@@ -739,7 +740,8 @@
         "MUST requirementはDATA_REPOSITORY（`discovery.py search --source datacite|zenodo`）とLITERATURE_DATA（extraction.csvのdata_availability）を必ず検索する。",
         "残りのpathwayも評価し、source_type、query、hit数、取得数、access limitationを記録する。",
         "API window上限に当たったqueryは期間・用語で分割する。",
-        "見つけた候補はdecision `PENDING`で追加する。"
+        "見つけた候補はdecision `PENDING`で追加する。",
+        "全collection pathwayで取得できない場合は、生成dataの可能性（Data Generator）を報告に含める。生成dataを候補としてcandidates.csvへ入れない。"
       ],
       "must_not": [
         "候補を採点・選定する。",
@@ -894,6 +896,104 @@
       ]
     },
     {
+      "id": "data-generator",
+      "title": "Data Generator",
+      "phase": "Data Requirement",
+      "gates": [
+        "2"
+      ],
+      "description": "必要dataが全collection pathwayで取得できないと確認された時だけ、simulation・synthetic・augmentedの生成dataを作り、生成dataとしてlabel付きで登録する時に使う。",
+      "reads": [
+        "data/requirements.csv",
+        "data/source_search_log.csv",
+        "data/manifest.json",
+        "SPECIFICATION.md"
+      ],
+      "writes": [
+        "data/manifest.json",
+        "data/generated/",
+        "data/requirements.csv",
+        "code/generation/"
+      ],
+      "independent_of": [
+        "generated-data-validator"
+      ],
+      "procedure": [
+        "source_search_log.csvで、対象requirementのPUBLIC_DATA、API、MEASUREMENT、EXTERNAL_PROVIDERの試行記録を確認する。欠けていれば生成せずData Source Scoutへ返す。",
+        "生成前に、manifestの新しいdata IDへgeneration.fidelity_criteria（observed referenceに対する基準）とpurpose、reason_not_collected、limitationsを記録する。",
+        "`generate.py bootstrap`または任意のgenerator（code/generation/に置き、seed固定）で作成し、`generate.py register`で登録する。登録で`data_origin`列、sidecar、固定labelが付く。",
+        "requirementのstatusを`GENERATED`（`SATISFIED`ではない）、satisfied_byに生成data ID、notesに取得できなかった理由を記録する。",
+        "Generated Data Validatorへ検証を依頼する。"
+      ],
+      "must_not": [
+        "collection pathwayの試行前に生成する。",
+        "期待する結果に合わせて生成条件を調整する。",
+        "labelや`data_origin`列を削除・変更する、または生成rowをobserved datasetや`data/raw/`へ入れる。",
+        "自分の生成dataを検証する。"
+      ],
+      "stop": [
+        "生成dataが登録され、検証依頼を出した。"
+      ],
+      "commands": [
+        "python code/data/generate.py bootstrap --data-id GEN-01 --reference-data-id DATA-01 --n-rows 720 --block-length 24 --seed 42 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\"",
+        "python code/data/generate.py register --data-id GEN-02 --path <file.csv> --provenance-class SIMULATED --method SIMULATION --generator \"EnergyPlus 24.2 model.idf\" --seed 0 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\""
+      ],
+      "claude_tools": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit",
+        "Write",
+        "Bash"
+      ]
+    },
+    {
+      "id": "generated-data-validator",
+      "title": "Generated Data Validator",
+      "phase": "Data Requirement",
+      "gates": [
+        "2",
+        "3"
+      ],
+      "description": "生成dataを、generatorと別roleとして事前固定のfidelity基準でobserved reference dataと比較し、GENERATED_DATA_VALIDATIONを記録する時に使う。",
+      "reads": [
+        "data/manifest.json",
+        "data/requirements.csv",
+        "evidence/checks.csv"
+      ],
+      "writes": [
+        "results/data_validation/",
+        "evidence/checks.csv",
+        "data/manifest.json"
+      ],
+      "independent_of": [
+        "data-generator"
+      ],
+      "procedure": [
+        "manifestのgeneration blockに、fidelity_criteria、reason_not_collected、limitations、固定labelがあることを確認する。基準がなければFAILとして返す。",
+        "`generate.py validate --record-check`でobserved referenceと比較する。duplicate_rate（生成元の複製）も確認する。",
+        "FAILの場合は、その生成dataをclaimに使わないようResearch Managerへ報告し、requirementを`SEARCHING`または`INSUFFICIENT`へ戻す案を示す。",
+        "PASSでも、生成dataで答えられない問い（実建物での因果、一般化）をlimitationsとして報告する。"
+      ],
+      "must_not": [
+        "generatorと同じroleで検証する。",
+        "検証後にfidelity基準を緩める。"
+      ],
+      "stop": [
+        "GENERATED_DATA_VALIDATION checkが記録された。"
+      ],
+      "commands": [
+        "python code/data/generate.py validate --data-id GEN-01 --reference-data-id DATA-01 --record-check CK-GV-01"
+      ],
+      "claude_tools": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit",
+        "Bash"
+      ]
+    },
+    {
       "id": "methodology-designer",
       "title": "Methodology Designer",
       "phase": "Methodology Design",
@@ -968,7 +1068,8 @@
         "`code/analysis/stats.py`の共通metric、bootstrap、比較検定、splitを使う。thresholdはplanから読む。",
         "codeをcommitしてから`record_run.py`でPRIMARY runを実行する。",
         "`stats.py evaluate`等の出力からobserved_valueとuncertaintyをclaims.csvへ記録する。negative resultもUNSUPPORTEDとして残す。",
-        "post-hocの発見はPRELIMINARYまでとする。"
+        "post-hocの発見はPRELIMINARYまでとする。",
+        "生成dataを使うrunには`input_data_origin`が自動で付く。そのclaimでは`generated_data_disclosure`を記入し、STATUS.mdのData OriginをGENERATEDまたはMIXEDにする。生成dataだけのclaimはmodelについての記述に留める。"
       ],
       "must_not": [
         "challenge checkや独立検証を自分で行う。",
@@ -1197,7 +1298,8 @@
       "procedure": [
         "対象claimとartifactを特定し、反例、leakage、bias、alternative explanation、literature conflict、novelty overclaimを探す。",
         "issueにCRITICAL/MAJOR/MINOR/NOTEと必要revisionを付ける。",
-        "再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。"
+        "再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。",
+        "生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。"
       ],
       "must_not": [
         "会話や自己評価を根拠にする。",
@@ -1289,7 +1391,8 @@
       "procedure": [
         "PROJECT.mdのReport Designにreport type、audience、outline、理由を記録する。",
         "claims.csvのclaim_statusとverificationを超える強さで書かない。negative resultとlimitationsを含める。",
-        "事実・数値・先行研究には近接した`\\cite{}`を置き、refs.bibはDOI等の原典で確認する。"
+        "事実・数値・先行研究には近接した`\\cite{}`を置き、refs.bibはDOI等の原典で確認する。",
+        "生成dataとそれに由来する結果は、本文・図表caption・表で`\\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。"
       ],
       "must_not": [
         "Claim Evidence Tableにない結論を書く。",
@@ -1333,7 +1436,8 @@
         "Gate 4とReferee decision PASSを確認する。未通過なら送信しない。",
         "`results/reports/`へPDFを生成し、全pageを画像renderして文字化け、clipping、overlap、表・図、引用番号、reference listを確認する。",
         "Gmailの認証accountとrecipient（実行時指定）を確認し、PDFを添付して送信する。",
-        "送信成功responseを確認し、PDF path、recipient source、sent timestamp、message IDをSTATUS.mdへ記録する（email addressは記録しない）。"
+        "送信成功responseを確認し、PDF path、recipient source、sent timestamp、message IDをSTATUS.mdへ記録する（email addressは記録しない）。",
+        "render済みPDFで、生成dataのlabel（`[Generated data: ID]`）が該当する本文・図表に表示されていることを確認する。"
       ],
       "must_not": [
         "recipientやcredentialをcommitする。",

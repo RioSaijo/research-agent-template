@@ -4,7 +4,10 @@
     "raw_data_location": "data/raw/<DATA-ID>/ (gitignored, read-only)",
     "raw_data_immutable": true,
     "non_redistributable_files_must_stay_under_data_raw": true,
-    "never_record_credentials": true
+    "never_record_credentials": true,
+    "generated_data_location": "data/generated/<DATA-ID>/ (gitignored, read-only, data_origin column + .provenance.json sidecar)",
+    "generated_data_label": "GENERATED DATA - not observed measurements",
+    "generated_data_only_when_collection_failed": true
   },
   "datasets": [
     {
@@ -16,6 +19,7 @@
       "access": "TO_DEFINE",
       "license": "TO_DEFINE",
       "redistributable": null,
+      "provenance_class": "TO_DEFINE",
       "acquisition": {"method": "TO_DEFINE", "url": "", "retrieved_at": "", "retrieved_by": "", "source_note": ""},
       "files": [],
       "format": {

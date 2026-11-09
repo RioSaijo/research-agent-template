@@ -18,6 +18,7 @@ import json
 import os
 import shutil
 import stat
+import sys
 import tempfile
 import urllib.request
 from datetime import datetime, timezone
@@ -29,6 +30,15 @@ ACCESS = {"PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"}
 METHODS = {"DOWNLOAD", "API", "MANUAL_EXPORT", "BMS_EXPORT", "MEASUREMENT", "SIMULATION", "PROVIDED", "DERIVED"}
 DTYPES = {"float", "int", "bool", "category", "string", "datetime"}
 RAW_PREFIX = "data/raw/"
+GENERATED_PREFIX = "data/generated/"
+PRIVATE_PREFIXES = (RAW_PREFIX, GENERATED_PREFIX)
+
+
+def _generated_rules():
+    """Generated-data rules live in generate.py (needs pandas); import lazily."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import generate  # noqa: E402
+    return generate
 USER_AGENT = "research-agent-template/1.0 (data acquisition)"
 
 
@@ -74,6 +84,11 @@ def record_file(dataset: dict, rel_path: str, digest: str, size: int) -> None:
     files.append({"path": rel_path, "sha256": digest, "bytes": size})
 
 
+def refuse_generated(dataset: dict) -> None:
+    if dataset.get("provenance_class") in {"SIMULATED", "SYNTHETIC", "AUGMENTED"}:
+        raise SystemExit("[acquire] generated datasets are registered with code/data/generate.py, not into data/raw/")
+
+
 def place_raw(root: Path, data_id: str, source: Path, filename: str) -> tuple[str, str, int]:
     """Move or copy ``source`` into data/raw/<id>/<filename>; never overwrite different content."""
     rel = f"{RAW_PREFIX}{data_id}/{filename}"
@@ -96,6 +111,7 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     root, manifest_path = Path(args.root), Path(args.manifest)
     manifest = load_manifest(manifest_path)
     dataset = find_dataset(manifest, args.data_id)
+    refuse_generated(dataset)
     filename = args.filename or Path(urllib.request.urlparse(args.url).path).name or "download"
     request = urllib.request.Request(args.url, headers={"User-Agent": USER_AGENT})
     with tempfile.TemporaryDirectory() as tmp:
@@ -108,6 +124,8 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     acquisition = dataset.setdefault("acquisition", {})
     if not defined(acquisition.get("method")):
         acquisition["method"] = "DOWNLOAD"
+    if not defined(dataset.get("provenance_class")):
+        dataset["provenance_class"] = "OBSERVED"
     acquisition.update({"url": final_url, "retrieved_at": now_iso(), "retrieved_by": args.role})
     save_manifest(manifest_path, manifest)
     print(f"[acquire] {rel} sha256={digest} bytes={size}")
@@ -118,6 +136,7 @@ def cmd_register(args: argparse.Namespace) -> int:
     root, manifest_path = Path(args.root), Path(args.manifest)
     manifest = load_manifest(manifest_path)
     dataset = find_dataset(manifest, args.data_id)
+    refuse_generated(dataset)
     source = Path(args.path)
     if not source.is_file():
         raise SystemExit(f"[acquire] not a file: {source}")
@@ -129,6 +148,8 @@ def cmd_register(args: argparse.Namespace) -> int:
     acquisition.update({"retrieved_at": now_iso(), "retrieved_by": args.role})
     if args.source_note:
         acquisition["source_note"] = args.source_note
+    if not defined(dataset.get("provenance_class")):
+        dataset["provenance_class"] = "OBSERVED" if args.method != "SIMULATION" else "TO_DEFINE"
     save_manifest(manifest_path, manifest)
     print(f"[acquire] {rel} sha256={digest} bytes={size}")
     return 0
@@ -155,10 +176,10 @@ def validate_manifest(manifest: dict, root: Path | None, strict: bool) -> list[s
             rel = item.get("path", "")
             if not rel:
                 continue
-            if redistributable is not True and not rel.startswith(RAW_PREFIX):
-                issues.append(f"{did}: non-redistributable file outside gitignored {RAW_PREFIX}: {rel}")
-            if access in {"CONFIDENTIAL", "RESTRICTED"} and not rel.startswith(RAW_PREFIX):
-                issues.append(f"{did}: {access} file outside {RAW_PREFIX}: {rel}")
+            if redistributable is not True and not rel.startswith(PRIVATE_PREFIXES):
+                issues.append(f"{did}: non-redistributable file outside gitignored {RAW_PREFIX} or {GENERATED_PREFIX}: {rel}")
+            if access in {"CONFIDENTIAL", "RESTRICTED"} and not rel.startswith(PRIVATE_PREFIXES):
+                issues.append(f"{did}: {access} file outside {RAW_PREFIX} or {GENERATED_PREFIX}: {rel}")
             if root is None:
                 continue
             target = root / rel
@@ -166,6 +187,7 @@ def validate_manifest(manifest: dict, root: Path | None, strict: bool) -> list[s
                 issues.append(f"{did}: raw file missing: {rel}")
             elif item.get("sha256") and sha256_file(target) != item["sha256"]:
                 issues.append(f"{did}: raw file modified (hash mismatch): {rel}")
+        issues += _generated_rules().validate_generated_entry(dataset, root, strict)
         fmt = dataset.get("format", {})
         for var in dataset.get("variables", []):
             name = var.get("name", "")
@@ -185,6 +207,8 @@ def validate_manifest(manifest: dict, root: Path | None, strict: bool) -> list[s
                 issues.append(f"{did}: acquisition method undefined")
             if not [f for f in dataset.get("files", []) if f.get("path")]:
                 issues.append(f"{did}: no raw file registered")
+            if dataset.get("acquisition", {}).get("method") == "SIMULATION" and dataset.get("provenance_class") not in {"SIMULATED", "SYNTHETIC", "AUGMENTED"}:
+                issues.append(f"{did}: acquisition method SIMULATION but provenance_class is not generated")
             if not dataset.get("related_rq"):
                 issues.append(f"{did}: related_rq undefined")
             if defined(fmt.get("timestamp_column")) and not defined(fmt.get("timezone")):

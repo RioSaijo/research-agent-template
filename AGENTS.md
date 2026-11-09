@@ -13,6 +13,7 @@
 9. 最終成果は検証済みPDFとして生成し、実行時に指定されたrecipientへGmailで送信する。送信成功を確認し、`STATUS.md`へPDF path、送信日時、message IDを記録するまで完了としない。
 10. 最終応答は研究報告書として提出し、結論だけでなく根拠、反証試行、limitations、未解決事項、成果物link、delivery statusを含める。
 11. 報告書の章立てと分量は固定せず、研究type、結果、evidence量、読者、target venueに適応させる。必要なdatabase、API、connector、公式sourceは利用可能なら検索・取得し、利用不能なsourceを検索済みと扱わない。
+12. 必要dataが全collection pathwayで取得できない場合は、simulation・synthetic・augmentedの生成dataを作成・検証して活用してよい。ただし生成dataであることを、manifest、data file、実行記録、claim、STATUS.md、原稿、PDFのすべてで必ず明示し、observed dataと混同させない（`SPECIFICATION.md` 7.3）。
 
 詳細な運用規則、role、quality gate、security、writing policyは`AGENTS_CORE.md`を正本とする。
 
@@ -51,6 +52,8 @@ role定義の正本は`agents/roles.json`。同じ定義から各platform用file
 | Data Screener | 2 | data-source-scout, data-verifier | `.claude/agents/data-screener.md` | `agents/portable/data-screener.md` |
 | Data Verifier | 2 | data-screener | `.claude/agents/data-verifier.md` | `agents/portable/data-verifier.md` |
 | Data Steward | 2, 3 | - | `.claude/agents/data-steward.md` | `agents/portable/data-steward.md` |
+| Data Generator | 2 | generated-data-validator | `.claude/agents/data-generator.md` | `agents/portable/data-generator.md` |
+| Generated Data Validator | 2, 3 | data-generator | `.claude/agents/generated-data-validator.md` | `agents/portable/generated-data-validator.md` |
 | Methodology Designer | 2 | - | `.claude/agents/methodology-designer.md` | `agents/portable/methodology-designer.md` |
 | Analyst | 3 | methods-challenger, independent-verifier | `.claude/agents/analyst.md` | `agents/portable/analyst.md` |
 | Methods Challenger | 3 | analyst | `.claude/agents/methods-challenger.md` | `agents/portable/methods-challenger.md` |

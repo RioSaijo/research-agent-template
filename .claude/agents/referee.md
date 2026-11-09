@@ -48,6 +48,7 @@ artifactだけを読み、反証を先に試すTopic、Scientific/Technical、Pu
 1. 対象claimとartifactを特定し、反例、leakage、bias、alternative explanation、literature conflict、novelty overclaimを探す。
 2. issueにCRITICAL/MAJOR/MINOR/NOTEと必要revisionを付ける。
 3. 再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。
+4. 生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。
 
 ## してはいけないこと
 

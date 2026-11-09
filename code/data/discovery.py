@@ -33,7 +33,10 @@ GAP_TYPES = {"EVIDENCE_GAP", "CONTRADICTION_GAP", "METHOD_GAP", "DATA_GAP", "TRA
 GAP_DECISIONS = {"NOT_REVIEWED", "ACCEPTED", "NARROWED", "REJECTED"}
 EVIDENCE_QUALITY = {"HIGH", "MODERATE", "LOW", "VERY_LOW", "NOT_ASSESSED"}
 PRIORITIES = {"MUST", "SHOULD", "COULD"}
-REQ_STATUS = {"OPEN", "SEARCHING", "SATISFIED", "PARTIAL", "PROXY", "INSUFFICIENT"}
+REQ_STATUS = {"OPEN", "SEARCHING", "SATISFIED", "PARTIAL", "PROXY", "GENERATED", "INSUFFICIENT"}
+GENERATED_CLASSES = {"SIMULATED", "SYNTHETIC", "AUGMENTED"}
+# Generated data is allowed only after collection was attempted through every observed-data pathway.
+COLLECTION_GROUPS = ("PUBLIC_DATA", "API", "MEASUREMENT", "EXTERNAL_PROVIDER")
 SOURCE_TYPES = {
     "DATA_REPOSITORY", "DATA_PAPER", "LITERATURE_DATA", "OFFICIAL_STATISTICS", "STANDARD_OR_BENCHMARK",
     "API", "BMS_BEMS_IOT", "BIM_IFC", "MEASUREMENT_PLAN", "SIMULATION", "PROXY", "EXTERNAL_PROVIDER",
@@ -289,11 +292,30 @@ def audit_chain(chain: dict, strict: bool = True) -> list[tuple[str, str]]:
                 if placeholder(req.get(field, "")):
                     issues.append((rid, f"requirement field undefined: {field}"))
         types = search_types_by_req[rid]
-        if status in {"SATISFIED", "PARTIAL", "PROXY", "INSUFFICIENT"} and priority == "MUST":
+        if status in {"SATISFIED", "PARTIAL", "PROXY", "GENERATED", "INSUFFICIENT"} and priority == "MUST":
             for stype in sorted(MUST_SOURCE_TYPES - types):
                 issues.append((rid, f"MUST requirement decided without a {stype} search"))
+        satisfied_by = ids(req.get("satisfied_by", ""))
+        generated_ids = [d for d in satisfied_by if datasets.get(d, {}).get("provenance_class") in GENERATED_CLASSES]
+        if status in {"SATISFIED", "PARTIAL", "PROXY"} and generated_ids:
+            issues.append((rid, f"generated dataset(s) {', '.join(generated_ids)} cannot make a requirement {status}; use GENERATED"))
+        if status == "GENERATED":
+            if not satisfied_by:
+                issues.append((rid, "GENERATED without satisfied_by data_id"))
+            for did in satisfied_by:
+                item = datasets.get(did)
+                if item is None:
+                    issues.append((rid, f"satisfied_by {did} not in data/manifest.json"))
+                elif item.get("provenance_class") not in GENERATED_CLASSES:
+                    issues.append((rid, f"GENERATED requirement satisfied by non-generated dataset {did}"))
+                elif strict and item.get("generation", {}).get("validation_status") != "PASS":
+                    issues.append((rid, f"generated dataset {did} has not passed fidelity validation"))
+            for group in COLLECTION_GROUPS:
+                if not types & PATHWAY_GROUPS[group]:
+                    issues.append((rid, f"GENERATED before attempting collection pathway {group}"))
+            if placeholder(req.get("notes", "")):
+                issues.append((rid, "GENERATED requires notes on why observed data could not be collected"))
         if status in {"SATISFIED", "PARTIAL", "PROXY"}:
-            satisfied_by = ids(req.get("satisfied_by", ""))
             if not satisfied_by:
                 issues.append((rid, f"{status} without satisfied_by data_id"))
             selected_ids = {c.get("data_id") for c in selected_by_req[rid]}
@@ -348,7 +370,11 @@ def build_matrix(chain: dict) -> dict:
             for did in ids(req.get("satisfied_by", "")):
                 report = root / f"results/data_quality/{did}.json"
                 quality = json.loads(report.read_text(encoding="utf-8")).get("status") if report.exists() else "NOT_RUN"
-                data.append({"data_id": did, "quality": quality})
+                item = next((d for d in chain["manifest"].get("datasets", []) if d.get("data_id") == did), {})
+                data.append({"data_id": did, "quality": quality,
+                             "provenance_class": item.get("provenance_class", ""),
+                             "label": item.get("label", ""),
+                             "validation": item.get("generation", {}).get("validation_status", "")})
             reqs.append({
                 "requirement_id": rid, "priority": req.get("priority"), "status": req.get("status"),
                 "gap_id": req.get("gap_id"), "analysis_id": req.get("analysis_id"),

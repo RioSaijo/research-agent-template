@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.7.0
+Version: 1.8.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -30,7 +30,8 @@ Version: 1.7.0
 - `STATUS.md`: 現在状態、task、Claim Evidence Table、decision log。
 - `LITERATURE.md`: 研究判断に必要な文献map。
 - `literature/`: systematic reviewのprotocol、journal registry、search log、record、screening、extractionのmachine-readable artifact。role別の会話記録は置かない。
-- `data/manifest.json`: data inventoryのmachine-readable正本。raw fileは`data/raw/<DATA-ID>/`（gitignored、read-only）に置き、manifestにはsource、license、access、acquisition、SHA-256、timestamp/timezone、sampling interval、variable/unit/valid rangeを記録する。
+- `data/generated/`: 生成data（gitignored、read-only）。全行に`data_origin`列、各fileに`.provenance.json` sidecarを持つ（7.3）。
+- `data/manifest.json`: data inventoryのmachine-readable正本。各datasetは`provenance_class`を持つ。raw fileは`data/raw/<DATA-ID>/`（gitignored、read-only）に置き、manifestにはsource、license、access、acquisition、SHA-256、timestamp/timezone、sampling interval、variable/unit/valid rangeを記録する。
 - `evidence/`: Gate 3のmachine-readable正本。`analysis_plan.json`（事前固定したanalysis、criterion、required check、independence level）、`runs.csv`（実行provenanceとhash）、`checks.csv`（challenge/verification check）、`claims.csv`（claim registry）。
 - `REFEREE.md`: 独立した反証優先レビュー。
 - `paper/`: publication artifact。`main.tex`、`refs.bib`、`figures/`を含む。
@@ -86,7 +87,7 @@ RQは再評価可能だが変更には人間の承認が必要である。次の
 3. Data requirement derivation（`data/requirements.csv`）: Data Requirement roleはRQ、gap、analysis planのmetric/criterion/baselineから逆算し、必要なevidence、変数、unit、時間・空間解像度、最小coverage（期間、季節、建物数、気候等）、context（building type、system、occupancy）、品質要件、priority `MUST / SHOULD / COULD`、derivation（なぜ必要か）を記録する。gapの種類はrequirementを規定する。例: `TRANSFER_GAP`は複数建物・複数気候のdata、`CONTRADICTION_GAP`は矛盾studyの条件を再現できるdata、`METHOD_GAP`は共通baselineとbenchmark data、`DATA_GAP`は欠けている変数・metadata自体を要する。
 4. Data source search（`data/source_search_log.csv`）: Data Source Scoutはrequirementごとに次のpathwayを順に探索し、source、source type、query、filter、hit数、取得数、access limitationを記録する: public data（data repository: DataCite、Zenodo等、data paper、included studyが使用・公開したdata = `LITERATURE_DATA`、official statistics、standard/benchmark）、API、measurement（BMS/BEMS/IoT、BIM/IFC、追加測定計画）、simulation、proxy、external provider、design change。`MUST` requirementは少なくとも`DATA_REPOSITORY`と`LITERATURE_DATA`を検索してから判断する。literature extractionの`data_availability`列がLITERATURE_DATA探索の入口になる。hit数と取得数の差は理由を記録し、表示上限を探索上限としない。`code/data/discovery.py search --source datacite|zenodo`はpaginationで全hitを取得し、candidateとして記録する（DataCiteはcursor pagination、Zenodoは匿名API上限の1 page 25件・10,000件window。windowを超えるqueryは期間や用語で分割する）。
 5. Candidate screening（`data/candidates.csv`）: Data Screenerは各candidateを`data/screening_rubric.json`の基準記述（anchor）に従い、fit、coverage、resolution、quality/provenance、access、cost、reproducibilityで0-3評価し、各criterionのanchorを引用した`score_rationale`、`rubric_version`、`SELECTED / BACKUP / REJECTED / DUPLICATE`と理由を記録する。迷う場合は低い方のlevelを採り、未確認metadataではquality、access、reproducibilityを1より高くしない。fitまたはaccessが0のcandidateは選定しない。`SATISFIED`にはfit、coverage、resolutionがすべて2以上の選定candidateを要し、満たさなければ`PARTIAL`または`PROXY`とする。MUST requirementの選定はscreenerと別role（`verified_by_role`）が再採点する。rubricを変更したらversionを上げ、旧versionで採点したcandidateを再採点する。repository検索は検索元をまたいでDOIで重複を判定し、重複rowは削除せず`DUPLICATE`と`duplicate_of`で残す。選定にはlicenseとaccess classの確認、`data/manifest.json` entry、manifestのrelated_rqとの一致を要する。
-6. Requirement status: `SATISFIED / PARTIAL / PROXY`は選定candidate経由のmanifest datasetを要し、`PARTIAL`と`PROXY`は不足またはproxy妥当性を記録する。`INSUFFICIENT`（`DATA_INSUFFICIENT`）は全pathwayを評価した後にだけ宣言できる。
+6. Requirement status: `SATISFIED / PARTIAL / PROXY`は選定candidate経由のobserved manifest datasetを要し、`PARTIAL`と`PROXY`は不足またはproxy妥当性を記録する。生成dataで満たすrequirementは`GENERATED`とし、`SATISFIED`にしない（7.3）。`INSUFFICIENT`（`DATA_INSUFFICIENT`）は全pathwayと生成の可能性を評価した後にだけ宣言できる。
 7. Collection discipline: manifestのdatasetとanalysis planのdata IDはいずれかのrequirementに正当化されていなければならない。RQに結びつかないdata収集をしない。
 
 ## 7. Method, data, and reproducibility
@@ -115,13 +116,25 @@ seed、major software version、simulation parameter、manual processing、negat
 - confirmatory runは`code/analysis/record_run.py`経由で実行する。plan未lock、未commitのtracked code、seed未指定、入力欠損を拒否し、子processへ`RESEARCH_SEED`と`PYTHONHASHSEED`を渡し、実行前後の入力hash一致、出力生成を確認し、`pip freeze`を`results/environments/<RUN-ID>.txt`へ保存して`evidence/runs.csv`へ追記する。失敗したcommandはevidenceとして記録しない。
 - domain固有の処理（weather正規化、simulation、FDD、model学習等）は`code/analysis/`または`code/preprocessing/`にRQ単位で追加し、共通部品を再実装しない。
 
+### 7.3 Generated data
+
+必要dataがpublic data、API、measurement（BMS/BEMS/IoT、BIM/IFC、追加測定）、external providerの全collection pathwayで取得できない場合、研究を止めずに生成dataを作成・検証・活用できる。生成dataは`SIMULATED`（物理・工学simulation等）、`SYNTHETIC`（bootstrap、統計model、ML、rule、LLM等）、`AUGMENTED`（observedと生成の混合）に分類し、observed（`OBSERVED`）や変換data（`DERIVED`）と常に区別する。
+
+1. 条件: `data/source_search_log.csv`に4つのcollection pathwayの試行記録があり、requirementのnotesに取得できなかった理由がある。生成は期待する結果に合わせて行わない。
+2. 事前固定: 生成前に`data/manifest.json`の`generation.fidelity_criteria`へ、observed reference dataまたは文献・standardに対するfidelity基準（`ks / mean_rel_diff / std_rel_diff / acf_lag1_diff / range_coverage / duplicate_rate`）を記録する。生成元dataを複製していないかを`duplicate_rate`で確認する。
+3. 生成と登録: `code/data/generate.py bootstrap`（組込みのmoving-block bootstrap）または任意のgenerator（EnergyPlus等）で作成し、`generate.py register`で登録する。登録は`data/generated/<ID>/`（gitignored、read-only）に置き、全行に`data_origin`列、同名の`.provenance.json` sidecar、manifestの`provenance_class`、固定label `GENERATED DATA - not observed measurements`、generation block（method、generator、version、parameters、seed、calibration data、purpose、reason_not_collected、limitations、generated_by）を付ける。observed datasetや`data/raw/`へ生成rowを入れない。
+4. 検証: generatorと別roleのGenerated Data Validatorが`generate.py validate`でobserved referenceと比較し、`GENERATED_DATA_VALIDATION` checkを`evidence/checks.csv`へ記録する。基準が無い、またはFAILの生成dataはclaimに使わない。
+5. 活用と表示: `record_run.py`はinputからrunの`input_data_origin`（`OBSERVED / GENERATED / MIXED`）を自動記録する。生成dataを使うclaimは`claims.csv`の`generated_data_disclosure`とSTATUS.mdのData Originを必須とする。生成dataだけに基づくclaimは、modelやmethodについての記述（evidence type `SIMULATION / ANALYTICAL / SOFTWARE_TEST / BENCHMARK`）としてだけ`SUPPORTED`にでき、`CAUSAL`と`GENERALIZATION`は`SUPPORTED`にしない。
+6. 原稿とPDF: 生成dataとそれに由来する結果は、本文・図表captionで`\GeneratedData{ID}`（`paper/main.tex`で定義した可視label）を使って明示し、`generate.py check-disclosure`で検査する。報告書には生成理由、方法、fidelity結果、limitationsを含め、render済みPDFでlabelを確認する。
+7. 監査: `acquire.py verify`がmanifest・file・sidecar・行labelを、`discovery.py audit`がGENERATED statusの条件を、`evidence_audit.py`がclaim・run・STATUS.mdの表示と主張強度を検査する。
+
 ## 8. Evidence and claims
 
 Evidence Typeは`LITERATURE / STANDARD / MEASUREMENT / BMS_DATA / EXPERIMENT / SIMULATION / ANALYTICAL / STATISTICAL / BENCHMARK / SOFTWARE_TEST / CASE_STUDY / USER_EVALUATION`。
 
 Verificationは`NOT_VERIFIED / INTERNALLY_VERIFIED / INDEPENDENTLY_VERIFIED`、Claim Statusは`OPEN / PRELIMINARY / SUPPORTED / PARTIALLY_SUPPORTED / UNSUPPORTED`とする。`SUPPORTED`には事前定義したEvaluation Criterionの充足が必要である。Evidenceが存在してもClaimが支持されるとは限らず、Claimが支持されても独立検証済みとは限らない。独立検証は全caseで必須ではなく、設計上必要なclaimに割り当てる。
 
-`STATUS.md`のClaim Evidence TableでClaim ID、RQ、Claim、Evidence Type、Primary Evidence、Independent Check、Verification、Claim Status、Refereeを追跡する。machine-readableな正本は`evidence/claims.csv`とし、両者の不一致はGate 3 failureとする。
+`STATUS.md`のClaim Evidence TableでClaim ID、RQ、Claim、Evidence Type、Data Origin、Primary Evidence、Independent Check、Verification、Claim Status、Refereeを追跡する。machine-readableな正本は`evidence/claims.csv`とし、両者の不一致はGate 3 failureとする。
 
 ### 8.1 Pre-registered analysis and evidence registry
 
