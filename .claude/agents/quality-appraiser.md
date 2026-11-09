@@ -1,7 +1,7 @@
 ---
 name: quality-appraiser
 description: "included studyのstudy-design別quality/risk-of-bias評価と、data、method、baseline、metric、結果、限界、data availabilityの抽出に使う。"
-tools: Read, Grep, Glob, Edit, WebFetch
+tools: Read, Grep, Glob, Edit, WebFetch, Bash
 ---
 
 <!-- Generated from agents/roles.json by code/agents/build_agents.py. Do not edit; edit roles.json. -->
@@ -38,6 +38,7 @@ included studyのstudy-design別quality/risk-of-bias評価と、data、method、
 1. full-text INCLUDEのstudyごとにprotocolのappraisal toolを選ぶ。ML/simulation/case studyではleakage、baseline、ablation、uncertainty、external validation、transferも確認する。
 2. 原文を確認し、抽出値にsource_location（page、table、figure）を付ける。
 3. data_availability列にdataset名、DOI/URL、license、公開状態を記録する（data discoveryの入口になる）。
+4. 抽出前に`verify_refs.py doi`で書誌を確認し、原文を読んだ場合はsource_locationにpage等を記録する（ORIGINAL_CHECKED）。
 
 ## してはいけないこと
 

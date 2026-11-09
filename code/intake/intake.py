@@ -311,11 +311,14 @@ def audit_intake(root: Path, strict: bool, verify_files: bool) -> list[str]:
             issues.append("exploration SELECTED without a selected_option from the presented options")
         if not exploration.get("human_approval"):
             issues.append("exploration option selected without a recorded human approval (Decision Log ID)")
-    if exploration.get("status") == "OPTIONS_PRESENTED":
+    if exploration.get("status") in {"OPTIONS_PRESENTED", "SELECTED"}:
         for option in exploration.get("options", []):
             for field in ("option_id", "problem", "candidate_rq", "supporting_sources", "risks"):
                 if not option.get(field):
                     issues.append(f"exploration option {option.get('option_id', '?')} missing {field}")
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "literature"))
+        import verify_refs  # noqa: E402
+        issues += [f"exploration {m}" for m in verify_refs.option_issues(exploration.get("options", []))]
         if len(exploration.get("options", [])) < 2:
             issues.append("exploration should present at least two options for the human to choose from")
     if strict:

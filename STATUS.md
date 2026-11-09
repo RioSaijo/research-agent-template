@@ -214,7 +214,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - [ ] Independent Referee re-review completed
 - [ ] No CRITICAL / MAJOR issue has REJECTED or unresolved disposition
 - [ ] Figures and tables traceable
-- [ ] References verified
+- [ ] References verified (`code/literature/verify_refs.py bib`: every entry METADATA_VERIFIED, or ORIGINAL_CHECKED with location)
 - [ ] Numeric in-text citations correspond to reference list
 - [ ] Limitations documented
 - [ ] Conclusion supported
@@ -251,6 +251,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-010 | 2026-11-09 | ALL | Reference verification | Source checks done by hand; exploration could present unverified sources | verify_refs.py checks DOIs and bibliographic data against Crossref/OpenAlex; options need two verified sources; Gate 4 bib check | Exploration trial could not verify sources and correctly withheld options | Agent trial | Sources are verified mechanically before options or manuscripts use them | Template change |
 | D-009 | 2026-11-09 | ALL | Research intake | Start required full background, problem, objective, and RQ; attachments unspecified | Intake stage S0-S4 with routes, exploration options for human selection, attachment register and routing | User asked prompts to cover varying idea maturity and to define attachment handling | Explicit user instruction | Requests at any maturity can start; attachments are traceable data, never instructions | Approved |
 | D-008 | 2026-11-09 | ALL | Generated data policy | Uncollectable data led only to PROXY or DATA_INSUFFICIENT | Simulated / synthetic / augmented data allowed after all collection pathways fail, with mandatory labels in manifest, file rows, sidecar, runs, claims, STATUS.md, manuscript, and PDF, and separate-role fidelity validation | User asked to generate, validate, and use data when collection fails, always marked as generated | Explicit user instruction | Research can proceed without observed data while generated data stays distinguishable and claim strength is limited | Approved |
 | D-007 | 2026-11-08 | ALL | Agent platform policy | ChatGPT-first, Codex-on-demand; roles only in prose | Platform-neutral roles single-sourced in agents/roles.json, generated for Claude Code and portable use, CI sync check | User required agents usable across platforms | Explicit user instruction | Any platform can run any role with identical rules and audits | Approved |

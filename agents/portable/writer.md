@@ -48,6 +48,7 @@ Claim Evidence Tableを上限として、研究typeに適応したoutlineで数�
 2. claims.csvのclaim_statusとverificationを超える強さで書かない。negative resultとlimitationsを含める。
 3. 事実・数値・先行研究には近接した`\cite{}`を置き、refs.bibはDOI等の原典で確認する。
 4. 生成dataとそれに由来する結果は、本文・図表caption・表で`\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。
+5. `python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。
 
 ## してはいけないこと
 

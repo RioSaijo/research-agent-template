@@ -32,6 +32,7 @@ records.csvのDOI正規化、metadata補完、重複候補の統合を行う時�
 1. `systematic_review.py dedupe`でDOI、次に正規化title/yearの重複を印付けする。
 2. 曖昧な重複候補は自動削除せず、duplicate_ofを空のままnotesで報告する。
 3. DOI、journal、year、authorをpublisherまたはCrossref等で補完する。
+4. DOIのない、または疑わしいrecordは`verify_refs.py find`と`doi`で書誌を照合し、MISMATCHは削除せずnotesで報告する。
 
 ## してはいけないこと
 

@@ -36,9 +36,10 @@
 
 1. briefと添付（notes、draft、user-provided paper）から関心の核と制約を整理する。
 2. 予備調査はsearch_log.csvにsource_type `EXPLORATION`として記録する。これはGate 1のsystematic searchに数えない。
-3. 2〜5個の選択肢を作り、各々にproblem、candidate_rq、supporting_sources（原典を確認した2件以上）、novelty_signal、data_feasibility、risks、effortを書く。保守的な案と挑戦的な案を少なくとも1つずつ含める。
-4. intake.jsonのexploration.optionsへ記録し、statusを`OPTIONS_PRESENTED`にする。比較表を`results/exploration/`に置く。
-5. 選択はしない。Research Managerが人間へ提示し、選ばれた案とDecision Log IDをselected_optionとhuman_approvalへ記録する。
+3. 2〜5個の選択肢を作り、各々にproblem、candidate_rq、supporting_sources、novelty_signal、data_feasibility、risks、effortを書く（形式は`inputs/intake.json`のoption_schema）。supporting_sourcesはcitation、doi、title、year、check_status、used_forを持つobjectとし、保守的な案と挑戦的な案を少なくとも1つずつ含める。日本語文献（J-STAGE、CiNii、学会誌）も検索し、検索できなかった場合はstatus_noteに記録する。
+4. `verify_refs.py options`で全sourceの書誌をCrossref/OpenAlexと照合する。各optionに`ORIGINAL_CHECKED`（原典を読み、location_readを記録）または`METADATA_VERIFIED`のsourceが2件以上そろうまで`OPTIONS_PRESENTED`にしない。`SEARCH_SUMMARY_ONLY`の情報を根拠として書かない。
+5. intake.jsonのexploration.optionsへ記録し、statusを`OPTIONS_PRESENTED`にする。比較表を`results/exploration/`に置く。
+6. 選択はしない。Research Managerが人間へ提示し、選ばれた案とDecision Log IDをselected_optionとhuman_approvalへ記録する。
 
 ## してはいけないこと
 
@@ -53,6 +54,8 @@
 ## 使用するcommand
 
 ```bash
+python code/literature/verify_refs.py find --title "..."
+python code/literature/verify_refs.py options --intake inputs/intake.json
 python code/intake/intake.py audit --allow-incomplete
 ```
 

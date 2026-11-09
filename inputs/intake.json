@@ -28,6 +28,28 @@
     "status": "NOT_REQUIRED",
     "options": [],
     "selected_option": "",
-    "human_approval": ""
+    "human_approval": "",
+    "status_note": "",
+    "option_schema": {
+      "option_id": "OPT-1",
+      "stance": "conservative / middle / ambitious",
+      "problem": "",
+      "candidate_rq": "",
+      "supporting_sources": [
+        {
+          "citation": "",
+          "doi": "",
+          "title": "",
+          "year": "",
+          "check_status": "ORIGINAL_CHECKED / METADATA_VERIFIED / SEARCH_SUMMARY_ONLY",
+          "location_read": "page/section when ORIGINAL_CHECKED",
+          "used_for": "which statement in the option this source supports"
+        }
+      ],
+      "novelty_signal": "",
+      "data_feasibility": "",
+      "risks": "",
+      "effort": ""
+    }
   }
 }

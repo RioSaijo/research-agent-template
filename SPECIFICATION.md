@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.9.0
+Version: 1.10.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -64,7 +64,7 @@ Version: 1.9.0
 | S3 | RQ・method・data設計済み | METHODOLOGY: closest workを短く確認しGate 2へ | 通常なし |
 | S4 | 継続・改訂（原稿、査読コメント等あり） | REVISION: 該当gateから再開 | 方向を変える指摘時 |
 
-ユーザーがstageを申告してもIntake Coordinatorが根拠付きで判定し直す。EXPLORATIONの予備調査はprotocolをlockせず、`literature/search_log.csv`へsource_type `EXPLORATION`として記録し、Gate 1のsystematic searchに数えない。各選択肢はproblem、candidate RQ、原典確認済みsupporting sources、novelty signal、data feasibility、risks、effortを持ち、Exploration Analystは選ばない。人間が選んだ案とDecision Log IDを記録してからS2のrouteへ進む。止まらず進める実行（non-stop execution）はRQが定まったS2以降に適用する。
+ユーザーがstageを申告してもIntake Coordinatorが根拠付きで判定し直す。選択肢の根拠文献は`code/literature/verify_refs.py`でCrossref/OpenAlexと照合し、各選択肢に`ORIGINAL_CHECKED`（原典を読み、箇所を記録）または`METADATA_VERIFIED`（DOIが実在し書誌が一致）の文献が2件以上あるまで人間へ提示しない。検索結果の要約だけの文献（`SEARCH_SUMMARY_ONLY`）は根拠にしない。EXPLORATIONの予備調査はprotocolをlockせず、`literature/search_log.csv`へsource_type `EXPLORATION`として記録し、Gate 1のsystematic searchに数えない。各選択肢はproblem、candidate RQ、原典確認済みsupporting sources、novelty signal、data feasibility、risks、effortを持ち、Exploration Analystは選ばない。人間が選んだ案とDecision Log IDを記録してからS2のrouteへ進む。止まらず進める実行（non-stop execution）はRQが定まったS2以降に適用する。
 
 ### 4.3 Attached materials
 
@@ -206,7 +206,7 @@ journal掲載論文の検索はすべての研究テーマで必須である。p
 
 research agentは発見・関連性・gap・novelty・競合methodを担当する。paper-reading-moduleはlibrary、reference numbering、keyword/field classification、brief review、paper-review-moduleはdeep reading、method/evidence/limitation比較を担当する。文献は`NORMAL / READ / DEEP_REVIEW / CRITICAL`に分類し、RQ・問題定義・方法を変え得る論文を`CRITICAL`とする。詳細noteを重複させない。
 
-source優先順位は原著査読論文、公式standard/regulation/specification、公式dataset/institutional report、publisher/DOI、author/institution repository、高品質review、その他secondaryの順。数値記述にはsourceが必要で、未確認値は`要検討`。`DIRECT_EVIDENCE / SECONDARY_EVIDENCE / INFERENCE / UNVERIFIED`を表示し、推論を明記する。novelty、method、metric根拠、threshold、standard要件、数値背景には原典を使う。referenceを捏造しない。web snippetだけを最終証拠にしない。
+source優先順位は原著査読論文、公式standard/regulation/specification、公式dataset/institutional report、publisher/DOI、author/institution repository、高品質review、その他secondaryの順。数値記述にはsourceが必要で、未確認値は`要検討`。referenceの確認状態は`ORIGINAL_CHECKED / METADATA_VERIFIED / SEARCH_SUMMARY_ONLY / MISMATCH / NOT_FOUND`で記録し、`code/literature/verify_refs.py`（Crossref、OpenAlex）でDOIと書誌を照合する。`METADATA_VERIFIED`は文献の実在と書誌の正しさだけを示し、内容の根拠にはならない。中心的な主張を支える文献は原典を確認する。`DIRECT_EVIDENCE / SECONDARY_EVIDENCE / INFERENCE / UNVERIFIED`を表示し、推論を明記する。novelty、method、metric根拠、threshold、standard要件、数値背景には原典を使う。referenceを捏造しない。web snippetだけを最終証拠にしない。
 
 報告書本文とmanuscriptは数字式引用`[1]`を使用する。引用番号はreference listと一意に対応させ、LaTeXでは`\cite{...}`と`unsrt` bibliographyを既定とする。事実、数値、先行研究、method選定根拠、standard要件には近接した本文引用を置く。
 

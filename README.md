@@ -148,6 +148,7 @@ research-agent-template/
 │   └── figures/
 ├── code/
 │   ├── literature/systematic_review.py
+│   ├── literature/verify_refs.py  # DOI・書誌をCrossref/OpenAlexで照合
 │   ├── intake/intake.py     # 添付の登録・振り分け、受付の監査
 │   ├── agents/build_agents.py  # role定義から各platform用fileを生成・検査
 │   ├── evidence/evidence_audit.py

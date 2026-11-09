@@ -153,7 +153,8 @@
       "procedure": [
         "briefと添付（notes、draft、user-provided paper）から関心の核と制約を整理する。",
         "予備調査はsearch_log.csvにsource_type `EXPLORATION`として記録する。これはGate 1のsystematic searchに数えない。",
-        "2〜5個の選択肢を作り、各々にproblem、candidate_rq、supporting_sources（原典を確認した2件以上）、novelty_signal、data_feasibility、risks、effortを書く。保守的な案と挑戦的な案を少なくとも1つずつ含める。",
+        "2〜5個の選択肢を作り、各々にproblem、candidate_rq、supporting_sources、novelty_signal、data_feasibility、risks、effortを書く（形式は`inputs/intake.json`のoption_schema）。supporting_sourcesはcitation、doi、title、year、check_status、used_forを持つobjectとし、保守的な案と挑戦的な案を少なくとも1つずつ含める。日本語文献（J-STAGE、CiNii、学会誌）も検索し、検索できなかった場合はstatus_noteに記録する。",
+        "`verify_refs.py options`で全sourceの書誌をCrossref/OpenAlexと照合する。各optionに`ORIGINAL_CHECKED`（原典を読み、location_readを記録）または`METADATA_VERIFIED`のsourceが2件以上そろうまで`OPTIONS_PRESENTED`にしない。`SEARCH_SUMMARY_ONLY`の情報を根拠として書かない。",
         "intake.jsonのexploration.optionsへ記録し、statusを`OPTIONS_PRESENTED`にする。比較表を`results/exploration/`に置く。",
         "選択はしない。Research Managerが人間へ提示し、選ばれた案とDecision Log IDをselected_optionとhuman_approvalへ記録する。"
       ],
@@ -166,6 +167,8 @@
         "2つ以上の選択肢がOPTIONS_PRESENTEDで記録された。"
       ],
       "commands": [
+        "python code/literature/verify_refs.py find --title \"...\"",
+        "python code/literature/verify_refs.py options --intake inputs/intake.json",
         "python code/intake/intake.py audit --allow-incomplete"
       ],
       "claude_tools": [
@@ -173,6 +176,7 @@
         "Grep",
         "Glob",
         "Edit",
+        "Bash",
         "Write",
         "WebSearch",
         "WebFetch"
@@ -372,7 +376,8 @@
       "procedure": [
         "`systematic_review.py dedupe`でDOI、次に正規化title/yearの重複を印付けする。",
         "曖昧な重複候補は自動削除せず、duplicate_ofを空のままnotesで報告する。",
-        "DOI、journal、year、authorをpublisherまたはCrossref等で補完する。"
+        "DOI、journal、year、authorをpublisherまたはCrossref等で補完する。",
+        "DOIのない、または疑わしいrecordは`verify_refs.py find`と`doi`で書誌を照合し、MISMATCHは削除せずnotesで報告する。"
       ],
       "must_not": [
         "retrieval rowを削除する。",
@@ -548,7 +553,8 @@
       "procedure": [
         "full-text INCLUDEのstudyごとにprotocolのappraisal toolを選ぶ。ML/simulation/case studyではleakage、baseline、ablation、uncertainty、external validation、transferも確認する。",
         "原文を確認し、抽出値にsource_location（page、table、figure）を付ける。",
-        "data_availability列にdataset名、DOI/URL、license、公開状態を記録する（data discoveryの入口になる）。"
+        "data_availability列にdataset名、DOI/URL、license、公開状態を記録する（data discoveryの入口になる）。",
+        "抽出前に`verify_refs.py doi`で書誌を確認し、原文を読んだ場合はsource_locationにpage等を記録する（ORIGINAL_CHECKED）。"
       ],
       "must_not": [
         "abstractやsnippetだけで抽出する。",
@@ -563,7 +569,8 @@
         "Grep",
         "Glob",
         "Edit",
-        "WebFetch"
+        "WebFetch",
+        "Bash"
       ]
     },
     {
@@ -724,7 +731,8 @@
         "strict auditを`--allow-incomplete`なしで実行する。",
         "PRISMA flowを生成し、LITERATURE.mdの件数と照合する。",
         "LOW_VOLUME_REVIEW trigger、access limitation、未検索sourceを確認する。",
-        "監査結果をLITERATURE.mdへ記録し、不合格項目をResearch Managerへ返す。"
+        "監査結果をLITERATURE.mdへ記録し、不合格項目をResearch Managerへ返す。",
+        "included studyと`paper/refs.bib`のDOIを`verify_refs.py`で照合し、METADATA_VERIFIED以上でないものを報告する。"
       ],
       "must_not": [
         "不合格を通過扱いにする。",
@@ -1417,7 +1425,8 @@
         "対象claimとartifactを特定し、反例、leakage、bias、alternative explanation、literature conflict、novelty overclaimを探す。",
         "issueにCRITICAL/MAJOR/MINOR/NOTEと必要revisionを付ける。",
         "再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。",
-        "生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。"
+        "生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。",
+        "`results/references/verification.json`を確認し、未検証referenceに依存する記述を指摘する。"
       ],
       "must_not": [
         "会話や自己評価を根拠にする。",
@@ -1512,7 +1521,8 @@
         "PROJECT.mdのReport Designにreport type、audience、outline、理由を記録する。",
         "claims.csvのclaim_statusとverificationを超える強さで書かない。negative resultとlimitationsを含める。",
         "事実・数値・先行研究には近接した`\\cite{}`を置き、refs.bibはDOI等の原典で確認する。",
-        "生成dataとそれに由来する結果は、本文・図表caption・表で`\\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。"
+        "生成dataとそれに由来する結果は、本文・図表caption・表で`\\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。",
+        "`python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。"
       ],
       "must_not": [
         "Claim Evidence Tableにない結論を書く。",
