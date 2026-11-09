@@ -377,6 +377,18 @@ def audit_evidence(
                                         and c.get("result") == "PASS" for c in checks)
                         if not validated or by_id[did].get("generation", {}).get("validation_status") != "PASS":
                             issues.append((clid, f"generated dataset {did} has no passing GENERATED_DATA_VALIDATION"))
+                for did in generated_ids:
+                    gen = by_id[did].get("generation", {})
+                    if gen.get("within_reference_conditions") is False and status == "SUPPORTED":
+                        issues.append((clid, f"{did} represents conditions outside its reference data; "
+                                             "claims using it cannot be SUPPORTED"))
+                    shared = set(gen.get("calibration_data_ids", [])) & set(used)
+                    if shared:
+                        leakage_ok = any(c.get("check_type") == "LEAKAGE" and c.get("result") == "PASS"
+                                         for c in claim_checks)
+                        if not leakage_ok:
+                            issues.append((clid, f"{did} was generated from {', '.join(sorted(shared))}, which the same "
+                                                 "analysis also uses; a passing LEAKAGE check is required"))
                 if origin == "GENERATED" and status == "SUPPORTED":
                     if claim.get("evidence_type") not in MODEL_EVIDENCE_TYPES:
                         issues.append((clid, "claim rests only on generated data; SUPPORTED needs evidence_type "

@@ -391,7 +391,7 @@
       ],
       "procedure": [
         "食い違いだけを抽出する。TITLE_ABSTRACTでは`EXCLUDE`と`INCLUDE / MAYBE`の組、FULL_TEXTでは`INCLUDE`と`EXCLUDE`の組が食い違い。TITLE_ABSTRACTの`INCLUDE`と`MAYBE`はどちらもfull textへ進むので食い違いではない。",
-        "eligibility criteriaだけで裁定し、食い違ったrowの1つにadjudicated_decision、adjudicator（`Eligibility Adjudicator`）、notesへ理由を記録する。",
+        "eligibility criteriaだけで裁定し、食い違ったrowの1つ（Screener Aのrow）の空のadjudicated_decisionとadjudicator（`Eligibility Adjudicator`）を埋め、notesの末尾に` || Adjudication: <理由>`を追記する。これは共通規則「既存rowを書き換えない」の唯一の例外で、decision、exclusion_reason、decided_atなど判定者の記録は変更しない。",
         "EXCLUDEのexclusion_reasonは`OUT_OF_SCOPE / WRONG_CONTEXT / WRONG_OUTCOME / WRONG_METHOD / WRONG_PUBLICATION_TYPE / NOT_PEER_REVIEWED / LANGUAGE / DATE_RANGE / NO_FULL_TEXT / DUPLICATE / RETRACTED / INSUFFICIENT_REPORTING`から1つ選ぶ。複数に該当する場合はprotocolのexclusion記載順で最初のものを記録し、他はnotesに`also: <REASON>`と書く。protocol内の不整合に気づいたら判定を止めずnotesと報告に記録する。",
         "full-text exclusionには理由を必ず残す。auditでunresolved conflictが0になったことを確認する。"
       ],
@@ -919,7 +919,9 @@
         "generated-data-validator"
       ],
       "procedure": [
-        "source_search_log.csvで、対象requirementのPUBLIC_DATA、API、MEASUREMENT、EXTERNAL_PROVIDERの試行記録を確認する。欠けていれば生成せずData Source Scoutへ返す。",
+        "source_search_log.csvで、対象requirementのPUBLIC_DATA、API、MEASUREMENT、EXTERNAL_PROVIDERの試行記録を確認する。欠けていれば生成せずData Source Scoutへ返す。 `generate.py`も4経路の記録とrequirementのnotesがなければ生成を拒否する。",
+        "生成dataが表すべき条件（target_conditions）と、observed referenceがそれを含むか（within_reference_conditions）を判断する。含まない場合はbootstrapを使わず、calibrated simulation等を選ぶ（`generate.py`も拒否する）。",
+        "fidelity基準はtarget_conditionsを検証できるものにする。resamplingではduplicate_rateに上限を設けず、生成dataとcalibration dataを同じ分析で使う場合のleakage管理をlimitationsに書く。",
         "生成前に、manifestの新しいdata IDへgeneration.fidelity_criteria（observed referenceに対する基準）とpurpose、reason_not_collected、limitationsを記録する。",
         "`generate.py bootstrap`または任意のgenerator（code/generation/に置き、seed固定）で作成し、`generate.py register`で登録する。登録で`data_origin`列、sidecar、固定labelが付く。",
         "requirementのstatusを`GENERATED`（`SATISFIED`ではない）、satisfied_byに生成data ID、notesに取得できなかった理由を記録する。",
@@ -935,8 +937,8 @@
         "生成dataが登録され、検証依頼を出した。"
       ],
       "commands": [
-        "python code/data/generate.py bootstrap --data-id GEN-01 --reference-data-id DATA-01 --n-rows 720 --block-length 24 --seed 42 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\"",
-        "python code/data/generate.py register --data-id GEN-02 --path <file.csv> --provenance-class SIMULATED --method SIMULATION --generator \"EnergyPlus 24.2 model.idf\" --seed 0 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\""
+        "python code/data/generate.py bootstrap --data-id GEN-01 --requirement-id DR-01 --reference-data-id DATA-01 --n-rows 720 --block-length 24 --seed 42 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\" --target-conditions \"...\" --within-reference-conditions yes",
+        "python code/data/generate.py register --data-id GEN-02 --requirement-id DR-02 --path <file.csv> --provenance-class SIMULATED --method SIMULATION --generator \"EnergyPlus 24.2 model.idf\" --seed 0 --purpose \"...\" --reason-not-collected \"...\" --limitations \"...\" --target-conditions \"...\" --within-reference-conditions yes"
       ],
       "claude_tools": [
         "Read",
@@ -971,6 +973,7 @@
       ],
       "procedure": [
         "manifestのgeneration blockに、fidelity_criteria、reason_not_collected、limitations、固定labelがあることを確認する。基準がなければFAILとして返す。",
+        "target_conditionsとreference dataの条件（期間、季節、建物、気候）を比べ、referenceが目標条件を表しているか確認する。表していない場合、fidelity PASSは代表性の根拠にならないことを報告に明記する。",
         "`generate.py validate --record-check`でobserved referenceと比較する。duplicate_rate（生成元の複製）も確認する。",
         "FAILの場合は、その生成dataをclaimに使わないようResearch Managerへ報告し、requirementを`SEARCHING`または`INSUFFICIENT`へ戻す案を示す。",
         "PASSでも、生成dataで答えられない問い（実建物での因果、一般化）をlimitationsとして報告する。"

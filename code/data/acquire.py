@@ -203,7 +203,7 @@ def validate_manifest(manifest: dict, root: Path | None, strict: bool) -> list[s
             for field in ("title", "source", "owner", "access", "license"):
                 if not defined(dataset.get(field)):
                     issues.append(f"{did}: field undefined: {field}")
-            if not defined(method):
+            if not defined(method) and dataset.get("provenance_class") not in {"SIMULATED", "SYNTHETIC", "AUGMENTED"}:
                 issues.append(f"{did}: acquisition method undefined")
             if not [f for f in dataset.get("files", []) if f.get("path")]:
                 issues.append(f"{did}: no raw file registered")

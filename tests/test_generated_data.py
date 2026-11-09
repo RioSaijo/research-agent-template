@@ -43,18 +43,24 @@ def project(tmp_path):
             {"metric": "acf_lag1_diff", "variable": "power", "max": 0.1}]}},
     ]}
     (tmp_path / "data/manifest.json").write_text(json.dumps(manifest))
+    pd.DataFrame([{"requirement_id": "DR-01", "rq_id": "RQ-01", "status": "SEARCHING",
+                   "notes": "no winter data from any pathway"}]).to_csv(tmp_path / "data/requirements.csv", index=False)
+    pd.DataFrame([{"search_id": f"S{i}", "requirement_ids": "DR-01", "source_type": t} for i, t in
+                  enumerate(["DATA_REPOSITORY", "API", "BMS_BEMS_IOT", "EXTERNAL_PROVIDER"])]).to_csv(
+        tmp_path / "data/source_search_log.csv", index=False)
     (tmp_path / "evidence").mkdir()
     (tmp_path / "evidence/checks.csv").write_text(
         "check_id,claim_id,analysis_id,data_id,check_type,description,role,run_id,independence_level,artifact,result,impact_on_claim,checked_at\n")
     return tmp_path
 
 
-def bootstrap(tmp_path, role="Data Generator"):
+def bootstrap(tmp_path, role="Data Generator", within="yes"):
     return GEN.main(["bootstrap", "--root", str(tmp_path), "--manifest", str(tmp_path / "data/manifest.json"),
-                     "--data-id", "GEN-01", "--reference-data-id", "OBS-01", "--n-rows", "336",
+                     "--data-id", "GEN-01", "--requirement-id", "DR-01", "--reference-data-id", "OBS-01", "--n-rows", "336",
                      "--block-length", "24", "--seed", "7", "--purpose", "extend winter coverage",
                      "--reason-not-collected", "no public or BMS data for February; provider declined",
-                     "--limitations", "inherits OBS-01 building and climate", "--role", role])
+                     "--limitations", "inherits OBS-01 building and climate", "--role", role,
+                     "--target-conditions", "same building and season as OBS-01", "--within-reference-conditions", within])
 
 
 def test_bootstrap_labels_file_sidecar_and_manifest(tmp_path):
@@ -172,7 +178,7 @@ CLAIM = {"claim_id": "CL-01", "analysis_id": "AN-01", "evidence_type": "SIMULATI
          "observed_value": "0.2", "uncertainty": "CI", "criterion_met": "YES", "verification": "NOT_VERIFIED",
          "claim_status": "SUPPORTED", "generated_data_disclosure": "model trained and tested on SYNTHETIC GEN-01"}
 MANIFEST = {"datasets": [{"data_id": "GEN-01", "provenance_class": "SYNTHETIC",
-                          "generation": {"validation_status": "PASS"}}]}
+                          "generation": {"validation_status": "PASS", "within_reference_conditions": True}}]}
 
 
 def evid(plan=PLAN, runs=RUNS, checks=CHECKS, claim=CLAIM, status=None):
@@ -228,3 +234,60 @@ def test_record_run_labels_generated_inputs(tmp_path):
         {"data_id": "GEN-01", "provenance_class": "SYNTHETIC", "files": [{"path": "data/generated/GEN-01/b.csv"}]}]}))
     assert REC.input_origin(tmp_path, ["data/raw/OBS-01/a.csv"]) == "OBSERVED"
     assert REC.input_origin(tmp_path, ["data/raw/OBS-01/a.csv", "data/generated/GEN-01/b.csv"]) == "MIXED"
+
+
+def test_generation_refused_until_collection_attempted(tmp_path):
+    root = project(tmp_path)
+    log = pd.read_csv(root / "data/source_search_log.csv")
+    log[log["source_type"] != "EXTERNAL_PROVIDER"].to_csv(root / "data/source_search_log.csv", index=False)
+    pd.DataFrame([{"requirement_id": "DR-01", "notes": ""}]).to_csv(root / "data/requirements.csv", index=False)
+    try:
+        bootstrap(root)
+        raise AssertionError("generation must be refused")
+    except SystemExit as exc:
+        assert "EXTERNAL_PROVIDER" in str(exc) and "notes" in str(exc)
+    assert not (root / "data/generated").exists()
+
+
+def test_bootstrap_refused_outside_reference_conditions(tmp_path):
+    root = project(tmp_path)
+    try:
+        bootstrap(root, within="no")
+        raise AssertionError("bootstrap must not extrapolate to unobserved conditions")
+    except SystemExit as exc:
+        assert "cannot represent conditions absent from the reference" in str(exc)
+
+
+def test_extrapolated_generated_data_cannot_support_claims():
+    manifest = {"datasets": [{"data_id": "GEN-01", "provenance_class": "SIMULATED",
+                              "generation": {"validation_status": "PASS", "within_reference_conditions": False}}]}
+    issues = [m for _, m in EVID.audit_evidence(PLAN, RUNS, CHECKS, [CLAIM], strict=False, manifest=manifest)]
+    assert any("outside its reference data" in m for m in issues)
+
+
+def test_generated_with_its_calibration_data_needs_leakage_check():
+    plan = copy.deepcopy(PLAN)
+    plan["analyses"][0]["data_ids"] = ["GEN-01", "OBS-01"]
+    manifest = {"datasets": [
+        {"data_id": "GEN-01", "provenance_class": "SYNTHETIC",
+         "generation": {"validation_status": "PASS", "within_reference_conditions": True, "calibration_data_ids": ["OBS-01"]}},
+        {"data_id": "OBS-01", "provenance_class": "OBSERVED"}]}
+    checks = [c for c in CHECKS if c["check_type"] != "LEAKAGE"]
+    issues = [m for _, m in EVID.audit_evidence(plan, RUNS, checks, [CLAIM], strict=False, manifest=manifest)]
+    assert any("LEAKAGE check is required" in m for m in issues)
+    issues = [m for _, m in EVID.audit_evidence(plan, RUNS, CHECKS, [CLAIM], strict=False, manifest=manifest)]
+    assert not any("LEAKAGE check is required" in m for m in issues)
+
+
+def test_validation_fails_when_generation_record_is_incomplete(tmp_path):
+    root = project(tmp_path)
+    bootstrap(root)
+    manifest = json.loads((root / "data/manifest.json").read_text())
+    del manifest["datasets"][1]["generation"]["within_reference_conditions"]
+    (root / "data/manifest.json").write_text(json.dumps(manifest))
+    rc = GEN.main(["validate", "--root", str(root), "--manifest", str(root / "data/manifest.json"), "--data-id", "GEN-01",
+                   "--reference-data-id", "OBS-01", "--role", "Generated Data Validator",
+                   "--output", str(root / "results/v.json")])
+    report = json.loads((root / "results/v.json").read_text())
+    assert rc == 1 and report["status"] == "FAIL"
+    assert any(c.get("metric") == "generation_record" for c in report["criteria"])

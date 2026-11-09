@@ -42,7 +42,7 @@ Screener A/Bの判定が食い違ったrecordだけを事前eligibilityで裁定
 ## 手順
 
 1. 食い違いだけを抽出する。TITLE_ABSTRACTでは`EXCLUDE`と`INCLUDE / MAYBE`の組、FULL_TEXTでは`INCLUDE`と`EXCLUDE`の組が食い違い。TITLE_ABSTRACTの`INCLUDE`と`MAYBE`はどちらもfull textへ進むので食い違いではない。
-2. eligibility criteriaだけで裁定し、食い違ったrowの1つにadjudicated_decision、adjudicator（`Eligibility Adjudicator`）、notesへ理由を記録する。
+2. eligibility criteriaだけで裁定し、食い違ったrowの1つ（Screener Aのrow）の空のadjudicated_decisionとadjudicator（`Eligibility Adjudicator`）を埋め、notesの末尾に` || Adjudication: <理由>`を追記する。これは共通規則「既存rowを書き換えない」の唯一の例外で、decision、exclusion_reason、decided_atなど判定者の記録は変更しない。
 3. EXCLUDEのexclusion_reasonは`OUT_OF_SCOPE / WRONG_CONTEXT / WRONG_OUTCOME / WRONG_METHOD / WRONG_PUBLICATION_TYPE / NOT_PEER_REVIEWED / LANGUAGE / DATE_RANGE / NO_FULL_TEXT / DUPLICATE / RETRACTED / INSUFFICIENT_REPORTING`から1つ選ぶ。複数に該当する場合はprotocolのexclusion記載順で最初のものを記録し、他はnotesに`also: <REASON>`と書く。protocol内の不整合に気づいたら判定を止めずnotesと報告に記録する。
 4. full-text exclusionには理由を必ず残す。auditでunresolved conflictが0になったことを確認する。
 

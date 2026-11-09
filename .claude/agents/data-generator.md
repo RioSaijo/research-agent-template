@@ -45,11 +45,13 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 ## 手順
 
-1. source_search_log.csvで、対象requirementのPUBLIC_DATA、API、MEASUREMENT、EXTERNAL_PROVIDERの試行記録を確認する。欠けていれば生成せずData Source Scoutへ返す。
-2. 生成前に、manifestの新しいdata IDへgeneration.fidelity_criteria（observed referenceに対する基準）とpurpose、reason_not_collected、limitationsを記録する。
-3. `generate.py bootstrap`または任意のgenerator（code/generation/に置き、seed固定）で作成し、`generate.py register`で登録する。登録で`data_origin`列、sidecar、固定labelが付く。
-4. requirementのstatusを`GENERATED`（`SATISFIED`ではない）、satisfied_byに生成data ID、notesに取得できなかった理由を記録する。
-5. Generated Data Validatorへ検証を依頼する。
+1. source_search_log.csvで、対象requirementのPUBLIC_DATA、API、MEASUREMENT、EXTERNAL_PROVIDERの試行記録を確認する。欠けていれば生成せずData Source Scoutへ返す。 `generate.py`も4経路の記録とrequirementのnotesがなければ生成を拒否する。
+2. 生成dataが表すべき条件（target_conditions）と、observed referenceがそれを含むか（within_reference_conditions）を判断する。含まない場合はbootstrapを使わず、calibrated simulation等を選ぶ（`generate.py`も拒否する）。
+3. fidelity基準はtarget_conditionsを検証できるものにする。resamplingではduplicate_rateに上限を設けず、生成dataとcalibration dataを同じ分析で使う場合のleakage管理をlimitationsに書く。
+4. 生成前に、manifestの新しいdata IDへgeneration.fidelity_criteria（observed referenceに対する基準）とpurpose、reason_not_collected、limitationsを記録する。
+5. `generate.py bootstrap`または任意のgenerator（code/generation/に置き、seed固定）で作成し、`generate.py register`で登録する。登録で`data_origin`列、sidecar、固定labelが付く。
+6. requirementのstatusを`GENERATED`（`SATISFIED`ではない）、satisfied_byに生成data ID、notesに取得できなかった理由を記録する。
+7. Generated Data Validatorへ検証を依頼する。
 
 ## してはいけないこと
 
@@ -65,8 +67,8 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 ## 使用するcommand
 
 ```bash
-python code/data/generate.py bootstrap --data-id GEN-01 --reference-data-id DATA-01 --n-rows 720 --block-length 24 --seed 42 --purpose "..." --reason-not-collected "..." --limitations "..."
-python code/data/generate.py register --data-id GEN-02 --path <file.csv> --provenance-class SIMULATED --method SIMULATION --generator "EnergyPlus 24.2 model.idf" --seed 0 --purpose "..." --reason-not-collected "..." --limitations "..."
+python code/data/generate.py bootstrap --data-id GEN-01 --requirement-id DR-01 --reference-data-id DATA-01 --n-rows 720 --block-length 24 --seed 42 --purpose "..." --reason-not-collected "..." --limitations "..." --target-conditions "..." --within-reference-conditions yes
+python code/data/generate.py register --data-id GEN-02 --requirement-id DR-02 --path <file.csv> --provenance-class SIMULATED --method SIMULATION --generator "EnergyPlus 24.2 model.idf" --seed 0 --purpose "..." --reason-not-collected "..." --limitations "..." --target-conditions "..." --within-reference-conditions yes
 ```
 
 ## 報告

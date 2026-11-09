@@ -28,6 +28,7 @@ import hashlib
 import json
 import re
 import stat
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -43,8 +44,10 @@ FIDELITY_METRICS = {"ks", "mean_rel_diff", "std_rel_diff", "acf_lag1_diff", "ran
 ORIGIN_COLUMN = "data_origin"
 GENERATED_PREFIX = "data/generated/"
 LABEL = "GENERATED DATA - not observed measurements"
-REQUIRED_GENERATION_FIELDS = ("method", "generator", "seed", "purpose", "reason_not_collected",
-                              "fidelity_criteria", "limitations", "generated_by")
+REQUIRED_GENERATION_FIELDS = ("method", "generator", "seed", "purpose", "reason_not_collected", "target_conditions",
+                              "within_reference_conditions", "fidelity_criteria", "limitations", "generated_by")
+# Resampling methods can only recombine observed rows; they cannot create conditions absent from the reference.
+RESAMPLING_METHODS = {"BOOTSTRAP"}
 
 
 def now_iso() -> str:
@@ -169,10 +172,36 @@ def validate_generated_entry(item: dict, root: Path | None, strict: bool) -> lis
     return issues
 
 
+def collection_issues(root: Path, requirement_id: str) -> list[str]:
+    """Generation is allowed only after every observed-data collection pathway was attempted."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import discovery  # noqa: E402
+    reqs = {r.get("requirement_id"): r for r in discovery.read_csv(root / "data/requirements.csv")}
+    req = reqs.get(requirement_id)
+    if req is None:
+        return [f"unknown requirement {requirement_id} in data/requirements.csv"]
+    issues = []
+    if discovery.placeholder(req.get("notes", "")):
+        issues.append(f"{requirement_id} notes do not record why observed data could not be collected")
+    types = {s.get("source_type") for s in discovery.read_csv(root / "data/source_search_log.csv")
+             if requirement_id in discovery.ids(s.get("requirement_ids", ""))}
+    for group in discovery.COLLECTION_GROUPS:
+        if not types & discovery.PATHWAY_GROUPS[group]:
+            issues.append(f"no {group} collection attempt for {requirement_id} in data/source_search_log.csv")
+    return issues
+
+
 def write_generated(root: Path, manifest_path: Path, data_id: str, frame: pd.DataFrame, filename: str,
                     pclass: str, generation: dict) -> str:
     if pclass not in GENERATED_CLASSES:
         raise SystemExit(f"[generate] provenance class must be one of {sorted(GENERATED_CLASSES)}")
+    if generation.get("method") in RESAMPLING_METHODS and generation.get("within_reference_conditions") is not True:
+        raise SystemExit("[generate] generation refused: resampling recombines observed rows and cannot represent "
+                         "conditions absent from the reference (other season, climate, building). Use a calibrated "
+                         "simulation or model and register it, or collect reference data for the target conditions.")
+    blocked = collection_issues(root, generation.get("requirement_id", ""))
+    if blocked:
+        raise SystemExit("[generate] generation refused; collect first:\n  " + "\n  ".join(blocked))
     manifest = load_manifest(manifest_path)
     item = dataset(manifest, data_id)
     if item.get("provenance_class") in {"OBSERVED", "DERIVED"}:
@@ -209,10 +238,12 @@ def write_generated(root: Path, manifest_path: Path, data_id: str, frame: pd.Dat
 
 
 def generation_from_args(args: argparse.Namespace, method: str, parameters: dict) -> dict:
-    return {"method": method, "generator": args.generator, "generator_version": getattr(args, "generator_version", ""),
+    return {"requirement_id": args.requirement_id, "method": method, "generator": args.generator, "generator_version": getattr(args, "generator_version", ""),
             "parameters": parameters, "seed": args.seed,
             "calibration_data_ids": [x for x in (args.calibration_data_ids or "").split(";") if x],
             "purpose": args.purpose, "reason_not_collected": args.reason_not_collected,
+            "target_conditions": args.target_conditions,
+            "within_reference_conditions": args.within_reference_conditions == "yes",
             "limitations": args.limitations, "generated_by": args.role}
 
 
@@ -346,6 +377,24 @@ def cmd_validate(args: argparse.Namespace) -> int:
     gen_file = next(f["path"] for f in item.get("files", []) if f.get("path"))
     ref_file = args.reference_file or next(f["path"] for f in ref.get("files", []) if f.get("path"))
     report = validate_frames(pd.read_csv(root / gen_file), pd.read_csv(root / ref_file), gen.get("fidelity_criteria", []))
+    missing = [f for f in REQUIRED_GENERATION_FIELDS if gen.get(f) in (None, "", [], "TO_DEFINE")]
+    if missing:
+        report["status"] = "FAIL"
+        report["criteria"].append({"metric": "generation_record", "passed": False,
+                                   "note": "required generation fields missing: " + ", ".join(missing)})
+    if gen.get("method") in RESAMPLING_METHODS and gen.get("within_reference_conditions") is not True:
+        report["status"] = "FAIL"
+        report["criteria"].append({"metric": "target_conditions", "passed": False,
+                                   "note": "resampled data not confirmed to lie within the reference conditions"})
+    notes = []
+    if gen.get("within_reference_conditions") is False:
+        notes.append("reference does not cover the target conditions; fidelity PASS shows similarity to the reference, "
+                     "not representativeness of the target. Generated data cannot make a claim SUPPORTED.")
+    if gen.get("method") in RESAMPLING_METHODS:
+        notes.append("resampled rows copy the reference; do not evaluate on the reference with models trained on this "
+                     "data (LEAKAGE check required when both are used).")
+    report.update(notes=notes, target_conditions=gen.get("target_conditions"),
+                  within_reference_conditions=gen.get("within_reference_conditions"))
     report.update(data_id=args.data_id, label=LABEL, generated_file=gen_file, reference_data_id=args.reference_data_id,
                   reference_file=ref_file, validated_by=args.role, validated_at=now_iso())
     output = Path(args.output or f"results/data_validation/{args.data_id}.json")
@@ -369,6 +418,8 @@ def cmd_validate(args: argparse.Namespace) -> int:
     save_manifest(manifest_path, manifest)
     for row in report["criteria"]:
         print(f"[generate] {row}")
+    for note in notes:
+        print(f"[generate] NOTE: {note}")
     print(f"[generate] {args.data_id} validation {report['status']} -> {output}")
     return 0 if report["status"] == "PASS" else 1
 
@@ -408,11 +459,17 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--root", default=".")
     gen_common = argparse.ArgumentParser(add_help=False)
     gen_common.add_argument("--data-id", required=True)
+    gen_common.add_argument("--requirement-id", required=True,
+                            help="data requirement this generated data stands in for (collection must have failed)")
     gen_common.add_argument("--seed", type=int, required=True)
     gen_common.add_argument("--purpose", required=True)
     gen_common.add_argument("--reason-not-collected", required=True,
                             help="which collection pathways failed and why (see data/source_search_log.csv)")
     gen_common.add_argument("--limitations", required=True)
+    gen_common.add_argument("--target-conditions", required=True,
+                            help="conditions the data must represent, e.g. 'office, January, heating season'")
+    gen_common.add_argument("--within-reference-conditions", required=True, choices=["yes", "no"],
+                            help="do the observed reference / calibration data cover the target conditions?")
     gen_common.add_argument("--role", default="Data Generator")
     reg = sub.add_parser("register", parents=[common, gen_common])
     reg.add_argument("--path", required=True)

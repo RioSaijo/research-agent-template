@@ -44,9 +44,10 @@ tools: Read, Grep, Glob, Edit, Bash
 ## 手順
 
 1. manifestのgeneration blockに、fidelity_criteria、reason_not_collected、limitations、固定labelがあることを確認する。基準がなければFAILとして返す。
-2. `generate.py validate --record-check`でobserved referenceと比較する。duplicate_rate（生成元の複製）も確認する。
-3. FAILの場合は、その生成dataをclaimに使わないようResearch Managerへ報告し、requirementを`SEARCHING`または`INSUFFICIENT`へ戻す案を示す。
-4. PASSでも、生成dataで答えられない問い（実建物での因果、一般化）をlimitationsとして報告する。
+2. target_conditionsとreference dataの条件（期間、季節、建物、気候）を比べ、referenceが目標条件を表しているか確認する。表していない場合、fidelity PASSは代表性の根拠にならないことを報告に明記する。
+3. `generate.py validate --record-check`でobserved referenceと比較する。duplicate_rate（生成元の複製）も確認する。
+4. FAILの場合は、その生成dataをclaimに使わないようResearch Managerへ報告し、requirementを`SEARCHING`または`INSUFFICIENT`へ戻す案を示す。
+5. PASSでも、生成dataで答えられない問い（実建物での因果、一般化）をlimitationsとして報告する。
 
 ## してはいけないこと
 
