@@ -10,7 +10,15 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ## CURRENT_PHASE
 
-`Literature Review`
+`Intake`
+
+## Research Maturity
+
+- Stage: TO_DEFINE（S0 関心領域 / S1 問題意識 / S2 RQ案 / S3 設計済み / S4 継続・改訂）
+- Route: TO_DEFINE（EXPLORATION / SYSTEMATIC_REVIEW / METHODOLOGY / REVISION）
+- Record: `inputs/intake.json`
+- Attachments: `inputs/attachments.csv`（0件）
+- Pending human decision: なし
 
 ## CURRENT_GATE
 
@@ -38,7 +46,9 @@ Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaim�
 
 | Task ID | Related RQ | Task | Purpose | Owner / Role | Dependency | Required Resource | Output | Status | Priority | Blocking Issue | Related Quality Gate |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T-001 | RQ-01 | Required inputを確認する | 研究入力を確定する | Research Manager | None | User input | PROJECT.md | TODO | P0 | None | Gate 1 |
+| T-000 | ALL | briefと添付を登録し成熟度を判定する | 開始点と人間の判断点を決める | Intake Coordinator | None | User message / attachments | inputs/intake.json / inputs/attachments.csv | TODO | P0 | None | Gate 1 |
+| T-001 | RQ-01 | Required inputを確認する | 研究入力を確定する | Research Manager | T-000 | inputs/intake.json | PROJECT.md | TODO | P0 | None | Gate 1 |
+| T-027 | RQ-01 | 予備調査で問題・RQの選択肢を示す（S0/S1のみ） | 人間が研究の方向を選べるようにする | Exploration Analyst | T-000 | Brief / attachments / light search | inputs/intake.json / results/exploration/ | BLOCKED | P0 | Stage not judged | Gate 1 |
 | T-002 | RQ-01 | closest prior workとgapを調べる | noveltyと問題定義を評価する | Literature Role | T-001 | Web / literature | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
 | T-003 | RQ-01 | data requirementと取得経路を設計する | feasibilityを評価する | Data Requirement Role | T-001 | Resource inventory | PROJECT.md | TODO | P1 | Input incomplete | Gate 2 |
 | T-004 | RQ-01 | method/evaluation/verificationを設計する | analysis前提を整える | Methodology Role | T-002, T-003 | Literature / data status | PROJECT.md | BLOCKED | P1 | Dependencies incomplete | Gate 2 |
@@ -111,6 +121,9 @@ Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaim�
 
 ### Gate 1 — Research Definition Gate
 
+- [ ] Intake recorded: stage, rationale, route, brief (`code/intake/intake.py audit`)
+- [ ] Every attachment registered with hash, stored under `inputs/raw/`, and routed or rejected with a reason
+- [ ] S0/S1 only: options presented and one selected by a human (Decision Log ID recorded)
 - [ ] Systematic review protocol locked before screening
 - [ ] Eligibility, date, language, publication type, sources, and synthesis plan defined
 - [ ] Database-specific queries independently peer reviewed
@@ -228,6 +241,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
 - Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
 - Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
+- Research intake added: maturity stages S0-S4, exploration options, attachment register and routing.
 - Generated data policy added: last-resort generation with mandatory labeling and separate-role fidelity validation.
 - Expert agent roles single-sourced in `agents/roles.json` and generated for Claude Code and portable (ChatGPT / Codex) use.
 - Problem-to-data chain added: machine-readable gaps, data requirements, data source search, candidate screening, and chain audit.
@@ -237,6 +251,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-009 | 2026-11-09 | ALL | Research intake | Start required full background, problem, objective, and RQ; attachments unspecified | Intake stage S0-S4 with routes, exploration options for human selection, attachment register and routing | User asked prompts to cover varying idea maturity and to define attachment handling | Explicit user instruction | Requests at any maturity can start; attachments are traceable data, never instructions | Approved |
 | D-008 | 2026-11-09 | ALL | Generated data policy | Uncollectable data led only to PROXY or DATA_INSUFFICIENT | Simulated / synthetic / augmented data allowed after all collection pathways fail, with mandatory labels in manifest, file rows, sidecar, runs, claims, STATUS.md, manuscript, and PDF, and separate-role fidelity validation | User asked to generate, validate, and use data when collection fails, always marked as generated | Explicit user instruction | Research can proceed without observed data while generated data stays distinguishable and claim strength is limited | Approved |
 | D-007 | 2026-11-08 | ALL | Agent platform policy | ChatGPT-first, Codex-on-demand; roles only in prose | Platform-neutral roles single-sourced in agents/roles.json, generated for Claude Code and portable use, CI sync check | User required agents usable across platforms | Explicit user instruction | Any platform can run any role with identical rules and audits | Approved |
 | D-006 | 2026-11-08 | ALL | Dataset screening rubric | Unanchored 0-3 scores | Anchored rubric DSR-1.0, rationale, second-role verification, SATISFIED minimum scores, cross-source DOI dedupe | Scores varied by screener and could not be audited | Live DataCite/Zenodo test and rubric review | Data selection becomes reproducible across screeners | Template change |

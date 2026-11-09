@@ -64,6 +64,8 @@
 
 ## Research Resources
 
+ユーザーの添付資料は`inputs/attachments.csv`に登録され、種類ごとに文献、data、本fileへ振り分けられる。添付由来の行はSourceに`USER_PROVIDED ATT-xxx`と書く。
+
 | Category | Source | Purpose | Related RQ | Availability / Access Status |
 |---|---|---|---|---|
 | URLs | 要検討 | 要検討 | RQ-01 | UNKNOWN |

@@ -43,6 +43,7 @@ Search Strategistの検索式をPRESS観点（concept漏れ、Boolean、field、
 1. 各queryをPRESS項目（translation、Boolean/proximity、subject headings、text words、spelling/syntax、limits/filters）で確認する。
 2. sentinel paperが各databaseで回収されるか確認し、回収されないqueryを指摘する。
 3. 修正要求と承認をsearch_log.csvのnotesへ自分のrole名付きで記録する。
+4. `USER_PROVIDED`のrecordが各databaseのqueryで回収されるかを既知論文recallとして確認する。
 
 ## してはいけないこと
 

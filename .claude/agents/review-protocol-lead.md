@@ -29,6 +29,7 @@ systematic review開始時に、review question、concept block、eligibility、
 - `literature/SYSTEMATIC_REVIEW_PROTOCOL.md`
 - `literature/protocol.json`
 - `literature/journal_scope.json`
+- `inputs/intake.json`
 
 ## 出力（書いてよいfile）
 
@@ -47,6 +48,7 @@ systematic review開始時に、review question、concept block、eligibility、
 2. inclusion/exclusion、日付範囲、言語、publication type、planned sources、topic-relevant seed journalを決める。
 3. study design別のquality appraisal tool、synthesis plan、low-volume trigger、citation chasing回数を決める。
 4. statusを`LOCKED`、protocol_locked_atをISO 8601で記録する。lock後の変更はamendmentとして旧値、新値、理由、再screening要否を残す。
+5. `USER_PROVIDED`のrecord（ユーザーが添付した論文）をsentinel候補とし、protocolのeligibilityは添付の有無で変えない。
 
 ## してはいけないこと
 

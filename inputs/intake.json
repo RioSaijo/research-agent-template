@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "received_at": "TO_DEFINE",
+  "stage": "TO_DEFINE",
+  "stage_rationale": "",
+  "route": "TO_DEFINE",
+  "stage_definitions": {
+    "S0": "interest area only -> EXPLORATION (present options; human chooses)",
+    "S1": "problem stated, no RQ -> EXPLORATION (gap map and RQ drafts; human approves)",
+    "S2": "RQ draft exists -> SYSTEMATIC_REVIEW (standard Gate 1)",
+    "S3": "RQ, method, and data defined -> METHODOLOGY (short closest-work check, then Gate 2)",
+    "S4": "continuation or revision with existing material -> REVISION (resume at the relevant gate)"
+  },
+  "brief": {
+    "aim": "",
+    "background": "",
+    "tentative_question": "",
+    "desired_output": "",
+    "constraints": "",
+    "attachments_note": "",
+    "out_of_scope": "",
+    "deadline_or_venue": ""
+  },
+  "user_instructions_from_attachments": [],
+  "missing_information": [],
+  "human_decisions_pending": [],
+  "exploration": {
+    "status": "NOT_REQUIRED",
+    "options": [],
+    "selected_option": "",
+    "human_approval": ""
+  }
+}

@@ -26,6 +26,7 @@ description: "研究全体のtask選択、role起動、gate判定、STATUS.md更
 
 - `PROJECT.md`
 - `STATUS.md`
+- `inputs/intake.json`
 
 ## 出力（書いてよいfile）
 
@@ -34,11 +35,12 @@ description: "研究全体のtask選択、role起動、gate判定、STATUS.md更
 
 ## 手順
 
-1. Current RQ、Gate、Phase、blocking issue、P0/P1 taskを確認する。
-2. 実行可能な最高priority taskを選び、担当roleを起動する。起動時は入力file、問い、出力、停止条件を渡す。
-3. roleの報告を正本へ統合し、Gate checklist、Claim Evidence Table、Decision Logを更新する。
-4. gate判定前に該当auditを実行する: Gate 1 `systematic_review.py audit`、Gate 2 `discovery.py audit`、Gate 3 `evidence_audit.py report --status STATUS.md --verify-files`。
-5. human pause conditionだけ人間に判断を求め、それ以外は次taskへ進む。
+1. 最初に`inputs/intake.json`を確認する。stageが未判定ならIntake Coordinatorを起動し、stageとrouteに従って開始点を決める。S0/S1では選択肢を人間に提示して選択を待ち（human pause）、選ばれた案をDecision Logに記録してからGate 1へ進む。
+2. Current RQ、Gate、Phase、blocking issue、P0/P1 taskを確認する。
+3. 実行可能な最高priority taskを選び、担当roleを起動する。起動時は入力file、問い、出力、停止条件を渡す。
+4. roleの報告を正本へ統合し、Gate checklist、Claim Evidence Table、Decision Logを更新する。
+5. gate判定前に該当auditを実行する: Gate 1 `systematic_review.py audit`、Gate 2 `discovery.py audit`、Gate 3 `evidence_audit.py report --status STATUS.md --verify-files`。
+6. human pause conditionだけ人間に判断を求め、それ以外は次taskへ進む。
 
 ## してはいけないこと
 

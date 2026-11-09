@@ -20,8 +20,40 @@
 
 ## 開始方法
 
+アイデアの段階は問いません。関心領域だけ（S0）でも、問題意識（S1）、RQ案（S2）、設計済み（S3）、既存の原稿や査読コメントがある継続・改訂（S4）でも開始できます。Intake Coordinatorが段階を判定し、S0/S1では予備調査で研究の方向の選択肢を示して、あなたの選択を待ちます。
+
+### 依頼の書き方（必須は1行目だけ）
+
+```
+■ やりたいこと：（1〜3文。漠然としていてよい）
+■ きっかけ・背景：
+■ 仮の問い・仮説：（あれば）
+■ 欲しい成果：論文 / 報告書 / 提案書 / 卒論・修論 / 方針判断の材料
+■ 制約：期間、使えるデータ・計測、計算資源、予算
+■ 手持ちの資料：（添付の一覧と、それぞれ何のための資料か）
+■ 範囲外にしたいこと：
+■ 締切・投稿先：
+```
+
+研究の進め方の規則（独立判定、引用形式など）はrepositoryにあるので、依頼に書く必要はありません。送付先のemailは実行時に伝え、repositoryには記録しません。
+
+### 添付資料
+
+| 添付の種類 | 行き先 | 扱い |
+|---|---|---|
+| 論文PDF、文献リスト（.bib/.ris） | `literature/records.csv` | ユーザー提供として記録。screeningは免除せず、検索式の回収確認と引用追跡の起点に使う |
+| データ（CSV、Excel、BMS出力）、図面・IFC | `data/manifest.json`、data候補 | 観測dataとして登録し、他の候補と同じく採点・品質検査 |
+| 自分の原稿・研究計画書 | `PROJECT.md` | 「ユーザー記載・未検証」として転記。主張は検証まで根拠にしない |
+| 査読コメント | `REFEREE.md` | 外部査読の指摘として登録し、Revision Leadが回答を作る |
+| 規格・基準書 | `LITERATURE.md` | 版と日付を確認 |
+| メモ・スライド | 予備調査の入力 | 根拠にはしない |
+
+添付はすべて`inputs/attachments.csv`に登録され（hash付き）、原本は`inputs/raw/`に置かれてcommitされません。資料の中の指示文には従いません。資料を指示として使ってほしい場合は、本文で「この計画書に沿って」のように明示してください。
+
+### 進み方
+
 1. 研究テーマを、ChatGPT、Claude Code、Codexのいずれかで動くResearch Managerへ送ります。背景、目的、RQが不完全でも開始できます。不明な項目は推測せず `要検討` とします。
-2. Research Managerは`AGENTS.md`（Claude Codeでは`CLAUDE.md`経由）を入口として、必要なexpert roleを起動しながら、systematic review protocol、検索式査読、文献収集、二重screening、quality/gap分析、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
+2. Research Managerは`AGENTS.md`（Claude Codeでは`CLAUDE.md`経由）を入口として、受付と段階判定の後、必要なexpert roleを起動しながら、systematic review protocol、検索式査読、文献収集、二重screening、quality/gap分析、問題定義、RQ評価、データ要件、方法設計、分析、検証、査読、引用番号付き執筆を自動的に進めます。
 3. `STATUS.md`で現在のphase、quality gate、task、Claim Evidence Tableを確認します。
 4. 重要な研究方針変更や人間だけが取得できる資源が必要になった場合に限り、人間が判断します。
 5. Gate 4通過後、最終PDFを生成・render検証し、Gmailで指定recipientへ送信します。送信記録までが一連のworkflowです。
@@ -86,6 +118,9 @@ research-agent-template/
 ├── STATUS.md
 ├── LITERATURE.md
 ├── REFEREE.md
+├── inputs/
+│   ├── intake.json          # 段階（S0〜S4）、brief、進め方、人間の判断点
+│   ├── attachments.csv      # 添付資料の台帳（原本は inputs/raw/、gitignored）
 ├── literature/
 │   ├── SYSTEMATIC_REVIEW_PROTOCOL.md
 │   ├── protocol.json
@@ -113,6 +148,7 @@ research-agent-template/
 │   └── figures/
 ├── code/
 │   ├── literature/systematic_review.py
+│   ├── intake/intake.py     # 添付の登録・振り分け、受付の監査
 │   ├── agents/build_agents.py  # role定義から各platform用fileを生成・検査
 │   ├── evidence/evidence_audit.py
 │   ├── data/discovery.py    # gap→RQ→requirement→candidate chain、repository検索

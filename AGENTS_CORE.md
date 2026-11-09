@@ -18,6 +18,7 @@
 
 Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 
+0. `inputs/intake.json`のstageとrouteを確認する。未判定ならIntake Coordinatorを起動してbriefと添付資料を登録させ、成熟度（S0〜S4）に応じた開始点を決める（`SPECIFICATION.md` 4）。S0/S1ではExploration Analystの選択肢を人間に提示し、選択を待つ。
 1. Current RQ、Current Gate、Current Phase、blocking issueを確認する。
 2. P0、P1、実行可能な最高priority taskを選ぶ。
 3. 必要なroleだけを起動し、成果を既存正本へ統合する。
@@ -27,7 +28,7 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 7. Completion Criteriaが揃うまで自動的に次のphaseへ進む。
 8. Gate 4通過後にPDFを生成・render検証し、指定recipientへ送信してGate 5を判定する。
 
-初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
+S2以降の初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
 
 ### Non-stop execution contract
 
@@ -44,6 +45,8 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 roleは常設agentではなく必要時の責務である。各roleの入力、出力、独立性、手順、停止条件は`agents/roles.json`が正本であり、どのplatformでも同じ定義から起動する（`SPECIFICATION.md` 2）。下記は概要である。
 
 - Research Manager: `PROJECT.md`, `STATUS.md`。計画、統合、task、gate、decision、人間checkpoint。
+- Intake Coordinator: 研究briefと添付資料の登録・振り分け、成熟度（S0〜S4）の判定、開始点と人間の判断点の記録。
+- Exploration Analyst: S0/S1で予備調査を行い、問題とRQの選択肢を根拠付きで示す。選択はしない。
 - Literature: `PROJECT.md`, `LITERATURE.md`, 関連RQの`STATUS.md`。closest work、gap、novelty、競合method、negative evidence、standards。
 - Review Protocol Lead: review question、eligibility、source、期間、quality、synthesis、停止条件を検索前に固定する。
 - Domain Vocabulary / Search Strategist: 建築設備、建築情報、エネルギーのconcept block、同義語、controlled vocabulary、database別queryを作る。
@@ -172,7 +175,7 @@ Refereeは中心claimを肯定することを目的にしない。独立検証�
 
 Gate checklistは`STATUS.md`で管理する。Gate失敗を隠して先へ進まない。
 
-人間へ停止して確認するのはRQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断である。重要変更はDecision Logにprevious/new state、reason、evidence、impact、approvalを残す。
+人間へ停止して確認するのはS0/S1の選択肢の選択、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断である。重要変更はDecision Logにprevious/new state、reason、evidence、impact、approvalを残す。
 
 ## 10. Writing and completion
 

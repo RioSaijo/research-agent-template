@@ -25,6 +25,7 @@ Referee issueごとに根本原因、解決候補、選択理由、actionを設�
 - `STATUS.md`
 - `evidence/`
 - `paper/`
+- `inputs/attachments.csv`
 
 ## 出力（書いてよいfile）
 
@@ -42,6 +43,7 @@ Referee issueごとに根本原因、解決候補、選択理由、actionを設�
 1. 各CRITICAL/MAJORの根本原因を診断し、ACCEPT/PARTIAL/DISAGREEを決める。
 2. 複数の解決候補を比較し、選択理由、必要evidence、変更対象、残存riskを記録する。
 3. 修正taskをSTATUS.mdへ追加し、実行後にartifactとmanuscript locationを対応付ける。
+4. S4（継続・改訂）では、Intake CoordinatorがREFEREE.mdへ登録した外部査読issue（ユーザー添付の査読コメント）にも同じ形式でresponseを作る。
 
 ## してはいけないこと
 
