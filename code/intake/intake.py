@@ -37,7 +37,7 @@ from typing import Iterable
 STAGES = {"S0", "S1", "S2", "S3", "S4"}
 ROUTE_FOR_STAGE = {"S0": "EXPLORATION", "S1": "EXPLORATION", "S2": "SYSTEMATIC_REVIEW",
                    "S3": "METHODOLOGY", "S4": "REVISION"}
-EXPLORATION_STATUS = {"NOT_REQUIRED", "IN_PROGRESS", "OPTIONS_PRESENTED", "SELECTED"}
+EXPLORATION_STATUS = {"NOT_REQUIRED", "PENDING", "IN_PROGRESS", "OPTIONS_PRESENTED", "SELECTED"}
 KINDS = {"paper", "bibliography", "dataset", "drawing", "draft", "review_comments", "standard", "notes",
          "other", "UNCLASSIFIED"}
 STATUSES = {"REGISTERED", "ROUTED", "PENDING_REVIEW", "REJECTED"}
@@ -50,7 +50,7 @@ DESTINATION = {
     "draft": "PROJECT.md (USER_STATED, unverified)",
     "review_comments": "REFEREE.md (external referee issues)",
     "standard": "LITERATURE.md (Relevant Standards)",
-    "notes": "inputs/intake.json (exploration input only)",
+    "notes": "inputs/intake.json#brief (exploration input only)",
     "other": "Research Manager decision",
 }
 AUTOMATIC = {"paper", "bibliography", "dataset", "drawing"}
@@ -193,7 +193,9 @@ def route_literature(root: Path, row: dict, entries: list[dict[str, str]]) -> li
         new_rows.append({
             "record_id": rid, "title": entry.get("title", "要検討"), "authors": entry.get("author", ""),
             "year": entry.get("year", ""), "journal": entry.get("journal", ""), "doi": entry.get("doi", ""),
-            "url": entry.get("url", ""), "source_database": "USER_PROVIDED", "search_id": row["attachment_id"],
+            "url": entry.get("url", ""), "abstract": entry.get("abstract", ""),
+            "publication_type": entry.get("publication_type", ""),
+            "source_database": "USER_PROVIDED", "search_id": row["attachment_id"],
             "retrieved_at": row["received_at"], "topic_tags": "user-provided; sentinel candidate",
         })
     append_csv(records, new_rows, LIT_RECORD_FIELDS)
@@ -213,7 +215,14 @@ def route_dataset(root: Path, row: dict, data_id: str, requirement_ids: str) -> 
     import acquire  # noqa: E402
     manifest_path = root / "data/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if not any(d.get("data_id") == data_id for d in manifest.get("datasets", [])):
+    existing = next((d for d in manifest.get("datasets", []) if d.get("data_id") == data_id), None)
+    if existing is not None:
+        placeholder = not [f for f in existing.get("files", []) if f.get("path")] and \
+            existing.get("title", "TO_DEFINE") in ("TO_DEFINE", "", "要検討")
+        if not placeholder:
+            raise SystemExit(f"[intake] {data_id} already holds registered data; choose a new --data-id")
+        manifest["datasets"] = [d for d in manifest["datasets"] if d.get("data_id") != data_id]
+    if True:  # always add the fresh entry
         manifest.setdefault("datasets", []).append({
             "data_id": data_id, "title": f"user-provided: {row['filename']}", "related_rq": [],
             "source": f"USER_PROVIDED {row['attachment_id']}", "owner": "要検討", "access": row["access"],
@@ -225,7 +234,8 @@ def route_dataset(root: Path, row: dict, data_id: str, requirement_ids: str) -> 
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     acquire.main(["register", "--manifest", str(manifest_path), "--root", str(root), "--data-id", data_id,
                   "--path", str(root / row["stored_path"]), "--method", "PROVIDED",
-                  "--source-note", f"user attachment {row['attachment_id']}", "--role", "Intake Coordinator"])
+                  "--source-note", f"user attachment {row['attachment_id']}; provenance OBSERVED is user-declared, "
+                                   "not yet verified (Data Screener checks it)", "--role", "Intake Coordinator"])
     # Enter the data-discovery chain like any other source, so it is scored against a requirement.
     search_log = root / "data/source_search_log.csv"
     sid = f"DS-{row['attachment_id']}"
@@ -260,7 +270,8 @@ def cmd_route(args: argparse.Namespace) -> int:
     stored = root / row["stored_path"]
     if kind == "paper":
         ids = route_literature(root, row, [{"title": args.title or "要検討", "author": args.authors or "",
-                                            "year": args.year or "", "doi": args.doi or "", "journal": args.journal or ""}])
+                                            "year": args.year or "", "doi": args.doi or "", "journal": args.journal or "",
+                                            "abstract": args.abstract or "", "publication_type": args.publication_type or ""}])
     elif kind == "bibliography":
         text = stored.read_text(encoding="utf-8", errors="replace")
         entries = parse_ris(text) if stored.suffix.lower() == ".ris" else parse_bibtex(text)
@@ -363,6 +374,8 @@ def cmd_audit(args: argparse.Namespace) -> int:
     issues = audit_intake(Path(args.root), strict=not args.allow_incomplete, verify_files=args.verify_files)
     for issue in issues:
         print(f"[intake-audit] {issue}")
+    if not issues:
+        print("[intake-audit] OK")
     return 1 if issues else 0
 
 
@@ -374,8 +387,11 @@ def cmd_mark(args: argparse.Namespace) -> int:
     row = next((r for r in rows if r.get("attachment_id") == args.id), None)
     if row is None:
         raise SystemExit(f"[intake] unknown attachment {args.id}")
-    row.update(status=args.status, routed_ids=args.routed_ids or row.get("routed_ids", ""),
-               notes="; ".join(filter(None, [row.get("notes", ""), args.note or ""])))
+    note = args.note or ""
+    notes = row.get("notes", "")
+    if note and note not in notes:
+        notes = "; ".join(filter(None, [notes, note]))
+    row.update(status=args.status, routed_ids=args.routed_ids or row.get("routed_ids", ""), notes=notes)
     write_csv(register, rows, FIELDS)
     print(f"[intake] {args.id} -> {args.status}")
     return 0
@@ -400,6 +416,8 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--year")
     route.add_argument("--journal")
     route.add_argument("--doi")
+    route.add_argument("--abstract")
+    route.add_argument("--publication-type")
     route.add_argument("--data-id")
     route.add_argument("--requirement-ids")
     route.add_argument("--root", default=".")

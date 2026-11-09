@@ -135,3 +135,34 @@ def test_tampered_attachment_is_detected(tmp_path):
     stored.chmod(0o644)
     stored.write_text("changed")
     assert any("hash mismatch" in i for i in MODULE.audit_intake(root, strict=False, verify_files=True))
+
+
+def test_dataset_replaces_template_entry_but_not_registered_data(tmp_path):
+    root = project(tmp_path)
+    csv_file = tmp_path / "bms.csv"
+    csv_file.write_text("ts,power\n2026-01-01 00:00,10\n")
+    register(root, csv_file, purpose="BMS export")
+    assert MODULE.main(["route", "--root", str(root), "--id", "ATT-001", "--data-id", "DATA-01"]) == 0
+    manifest = json.loads((root / "data/manifest.json").read_text())
+    items = [d for d in manifest["datasets"] if d["data_id"] == "DATA-01"]
+    assert len(items) == 1 and items[0]["access"] == "INTERNAL" and items[0]["files"]
+    other = tmp_path / "bms2.csv"
+    other.write_text("ts,power\n2026-02-01 00:00,11\n")
+    register(root, other, purpose="another export")
+    try:
+        MODULE.main(["route", "--root", str(root), "--id", "ATT-002", "--data-id", "DATA-01"])
+        raise AssertionError("registered data must not be overwritten")
+    except SystemExit as exc:
+        assert "choose a new --data-id" in str(exc)
+
+
+def test_mark_does_not_duplicate_notes(tmp_path):
+    root = project(tmp_path)
+    doc = tmp_path / "notes.txt"
+    doc.write_text("idea")
+    register(root, doc, kind="notes", purpose="memo")
+    for _ in range(2):
+        MODULE.main(["mark", "--root", str(root), "--id", "ATT-001", "--status", "ROUTED",
+                     "--routed-ids", "intake.json#brief", "--note", "moved to brief"])
+    notes = pd.read_csv(root / "inputs/attachments.csv", dtype=str).iloc[0]["notes"]
+    assert notes.count("moved to brief") == 1
