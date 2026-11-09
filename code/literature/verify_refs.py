@@ -90,7 +90,8 @@ def lookup(doi: str, fetch: Fetcher = http_json) -> dict | None:
         record = {
             "registry": "Crossref", "doi": canonical_doi(m.get("DOI", doi)),
             "title": (m.get("title") or [""])[0],
-            "authors": [" ".join(filter(None, [a.get("given"), a.get("family")])) for a in m.get("author", [])],
+            "authors": [n for n in (" ".join(filter(None, [a.get("given"), a.get("family")])) or a.get("name", "")
+                                    for a in m.get("author", [])) if n],
             "year": parts[0][0], "container": (m.get("container-title") or [""])[0],
             "volume": m.get("volume", ""), "issue": m.get("issue", ""),
             "pages": m.get("page", "") or m.get("article-number", ""), "type": m.get("type", ""),
