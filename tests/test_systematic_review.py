@@ -59,8 +59,11 @@ def test_prisma_counts_preserve_retrievals_and_duplicates():
         "unique_records": 2,
         "title_abstract_screened": 2,
         "title_abstract_excluded": 1,
+        "title_abstract_conflicts_unresolved": 0,
         "full_text_assessed": 1,
         "full_text_excluded": 0,
+        "full_text_pending": 0,
+        "full_text_conflicts_unresolved": 0,
         "studies_included": 1,
     }
 
@@ -70,3 +73,37 @@ def test_search_export_cap_is_not_silently_accepted():
         {"search_id": "S1", "result_count": "1500", "export_count": "1000"}
     ])
     assert any("unresolved result/export cap" in issue for issue in issues)
+
+
+def _ta(rid, reviewer, decision, reason=""):
+    return {"record_id": rid, "stage": "TITLE_ABSTRACT", "reviewer": reviewer, "decision": decision,
+            "exclusion_reason": reason}
+
+
+def test_maybe_and_include_both_advance_without_conflict():
+    records = [{"record_id": "R1", "duplicate_of": ""}]
+    decisions = [_ta("R1", "A", "MAYBE"), _ta("R1", "B", "INCLUDE")]
+    assert MODULE.audit_screening(records, decisions, require_complete=False) == []
+    assert MODULE.prisma_counts(records, decisions)["title_abstract_screened"] == 1
+
+
+def test_maybe_versus_exclude_is_a_conflict():
+    records = [{"record_id": "R1", "duplicate_of": ""}]
+    decisions = [_ta("R1", "A", "MAYBE"), _ta("R1", "B", "EXCLUDE", "OUT_OF_SCOPE")]
+    assert any("unresolved screening conflict" in i for i in MODULE.audit_screening(records, decisions))
+    assert MODULE.prisma_counts(records, decisions)["title_abstract_conflicts_unresolved"] == 1
+
+
+def test_advanced_records_need_dual_final_full_text_decisions():
+    records = [{"record_id": "R1", "duplicate_of": ""}]
+    decisions = [_ta("R1", "A", "INCLUDE"), _ta("R1", "B", "INCLUDE"),
+                 {"record_id": "R1", "stage": "FULL_TEXT", "reviewer": "A", "decision": "INCLUDE"}]
+    assert any("dual full-text screening incomplete" in i for i in MODULE.audit_screening(records, decisions))
+    decisions.append({"record_id": "R1", "stage": "FULL_TEXT", "reviewer": "B", "decision": "AWAITING_FULL_TEXT"})
+    assert any("still pending" in i for i in MODULE.audit_screening(records, decisions))
+    decisions[-1]["decision"] = "EXCLUDE"
+    decisions[-1]["exclusion_reason"] = "WRONG_OUTCOME"
+    assert any("conflict" in i for i in MODULE.audit_screening(records, decisions))
+    decisions[-1].update(adjudicated_decision="INCLUDE", adjudicator="Eligibility Adjudicator")
+    assert MODULE.audit_screening(records, decisions) == []
+    assert MODULE.prisma_counts(records, decisions)["studies_included"] == 1

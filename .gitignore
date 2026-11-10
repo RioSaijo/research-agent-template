@@ -31,5 +31,12 @@ paper/main.pdf
 
 # Local/raw data and temporary output
 data/raw/
+data/generated/
 tmp/
 
+
+# User attachments (originals; the register inputs/attachments.csv is committed)
+inputs/raw/
+
+# Full texts (copyrighted; the ledger literature/fulltext.csv is committed)
+literature/fulltext/

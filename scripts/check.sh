@@ -4,8 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py)
-required_dirs=(paper/figures code results tests literature)
+required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib paper/latexmkrc scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py data/manifest.json code/data/acquire.py code/data/quality.py code/analysis/stats.py code/analysis/record_run.py tests/test_data_analysis.py requirements.txt code/data/discovery.py tests/test_discovery.py literature/gaps.csv data/requirements.csv data/source_search_log.csv data/candidates.csv data/screening_rubric.json CLAUDE.md agents/roles.json code/agents/build_agents.py tests/test_build_agents.py code/data/generate.py tests/test_generated_data.py inputs/intake.json inputs/attachments.csv code/intake/intake.py tests/test_intake.py code/literature/verify_refs.py tests/test_verify_refs.py code/literature/fulltext.py literature/fulltext.csv tests/test_fulltext.py)
+required_dirs=(paper/figures code results tests literature evidence data inputs)
 
 for path in "${required_files[@]}"; do
   [[ -f "$path" ]] || { echo "[check] missing required file: $path" >&2; exit 1; }
@@ -37,6 +37,22 @@ grep -Fq "### Gate 5 — Report Delivery Gate" STATUS.md || { echo "[check] STAT
 grep -Fq '\bibliographystyle{unsrt}' paper/main.tex || { echo "[check] paper/main.tex must use numeric first-citation bibliography style" >&2; exit 1; }
 grep -Fq '\input{body}' paper/main.tex || { echo "[check] paper/main.tex must delegate adaptive structure to paper/body.tex" >&2; exit 1; }
 grep -Fq 'Citation format: NUMERIC_IN_TEXT' STATUS.md || { echo "[check] numeric in-text citation requirement missing" >&2; exit 1; }
+python_bin=""
+for candidate in python python3 py; do
+  if command -v "$candidate" >/dev/null 2>&1; then python_bin="$candidate"; break; fi
+done
+if [[ -n "$python_bin" ]]; then
+  "$python_bin" code/evidence/evidence_audit.py audit --allow-incomplete --status STATUS.md
+  # raw data is gitignored, so CI validates manifest structure only; run without --skip-files where data exists
+  "$python_bin" code/data/acquire.py verify --allow-incomplete --skip-files
+  "$python_bin" code/data/discovery.py audit --allow-incomplete
+  "$python_bin" code/agents/build_agents.py --check
+  "$python_bin" code/data/generate.py check-disclosure
+  "$python_bin" code/intake/intake.py audit --allow-incomplete
+  "$python_bin" code/literature/fulltext.py audit --allow-incomplete
+else
+  echo "[check] Python not found; evidence artifacts were not audited" >&2
+fi
 if command -v python >/dev/null 2>&1; then
   python code/literature/systematic_review.py audit --allow-incomplete --records literature/records.csv --decisions literature/screening_decisions.csv --journals literature/journal_scope.json --search-log literature/search_log.csv
 elif command -v python3 >/dev/null 2>&1; then
@@ -47,7 +63,9 @@ else
   echo "[check] Python not found; systematic literature artifacts were not audited" >&2
 fi
 if (( ${#test_files[@]} > 0 )); then
-  if command -v pytest >/dev/null 2>&1; then
+  if [[ -n "$python_bin" ]] && "$python_bin" -c "import pytest" >/dev/null 2>&1; then
+    "$python_bin" -m pytest -q
+  elif command -v pytest >/dev/null 2>&1; then
     pytest -q
   elif command -v python3 >/dev/null 2>&1; then
     python3 -m unittest discover -s tests -v
@@ -61,7 +79,7 @@ if (( ${#test_files[@]} > 0 )); then
 fi
 
 if command -v latexmk >/dev/null 2>&1; then
-  (cd paper && latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex)
+  (cd paper && latexmk main.tex)
 else
   echo "[check] latexmk not found; paper compilation skipped"
 fi

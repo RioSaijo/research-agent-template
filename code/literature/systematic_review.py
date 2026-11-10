@@ -71,6 +71,37 @@ def mark_duplicates(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return output
 
 
+def stage_outcome(stage: str, decision: str) -> str:
+    """Map a reviewer decision to what it means for the record at this stage.
+
+    TITLE_ABSTRACT: EXCLUDE stops the record; INCLUDE, MAYBE and AWAITING_FULL_TEXT all advance it
+    to full text. FULL_TEXT: INCLUDE and EXCLUDE are final; MAYBE and AWAITING_FULL_TEXT are pending.
+    """
+    if stage == "TITLE_ABSTRACT":
+        if decision == "EXCLUDE":
+            return "EXCLUDE"
+        return "ADVANCE" if decision in VALID_DECISIONS else ""
+    if decision in {"INCLUDE", "EXCLUDE"}:
+        return decision
+    return "PENDING" if decision in VALID_DECISIONS else ""
+
+
+def stage_result(stage: str, rows: list[dict[str, str]]) -> tuple[str, bool]:
+    """Return (final outcome or '', conflict flag) for one record at one stage."""
+    adjudicated = [r.get("adjudicated_decision", "") for r in rows if r.get("adjudicated_decision", "")]
+    if adjudicated:
+        return stage_outcome(stage, adjudicated[-1]), False
+    outcomes = {stage_outcome(stage, r.get("decision", "")) for r in rows} - {""}
+    if not outcomes:
+        return "", False
+    final_votes = outcomes - {"PENDING"}
+    if len(final_votes) > 1:
+        return "", True
+    if "PENDING" in outcomes:
+        return "PENDING", False
+    return next(iter(outcomes)), False
+
+
 def audit_screening(
     records: list[dict[str, str]],
     decisions: list[dict[str, str]],
@@ -88,60 +119,60 @@ def audit_screening(
             issues.append(f"invalid stage for {record_id}: {stage}")
         if decision not in VALID_DECISIONS:
             issues.append(f"invalid decision for {record_id}: {decision}")
+        adjudicated = row.get("adjudicated_decision", "")
+        if adjudicated and adjudicated not in VALID_DECISIONS:
+            issues.append(f"invalid adjudicated decision for {record_id}: {adjudicated}")
+        if adjudicated and not row.get("adjudicator", ""):
+            issues.append(f"adjudicated decision without adjudicator: {record_id} at {stage}")
         if decision == "EXCLUDE" and row.get("exclusion_reason", "") not in VALID_EXCLUSION_REASONS:
             issues.append(f"missing/invalid exclusion reason for {record_id} at {stage}")
         grouped[(record_id, stage)].append(row)
 
+    def reviewers(rows: list[dict[str, str]]) -> set[str]:
+        return {r.get("reviewer", "") for r in rows if r.get("reviewer", "")}
+
     for record_id in sorted(unique_ids):
-        title_rows = grouped.get((record_id, "TITLE_ABSTRACT"), [])
-        reviewers = {r.get("reviewer", "") for r in title_rows if r.get("reviewer", "")}
-        if require_complete and len(reviewers) < 2:
+        ta_rows = grouped.get((record_id, "TITLE_ABSTRACT"), [])
+        ft_rows = grouped.get((record_id, "FULL_TEXT"), [])
+        if require_complete and len(reviewers(ta_rows)) < 2:
             issues.append(f"dual title/abstract screening incomplete: {record_id}")
-        for stage in VALID_STAGES:
-            stage_rows = grouped.get((record_id, stage), [])
-            initial = {r.get("decision", "") for r in stage_rows if r.get("decision", "") in {"INCLUDE", "EXCLUDE"}}
-            adjudicated = {r.get("adjudicated_decision", "") for r in stage_rows if r.get("adjudicated_decision", "")}
-            if len(initial) > 1 and not adjudicated:
-                issues.append(f"unresolved screening conflict: {record_id} at {stage}")
+        ta_final, ta_conflict = stage_result("TITLE_ABSTRACT", ta_rows)
+        ft_final, ft_conflict = stage_result("FULL_TEXT", ft_rows)
+        if ta_conflict:
+            issues.append(f"unresolved screening conflict: {record_id} at TITLE_ABSTRACT")
+        if ft_conflict:
+            issues.append(f"unresolved screening conflict: {record_id} at FULL_TEXT")
+        if ft_rows and ta_final == "EXCLUDE":
+            issues.append(f"full-text decision for a record excluded at title/abstract: {record_id}")
+        if require_complete and ta_final == "ADVANCE":
+            if len(reviewers(ft_rows)) < 2:
+                issues.append(f"dual full-text screening incomplete: {record_id}")
+            elif ft_final == "PENDING":
+                issues.append(f"full-text decision still pending (MAYBE/AWAITING_FULL_TEXT): {record_id}")
     return issues
 
 
 def prisma_counts(records: list[dict[str, str]], decisions: list[dict[str, str]]) -> dict[str, int]:
     unique_ids = {r.get("record_id", "") for r in records if not r.get("duplicate_of", "").strip()}
     duplicates = sum(bool(r.get("duplicate_of", "").strip()) for r in records)
-    by_stage: dict[str, list[dict[str, str]]] = defaultdict(list)
+    grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
     for row in decisions:
-        by_stage[row.get("stage", "")].append(row)
-    def consensus(stage: str) -> dict[str, str]:
-        rows_by_record: dict[str, list[dict[str, str]]] = defaultdict(list)
-        for row in by_stage[stage]:
-            rows_by_record[row.get("record_id", "")].append(row)
-        final: dict[str, str] = {}
-        for record_id, rows in rows_by_record.items():
-            adjudicated = [r.get("adjudicated_decision", "") for r in rows if r.get("adjudicated_decision", "")]
-            votes = {r.get("decision", "") for r in rows if r.get("decision", "")}
-            if adjudicated:
-                final[record_id] = adjudicated[-1]
-            elif len(votes) == 1:
-                final[record_id] = next(iter(votes))
-        return final
-
-    ta = consensus("TITLE_ABSTRACT")
-    ft = consensus("FULL_TEXT")
-    ta_ids = set(ta)
-    ft_ids = set(ft)
-    excluded_ta = {record_id for record_id, decision in ta.items() if decision == "EXCLUDE"}
-    excluded_ft = {record_id for record_id, decision in ft.items() if decision == "EXCLUDE"}
-    included = {record_id for record_id, decision in ft.items() if decision == "INCLUDE"}
+        grouped[(row.get("record_id", ""), row.get("stage", ""))].append(row)
+    ta = {rid: stage_result("TITLE_ABSTRACT", rows) for (rid, stage), rows in grouped.items()
+          if stage == "TITLE_ABSTRACT"}
+    ft = {rid: stage_result("FULL_TEXT", rows) for (rid, stage), rows in grouped.items() if stage == "FULL_TEXT"}
     return {
         "records_identified": len(records),
         "duplicates_removed": duplicates,
         "unique_records": len(unique_ids),
-        "title_abstract_screened": len(ta_ids),
-        "title_abstract_excluded": len(excluded_ta),
-        "full_text_assessed": len(ft_ids),
-        "full_text_excluded": len(excluded_ft),
-        "studies_included": len(included),
+        "title_abstract_screened": sum(final in {"ADVANCE", "EXCLUDE"} for final, _ in ta.values()),
+        "title_abstract_excluded": sum(final == "EXCLUDE" for final, _ in ta.values()),
+        "title_abstract_conflicts_unresolved": sum(conflict for _, conflict in ta.values()),
+        "full_text_assessed": sum(final in {"INCLUDE", "EXCLUDE"} for final, _ in ft.values()),
+        "full_text_excluded": sum(final == "EXCLUDE" for final, _ in ft.values()),
+        "full_text_pending": sum(final == "PENDING" for final, _ in ft.values()),
+        "full_text_conflicts_unresolved": sum(conflict for _, conflict in ft.values()),
+        "studies_included": sum(final == "INCLUDE" for final, _ in ft.values()),
     }
 
 

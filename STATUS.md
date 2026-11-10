@@ -10,7 +10,15 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ## CURRENT_PHASE
 
-`Literature Review`
+`Intake`
+
+## Research Maturity
+
+- Stage: TO_DEFINE（S0 関心領域 / S1 問題意識 / S2 RQ案 / S3 設計済み / S4 継続・改訂）
+- Route: TO_DEFINE（EXPLORATION / SYSTEMATIC_REVIEW / METHODOLOGY / REVISION）
+- Record: `inputs/intake.json`
+- Attachments: `inputs/attachments.csv`（0件）
+- Pending human decision: なし
 
 ## CURRENT_GATE
 
@@ -28,15 +36,20 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ## Claim Evidence Table
 
-| Claim ID | RQ | Claim | Evidence Type | Primary Evidence | Independent Check | Verification | Claim Status | Referee |
-|---|---|---|---|---|---|---|---|---|
-| CL-01 | RQ-01 | 要検討 | LITERATURE | なし | 要検討 | NOT_VERIFIED | OPEN | NOT_REVIEWED |
+Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaimは、生成dataに基づくことを本文でも明示する。
+
+| Claim ID | RQ | Claim | Evidence Type | Data Origin | Primary Evidence | Independent Check | Verification | Claim Status | Referee |
+|---|---|---|---|---|---|---|---|---|---|
+| CL-01 | RQ-01 | 要検討 | LITERATURE | 要検討 | なし | 要検討 | NOT_VERIFIED | OPEN | NOT_REVIEWED |
 
 ## Current Tasks
 
 | Task ID | Related RQ | Task | Purpose | Owner / Role | Dependency | Required Resource | Output | Status | Priority | Blocking Issue | Related Quality Gate |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T-001 | RQ-01 | Required inputを確認する | 研究入力を確定する | Research Manager | None | User input | PROJECT.md | TODO | P0 | None | Gate 1 |
+| T-000 | ALL | briefと添付を登録し成熟度を判定する | 開始点と人間の判断点を決める | Intake Coordinator | None | User message / attachments | inputs/intake.json / inputs/attachments.csv | TODO | P0 | None | Gate 1 |
+| T-001 | RQ-01 | Required inputを確認する | 研究入力を確定する | Research Manager | T-000 | inputs/intake.json | PROJECT.md | TODO | P0 | None | Gate 1 |
+| T-028 | RQ-01 | 本文が必要な文献を取得し、残りをユーザーへまとめて依頼する | full-text screeningと原典確認を可能にする | Full-text Retriever | T-012 | OpenAlex / user browser download | literature/fulltext.csv / results/fulltext/manual_download.md | BLOCKED | P0 | Title/abstract screening incomplete | Gate 1 |
+| T-027 | RQ-01 | 予備調査で問題・RQの選択肢を示す（S0/S1のみ） | 人間が研究の方向を選べるようにする | Exploration Analyst | T-000 | Brief / attachments / light search | inputs/intake.json / results/exploration/ | BLOCKED | P0 | Stage not judged | Gate 1 |
 | T-002 | RQ-01 | closest prior workとgapを調べる | noveltyと問題定義を評価する | Literature Role | T-001 | Web / literature | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
 | T-003 | RQ-01 | data requirementと取得経路を設計する | feasibilityを評価する | Data Requirement Role | T-001 | Resource inventory | PROJECT.md | TODO | P1 | Input incomplete | Gate 2 |
 | T-004 | RQ-01 | method/evaluation/verificationを設計する | analysis前提を整える | Methodology Role | T-002, T-003 | Literature / data status | PROJECT.md | BLOCKED | P1 | Dependencies incomplete | Gate 2 |
@@ -51,6 +64,17 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-013 | RQ-01 | quality appraisalとevidence extractionを行う | gap synthesisの証拠を構造化する | Quality Appraiser / Evidence Extractor | T-012 | Included studies | literature/extraction.csv | BLOCKED | P0 | Screening incomplete | Gate 1 |
 | T-014 | RQ-01 | citation chasingとgap challengeを完了する | 検索漏れと偽gapを反証する | Citation Chaser / Gap Analyst / Gap Challenger | T-013 | Included studies / citation graph | LITERATURE.md | BLOCKED | P0 | Extraction incomplete | Gate 1 |
 | T-015 | RQ-01 | systematic reviewを独立監査する | PRISMA、coverage、判定、gap traceabilityを確認する | Review Auditor | T-014 | Review artifacts | LITERATURE.md / results/literature/prisma_flow.json | BLOCKED | P0 | Gap challenge incomplete | Gate 1 |
+| T-022 | RQ-01 | gapを`literature/gaps.csv`へ記録し独立にchallengeする | RQの根拠となるgapを反証可能にする | Gap Analyst / Gap Challenger | T-013 | Extraction / search log | literature/gaps.csv | BLOCKED | P0 | Extraction incomplete | Gate 1 |
+| T-023 | RQ-01 | data requirementを逆算する | RQに必要なdataだけを定義する | Data Requirement Role | T-022, T-016 | Gaps / analysis plan | data/requirements.csv | BLOCKED | P1 | Gap not accepted | Gate 2 |
+| T-024 | RQ-01 | pathway別にdata sourceを探索する | public/literature/API/measurement/simulation/proxyを網羅する | Data Source Scout | T-023 | Repositories / connectors / web | data/source_search_log.csv / data/candidates.csv | BLOCKED | P1 | No requirements | Gate 2 |
+| T-025 | RQ-01 | candidate datasetを採点・選定する | fit、coverage、quality、access、reproducibilityで選ぶ | Data Screener | T-024 | Candidates | data/candidates.csv / data/manifest.json | BLOCKED | P1 | No candidates | Gate 2 |
+| T-026 | RQ-01 | 収集不能なdataを生成・検証する（必要時のみ） | 全collection pathway失敗後にラベル付き生成dataで研究を継続する | Data Generator / Generated Data Validator | T-024 | Observed reference data / generator | data/generated/ / results/data_validation/ / evidence/checks.csv | BLOCKED | P2 | Collection pathways not exhausted | Gate 2 |
+| T-020 | RQ-01 | data manifestを作成しraw dataを取得・登録する | provenanceとhash付きでdataを確保する | Data Requirement Role | T-003 | Data source / access | data/manifest.json / data/raw/ | BLOCKED | P1 | Data requirement incomplete | Gate 2 |
+| T-021 | RQ-01 | pre-use data quality profileを実行する | unit、時刻、欠損、range、sensor異常を分析前に検出する | Data Requirement Role | T-020 | Raw data | results/data_quality/ / evidence/checks.csv | BLOCKED | P1 | No data | Gate 2 |
+| T-016 | RQ-01 | analysis planをlockする | 結果を見る前にcriterion、claim type、required check、independence levelを固定する | Methodology Role | T-004 | PROJECT.md evaluation plan | evidence/analysis_plan.json | BLOCKED | P1 | Methodology incomplete | Gate 2 |
+| T-017 | RQ-01 | primary analysisを実行しrunを記録する | provenanceとhash付きprimary evidenceを作る | Analysis Role | T-016 | Data / code | evidence/runs.csv / results/ | BLOCKED | P1 | Plan not locked | Gate 3 |
+| T-018 | RQ-01 | challenge checkを実施する | 代替説明、sensitivity、falsification、leakageを分析者以外が検査する | Methods Challenger | T-017 | Primary run | evidence/checks.csv | BLOCKED | P1 | No primary run | Gate 3 |
+| T-019 | RQ-01 | 独立検証とGate 3 auditを行う | plan指定のindependence levelでclaimを検証し、strict auditを通す | Verification / Evidence Auditor | T-018 | Checks / runs | evidence/claims.csv / results/evidence/gate3_report.json | BLOCKED | P1 | Checks incomplete | Gate 3 |
 
 ## Blocked Tasks
 
@@ -59,6 +83,8 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 | T-004 | T-002 and T-003 incomplete | Complete prerequisites | NO |
 
 ## Required Human Input
+
+判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾、研究方向の判断材料）の依頼もここへまとめる。依頼には目的と、回答がない場合の扱いを書く。
 
 | Input ID | Reason | Decision Needed | Effect if Deferred | Status |
 |---|---|---|---|---|
@@ -98,6 +124,9 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 
 ### Gate 1 — Research Definition Gate
 
+- [ ] Intake recorded: stage, rationale, route, brief (`code/intake/intake.py audit`)
+- [ ] Every attachment registered with hash, stored under `inputs/raw/`, and routed or rejected with a reason
+- [ ] S0/S1 only: options presented and one selected by a human (Decision Log ID recorded)
 - [ ] Systematic review protocol locked before screening
 - [ ] Eligibility, date, language, publication type, sources, and synthesis plan defined
 - [ ] Database-specific queries independently peer reviewed
@@ -110,9 +139,13 @@ Allowed: `TRIAGE / ACTIVE / REFRAMING / VALIDATION / WRITING / COMPLETE / PARKED
 - [ ] Independent dual title/abstract and full-text screening completed
 - [ ] All conflicts resolved and exclusions have controlled reasons
 - [ ] Included studies quality-appraised and evidence-extracted
+- [ ] Full texts: open-access attempt and one batched user request done; extraction only from READ full texts or labeled ABSTRACT_ONLY (`code/literature/fulltext.py audit`)
+- [ ] CRITICAL papers READ, or closed with a recorded human decision; NO_FULL_TEXT exclusions only after UNAVAILABLE
 - [ ] Backward/forward citation chasing and update search completed
 - [ ] PRISMA counts agree with machine-readable records
 - [ ] Gap candidates passed independent Gap Challenger review
+- [ ] `literature/gaps.csv` records supporting/contradicting appraised studies, search IDs, and minimum closing design
+- [ ] Every RQ references an ACCEPTED / NARROWED gap in PROJECT.md
 - [ ] Background defined
 - [ ] Motivation defined
 - [ ] Problem Definition supported by literature
@@ -130,20 +163,48 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] RQ Data Method mapping complete
 - [ ] Required Data identified
 - [ ] Reasonable acquisition path exists
+- [ ] Every RQ has MUST data requirements derived from gap, metric, criterion, and baseline (`data/requirements.csv`)
+- [ ] Each MUST requirement searched in data repositories and in data used by included studies; other pathways logged
+- [ ] Candidate datasets scored against `data/screening_rubric.json` with cited anchors; MUST selections re-scored by a second role
+- [ ] Candidate datasets screened and scored; selections have license, access, and manifest entry
+- [ ] `DATA_INSUFFICIENT` declared only after every pathway was assessed
+- [ ] Generated data used only for requirements whose collection pathways (public data, API, measurement, external provider) were all attempted; requirement status is GENERATED, never SATISFIED
+- [ ] Generated datasets carry provenance_class, the fixed label, a data_origin column on every row, and a provenance sidecar under `data/generated/`
+- [ ] Fidelity criteria fixed before generation; validation PASS recorded by a role other than the generator
+- [ ] Strict `code/data/discovery.py audit` passes; `results/traceability/chain.json` generated
+- [ ] Every dataset has a `data/manifest.json` entry (source, access, license, units, valid ranges, timezone, interval)
+- [ ] Raw files acquired/registered with SHA-256 via `code/data/acquire.py`
+- [ ] Pre-use quality profile run for every dataset; WARN/FAIL dispositions recorded
+- [ ] Time-ordered split, multiplicity correction, and uncertainty method specified in the analysis plan
 - [ ] Evaluation Metric defined
 - [ ] Evaluation Criterion defined
 - [ ] Baseline / Reference defined when required
 - [ ] Verification Plan defined
+- [ ] `evidence/analysis_plan.json` LOCKED (claim type, criterion, required checks, independence level) before any confirmatory run
 
 ### Gate 3 — Evidence and Verification Gate
 
-- [ ] Primary Evidence exists
-- [ ] Evidence provenance traceable
-- [ ] Evaluation Criterion applied
-- [ ] Claim Status assigned
-- [ ] Verification performed
-- [ ] Alternative explanations examined
-- [ ] Critical data quality issues addressed
+Per-claim gate. Machine-readable source: `evidence/`. Judge with
+`python code/evidence/evidence_audit.py report --status STATUS.md --verify-files`
+(no `--allow-incomplete`); output `results/evidence/gate3_report.json`.
+
+- [ ] Analysis plan locked before every confirmatory run; amendments recorded with re-analysis impact
+- [ ] Every planned analysis has a PRIMARY run; every pre-registered claim reported, including negative results
+- [ ] Every run records git commit, command, environment, seed, and input/output SHA-256 (via `code/analysis/record_run.py`)
+- [ ] `code/data/acquire.py verify` passes: raw data unchanged since registration
+- [ ] Recorded inputs/outputs exist and hashes match (no stale results)
+- [ ] Criterion applied exactly as pre-registered; numeric criteria auto-evaluated without contradiction
+- [ ] Uncertainty reported for every SUPPORTED / PARTIALLY_SUPPORTED claim
+- [ ] Claim-type minimum checks passed (DATA_QUALITY; central: ALTERNATIVE_EXPLANATION, SENSITIVITY; CAUSAL: FALSIFICATION; PREDICTIVE: LEAKAGE, BASELINE; COMPARATIVE: BASELINE; GENERALIZATION: TRANSFER)
+- [ ] Challenge and independent verification performed by roles other than the primary analyst
+- [ ] Verification level matches the plan (RERUN is reproduction, not independent verification)
+- [ ] Post-hoc claims kept at PRELIMINARY or lower
+- [ ] FAIL / INCONCLUSIVE checks record their impact on the claim
+- [ ] STATUS.md Claim Evidence Table matches `evidence/claims.csv`
+- [ ] Claims using generated data carry `generated_data_disclosure` and Data Origin GENERATED / MIXED; claims on generated data alone are limited to statements about the model (no SUPPORTED causal or generalization claims)
+- [ ] Strict evidence audit returns no issues
+
+Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when criterion or claim type must change
 
 ### Gate 4 — Publication Readiness Gate
 
@@ -158,12 +219,13 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Independent Referee re-review completed
 - [ ] No CRITICAL / MAJOR issue has REJECTED or unresolved disposition
 - [ ] Figures and tables traceable
-- [ ] References verified
+- [ ] References verified (`code/literature/verify_refs.py bib`: every entry METADATA_VERIFIED, or ORIGINAL_CHECKED with location)
 - [ ] Numeric in-text citations correspond to reference list
 - [ ] Limitations documented
 - [ ] Conclusion supported
 - [ ] Manuscript internally consistent
 - [ ] Database/API access limitations and their coverage impact disclosed
+- [ ] Every generated dataset used by a claim is labeled with `\GeneratedData{ID}` in text, figures, and tables (`code/data/generate.py check-disclosure`)
 
 ### Gate 5 — Report Delivery Gate
 
@@ -171,6 +233,7 @@ Failure state: `TRIAGE / REFRAMING`
 - [ ] Every page render-checked
 - [ ] No clipping, overlap, missing glyph, or broken table/figure
 - [ ] Numeric citations and references verified in the PDF
+- [ ] Generated-data labels visible in the rendered PDF wherever generated data or derived results appear
 - [ ] Gmail authenticated account confirmed
 - [ ] Runtime recipient confirmed without committing personal information
 - [ ] PDF sent as attachment
@@ -181,12 +244,29 @@ Failure state: `TRIAGE / REFRAMING`
 
 - Repository initialized from specification.
 - Mandatory end-to-end flow added: journal search, numeric citations, PDF render QA, Gmail delivery, and delivery recording.
+- Gate 3 strengthened: locked analysis plan, machine-readable evidence registries, and strict evidence audit.
+- Data and analysis toolkit added: data manifest, acquisition, quality profiling, statistics, and run recording.
+- Manuscript switched to LuaLaTeX (Japanese and English); environment setup script and new-project procedure added.
+- Research intake added: maturity stages S0-S4, exploration options, attachment register and routing.
+- Generated data policy added: last-resort generation with mandatory labeling and separate-role fidelity validation.
+- Expert agent roles single-sourced in `agents/roles.json` and generated for Claude Code and portable (ChatGPT / Codex) use.
+- Problem-to-data chain added: machine-readable gaps, data requirements, data source search, candidate screening, and chain audit.
 
 ## Decision Log
 
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-012 | 2026-11-10 | ALL | Manuscript engine and environment setup | pdflatex (Japanese failed); tools installed by hand per session | LuaLaTeX with luatexja for Japanese and English; environment setup script installs LaTeX, poppler, Python dependencies; new-project procedure in README | Operation readiness review: Japanese PDF could not compile and new sessions lacked tools | Compile test and setup-script run | Japanese reports and theses can be produced; new sessions start ready | Approved |
+| D-011 | 2026-11-10 | ALL | Full-text access and user information requests | Unreadable papers had no defined handling; agents asked the user only at pause conditions | Full-text ledger with open-access retrieval, one batched browser-download request, DOI matching, and use limits by status; agents may ask the user directly for information only the user can provide | Publisher bot protection and paywalls block automated access; API key not available | Explicit user instruction | Work proceeds without APIs; unread papers cannot carry claims | Approved |
+| D-010 | 2026-11-09 | ALL | Reference verification | Source checks done by hand; exploration could present unverified sources | verify_refs.py checks DOIs and bibliographic data against Crossref/OpenAlex; options need two verified sources; Gate 4 bib check | Exploration trial could not verify sources and correctly withheld options | Agent trial | Sources are verified mechanically before options or manuscripts use them | Template change |
+| D-009 | 2026-11-09 | ALL | Research intake | Start required full background, problem, objective, and RQ; attachments unspecified | Intake stage S0-S4 with routes, exploration options for human selection, attachment register and routing | User asked prompts to cover varying idea maturity and to define attachment handling | Explicit user instruction | Requests at any maturity can start; attachments are traceable data, never instructions | Approved |
+| D-008 | 2026-11-09 | ALL | Generated data policy | Uncollectable data led only to PROXY or DATA_INSUFFICIENT | Simulated / synthetic / augmented data allowed after all collection pathways fail, with mandatory labels in manifest, file rows, sidecar, runs, claims, STATUS.md, manuscript, and PDF, and separate-role fidelity validation | User asked to generate, validate, and use data when collection fails, always marked as generated | Explicit user instruction | Research can proceed without observed data while generated data stays distinguishable and claim strength is limited | Approved |
+| D-007 | 2026-11-08 | ALL | Agent platform policy | ChatGPT-first, Codex-on-demand; roles only in prose | Platform-neutral roles single-sourced in agents/roles.json, generated for Claude Code and portable use, CI sync check | User required agents usable across platforms | Explicit user instruction | Any platform can run any role with identical rules and audits | Approved |
+| D-006 | 2026-11-08 | ALL | Dataset screening rubric | Unanchored 0-3 scores | Anchored rubric DSR-1.0, rationale, second-role verification, SATISFIED minimum scores, cross-source DOI dedupe | Scores varied by screener and could not be audited | Live DataCite/Zenodo test and rubric review | Data selection becomes reproducible across screeners | Template change |
+| D-005 | 2026-11-08 | ALL | Problem-to-data chain | Gap, RQ, and data needs linked only by prose | gaps.csv, requirements.csv, source search log, candidate screening, chain audit and matrix | Gap identification and data judgement, search, and selection were not traceable | Template review | Gate 1/2 gap and data decisions become auditable | Template change |
+| D-004 | 2026-11-08 | ALL | Data and analysis toolkit | Manual data inventory and ad hoc analysis | Data manifest, acquisition with hashes, automated quality profile, shared statistics, recorded runs | Data collection and quantitative analysis lacked reproducible tooling | Template review | Gate 2/3 data and analysis items become machine-checkable | Template change |
+| D-003 | 2026-11-08 | ALL | Gate 3 evidence control | Self-declared 7-item checklist | Locked analysis plan, run/check/claim registries, strict machine audit | Gate 3 lacked pre-registration, provenance hashes, check coverage, role separation, and independence levels | Template review | Gate 3 becomes per-claim and machine-verifiable | Template change |
 | D-002 | 2026-09-16 | ALL | Completion workflow | Gate 4 ended at manuscript readiness | Gate 5 requires verified PDF and Gmail delivery | User required theme-to-email execution, journal search, and numeric citations | Explicit user instruction | Adds mandatory search, citation, rendering, and delivery controls | Approved |
 
 ## Next Actions

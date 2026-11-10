@@ -84,6 +84,8 @@
 
 ## Evidence Gap Matrix
 
+machine-readable正本は`literature/gaps.csv`（`code/data/discovery.py audit`で検査）。この表は要約として同じGap IDで一致させる。
+
 | Gap ID | Gap Type | Description | Supporting Study IDs | Contradictory / Closing Study IDs | Coverage | Evidence Quality | Minimum Study to Close Gap | Challenger Decision | Confidence |
 |---|---|---|---|---|---|---|---|---|---|
 | GAP-001 | 要検討 | 要検討 | なし | なし | NOT_ASSESSED | NOT_ASSESSED | 要検討 | NOT_REVIEWED | LOW |

@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "status": "DRAFT",
+  "locked_at": "TO_DEFINE",
+  "lock_commit": "TO_DEFINE",
+  "policy": {
+    "lock_before_confirmatory_runs": true,
+    "criterion_change_after_lock_requires_amendment": true,
+    "post_hoc_claims_max_status": "PRELIMINARY",
+    "negative_results_must_be_reported": true
+  },
+  "analyses": [
+    {
+      "analysis_id": "AN-01",
+      "rq_id": "RQ-01",
+      "claim_ids": ["CL-01"],
+      "central": true,
+      "claim_type": "TO_DEFINE",
+      "hypothesis": "TO_DEFINE",
+      "metric": "TO_DEFINE",
+      "criterion": {"operator": "TO_DEFINE", "threshold": null, "description": "TO_DEFINE"},
+      "baseline": "TO_DEFINE",
+      "expected_direction": "TO_DEFINE",
+      "uncertainty_method": "TO_DEFINE",
+      "data_ids": ["DATA-01"],
+      "required_checks": ["DATA_QUALITY", "ALTERNATIVE_EXPLANATION", "SENSITIVITY"],
+      "alternative_explanations": ["TO_DEFINE"],
+      "verification": {"method": "TO_DEFINE", "independence_level": "TO_DEFINE"}
+    }
+  ],
+  "amendments": []
+}

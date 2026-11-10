@@ -99,10 +99,11 @@ gap候補には支持source、反証source、検索coverage、gapを閉じる最
 
 - `protocol.json`: review scopeと事前計画。
 - `journal_scope.json`: domain別seed journalとmetric policy。
-- `search_log.csv`: 実行した全query。
+- `search_log.csv`: 実行した全query。`source_type`はdatabase等の通常検索、`OTHER_METHODS`（ユーザー添付などPRISMA 2020のother methods）、`EXPLORATION`（S0/S1の予備調査。Gate 1のsystematic searchに数えない）を区別する。
 - `records.csv`: retrievalとdeduplicationのmaster record。
 - `screening_decisions.csv`: reviewer別判定。
-- `extraction.csv`: quality/evidence/gap抽出。
+- `extraction.csv`: quality/evidence/gap抽出。`data_availability`列にはstudyが使用したdatasetの名称、DOI/URL、license、公開状態を記録し、data discoveryの`LITERATURE_DATA`探索に使う。
+- `gaps.csv`: gap候補、支持/矛盾study、search coverage、最小closing design、Gap Challenger判定。
 - `results/literature/prisma_flow.json`: flow count。
 
 `code/literature/systematic_review.py`でdeduplication、flow集計、dual-screening auditを実行する。

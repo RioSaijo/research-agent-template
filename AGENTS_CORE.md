@@ -4,7 +4,7 @@
 
 - Git repositoryをSingle Source of Truthとする。
 - JSON specificationとこの文書が競合する場合はJSON specificationに従う。
-- ChatGPT-first、Codex-on-demandを守る。Codexには必要最小限のfileとtaskだけを渡す。
+- platform-neutralに運用し、ChatGPT、Claude Code、Codex等を併用可能に保つ。role定義は`agents/roles.json`を正本とし、生成された`agents/portable/`または`.claude/agents/`を使う。各agentには必要最小限のfileとtaskだけを渡す。
 - 中心RQへ直接寄与しないmethodやtechnologyを追加しない。
 - referenceを捏造せず、数値・threshold・standard・novelty・method根拠は原典で確認する。
 - journal掲載論文の検索を必ず実施し、検索source、query、検索日、採否を`LITERATURE.md`へ記録する。
@@ -18,6 +18,7 @@
 
 Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 
+0. `inputs/intake.json`のstageとrouteを確認する。未判定ならIntake Coordinatorを起動してbriefと添付資料を登録させ、成熟度（S0〜S4）に応じた開始点を決める（`SPECIFICATION.md` 4）。S0/S1ではExploration Analystの選択肢を人間に提示し、選択を待つ。
 1. Current RQ、Current Gate、Current Phase、blocking issueを確認する。
 2. P0、P1、実行可能な最高priority taskを選ぶ。
 3. 必要なroleだけを起動し、成果を既存正本へ統合する。
@@ -27,23 +28,27 @@ Research Managerは`PROJECT.md`と`STATUS.md`を読み、次を繰り返す。
 7. Completion Criteriaが揃うまで自動的に次のphaseへ進む。
 8. Gate 4通過後にPDFを生成・render検証し、指定recipientへ送信してGate 5を判定する。
 
-初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
+S2以降の初回はLiterature Review、Problem Definition、RQ Assessment、Data Requirement、Methodology Designまで進める。RQとmethodology readinessが不足する状態でfull implementationへ進まない。Evaluation Criterionなしにfinal analysis、Evidenceなしにconclusionを行わない。
 
 ### Non-stop execution contract
 
 - テーマ受領をworkflow開始の指示として扱う。各phaseの開始許可を繰り返し求めない。
 - あるtaskがblockedでも、同じRQまたはquality gateに属する別の実行可能taskへ進む。
-- 不足resourceには、代替source、公開dataset、API、追加測定案、simulation、proxy、design変更案の順で対応可能性を調べる。
+- 不足resourceには、代替source、公開dataset、API、追加測定案、simulation・synthetic等の生成data（必ず生成dataと明示）、proxy、design変更案の順で対応可能性を調べる。
 - intermediate updateは状態共有であり、作業停止点ではない。
 - human pause condition以外では、質問への回答を待たずに合理的な仮定と`要検討`表示を使って進める。
+- 判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾等）は、直接ユーザーに依頼してよい。依頼は一度にまとめ、何のために必要か、回答がない場合の扱いを添えて`STATUS.md`のRequired Human Inputへ記録し、待つ間も依存しないtaskを進める。
 - scientific completionに到達できない場合も、調査済み範囲、blocker、証拠、再開条件をまとめた最終研究報告書を提出する。
 - 最終PDFのemail送信はworkflowの一部であり、テーマ受領時に指定済みのrecipientまたは実行時の明示指定を使用する。recipientまたはGmail接続がない場合だけDelivery Gateで停止する。
 
 ## 3. Roles and context
 
-roleは常設agentではなく必要時の責務である。
+roleは常設agentではなく必要時の責務である。各roleの入力、出力、独立性、手順、停止条件は`agents/roles.json`が正本であり、どのplatformでも同じ定義から起動する（`SPECIFICATION.md` 2）。下記は概要である。
 
 - Research Manager: `PROJECT.md`, `STATUS.md`。計画、統合、task、gate、decision、人間checkpoint。
+- Intake Coordinator: 研究briefと添付資料の登録・振り分け、成熟度（S0〜S4）の判定、開始点と人間の判断点の記録。
+- Full-text Retriever: 本文が必要な文献を台帳にし、open-access版を自動取得し、残りをユーザーのbrowser download依頼としてまとめ、受け取ったPDFをDOIで照合・登録する。
+- Exploration Analyst: S0/S1で予備調査を行い、問題とRQの選択肢を根拠付きで示す。選択はしない。
 - Literature: `PROJECT.md`, `LITERATURE.md`, 関連RQの`STATUS.md`。closest work、gap、novelty、競合method、negative evidence、standards。
 - Review Protocol Lead: review question、eligibility、source、期間、quality、synthesis、停止条件を検索前に固定する。
 - Domain Vocabulary / Search Strategist: 建築設備、建築情報、エネルギーのconcept block、同義語、controlled vocabulary、database別queryを作る。
@@ -57,7 +62,9 @@ roleは常設agentではなく必要時の責務である。
 - Gap Analyst / Gap Challenger: evidence matrixからgap候補を作り、用語漏れ、隣接分野、contradiction、既存研究でgapが消えないか別passで反証する。
 - Review Auditor: dual screening、coverage、PRISMA count、metadata、除外、quality、gap traceabilityを独立監査する。
 - Problem/RQ Assessment: 文献と研究入力から問題、gap、RQのnovelty/data/verifiability/scopeを評価。
-- Data Requirement: 必要data、取得経路、quality/provenance、代替を設計。
+- Data Requirement: RQ、gap、analysis planから必要evidenceと変数・解像度・coverage・品質要件を逆算し`data/requirements.csv`へ記録する。
+- Data Source Scout: requirementごとにpublic data、literature data、API、measurement/BMS/BIM、simulation、proxy、external provider、design changeのpathwayを探索し`data/source_search_log.csv`へ記録する。
+- Data Screener: candidate datasetを`data/screening_rubric.json`のanchorに従いfit、coverage、resolution、quality、access、cost、reproducibilityで0-3評価し、anchorを引用したrationaleと選定・却下理由を`data/candidates.csv`へ記録する。Data Source Scoutと別passで行い、MUST requirementの選定は別roleが再採点する。
 - Methodology/Analysis: `PROJECT.md`, `STATUS.md`, 関連artifact。RQから必要証拠を逆算し、method/evaluation/verificationを設計・実行。
 - Specialist: RQ、method、data、evaluationが専門知識を必要とする場合だけ起動。結果は既存正本へ統合し、研究scopeを独立に拡張しない。
 - Evidence Auditor: central claimごとに原典、data provenance、数値、引用、Claim–Evidenceの到達可能性を監査する。
@@ -103,6 +110,17 @@ planned sourceとseed journalの検索、query review、重複処理、二重scr
 
 RQ変更案は提案まで行えるが、人間承認前は確定しない。
 
+### Problem-to-data chain
+
+`Problem → Gap → RQ → Data Requirement → Search → Candidate → Manifest → Quality`を`SPECIFICATION.md` 6.1に従って記録し、`python code/data/discovery.py audit`で検査する。
+
+1. Gap Analystが`literature/gaps.csv`へgap候補を書き、Gap Challengerが別passでcounter-searchして判定する。支持studyはextraction済みでなければならない。
+2. RQ表のGap IDs列にaccepted gapを記入する。gapが棄却されたRQは人間判断へ送る。
+3. Data Requirement roleがgap type、metric、criterion、baselineからrequirementを逆算する。
+4. Data Source Scoutが`discovery.py search`とconnector/web/APIでpathwayを探索する。included studyの`data_availability`を必ず追う。
+5. Data Screenerがcandidateを採点・選定し、選定dataを`acquire.py`で取得、`quality.py`で検査する。
+6. `discovery.py matrix`でchainを出力し、Gate 2で`--allow-incomplete`なしのauditを通す。
+
 ## 6. Method and data protocol
 
 `RQ → Required Evidence → Required Data → Candidate Methods → Method Selection → Evaluation Design → Verification Plan`の順で設計する。methodはfit、data availability、validity、cost、reproducibility、interpretability、scalability、domain fit、verification feasibilityで比較する。
@@ -111,11 +129,31 @@ RQ変更案は提案まで行えるが、人間承認前は確定しない。
 
 data使用前にunit、timestamp/timezone、欠損、重複、sensor/calibration、spatial/equipment mapping、sampling/coverage、outlier、preprocessing trace、train-test separation、leakageを確認する。問題があればimpact、correction、alternative data/method、最後に`DATA_INSUFFICIENT`の順で扱う。
 
+### Data and analysis toolkit
+
+1. Data Requirement roleは`data/manifest.json`へdataset entry（source、owner、access、license、variable、unit、valid range、timestamp column、timezone、expected interval）を作り、`python code/data/acquire.py fetch|register`で取得・登録する。raw dataは`data/raw/`でread-onlyとし、commitしない。
+2. 使用前に`python code/data/quality.py profile --data-id <ID> --record-check <CHECK-ID> --claim-id <CL>`を実行する。WARN/FAILは補正、除外、代替dataのいずれかとその影響を記録する。
+3. Analysis roleは`code/analysis/stats.py`の共通metric、bootstrap、比較検定、multiplicity補正、rolling-origin splitを使い、閾値はanalysis planから読む。
+4. confirmatory runは`python code/analysis/record_run.py ... -- <command>`で実行し、手でruns.csvを書かない。
+5. Gate 3前に`python code/data/acquire.py verify`（raw dataのあるenvironmentで）とstrict evidence auditを実行する。
+6. 全collection pathwayで取得できないdataは、`SPECIFICATION.md` 7.3に従い生成して検証・活用できる。Data Generatorがfidelity基準を先に固定して`code/data/generate.py`で登録し、別roleのGenerated Data Validatorが検証する。生成dataであることはmanifest、file行、sidecar、runs、claims、STATUS.md、原稿（`\GeneratedData{ID}`）、PDFのすべてで明示し、observed dataとして記述しない。
+
 ## 7. Evidence and verification
 
 Evidence Type、Verification、Claim Statusは`SPECIFICATION.md`のenumだけを使う。Claimを`SUPPORTED`にするには事前Criterionを満たす必要がある。independent verificationは設計上必要なclaimで実施し、primary evidenceと同じ処理の単純再実行を独立確認とみなさない。
 
 code、processed data、result、figure/table、paper sectionをClaim IDとRQ IDへ結びつける。seed、software version、parameter、manual processing、negative resultを残す。
+
+### Gate 3 evidence control
+
+`evidence/`をGate 3のmachine-readable正本とし、`STATUS.md`のClaim Evidence Tableはその要約として一致させる。
+
+1. Methodology roleはconfirmatory runの前に`evidence/analysis_plan.json`をlockする。各analysisにclaim ID、claim type（`DESCRIPTIVE / ASSOCIATIONAL / CAUSAL / PREDICTIVE / COMPARATIVE / GENERALIZATION / FEASIBILITY`）、metric、数値またはMANUAL criterion、baseline、expected direction、uncertainty method、required check、verification independence levelを固定する。lock後の変更はamendmentとして旧値、新値、理由、再分析要否を残す。
+2. Analysis roleはすべての実行を`evidence/runs.csv`へ記録する（run type、role、時刻、git commit、command、environment、seed、input/output pathとSHA-256）。lock前のrunは`EXPLORATORY`だけとし、confirmatory evidenceに使わない。
+3. Methods ChallengerとVerificationは`evidence/checks.csv`へcheckを記録する。`ALTERNATIVE_EXPLANATION`、`FALSIFICATION`、`NEGATIVE_CONTROL`、`INDEPENDENT_VERIFICATION`はprimary analystと別roleが行う。
+4. claim typeごとの最低checkはplanから削除できない。DATA_QUALITYは常に、central claimはALTERNATIVE_EXPLANATIONとSENSITIVITY、CAUSALはFALSIFICATION、PREDICTIVEはLEAKAGEとBASELINE、COMPARATIVEはBASELINE、GENERALIZATIONはTRANSFERを要する。
+5. independence levelは`NONE < RERUN < ALTERNATIVE_METHOD < INDEPENDENT_IMPLEMENTATION < INDEPENDENT_DATA < EXTERNAL`とする。RERUNとALTERNATIVE_METHODは`INTERNALLY_VERIFIED`まで、`INDEPENDENTLY_VERIFIED`には別roleによるINDEPENDENT_IMPLEMENTATION以上を要する。
+6. Evidence Auditorは`python code/evidence/evidence_audit.py report --status STATUS.md --verify-files`を`--allow-incomplete`なしで実行し、全issueを解消するか、claimを縮小・`PARTIALLY_SUPPORTED`・`UNSUPPORTED`へ下げる。pre-registerされていないclaimは`PRELIMINARY`を上限とし、negative resultを`claims.csv`から削除しない。
 
 ## 8. Referee protocol
 
@@ -139,7 +177,7 @@ Refereeは中心claimを肯定することを目的にしない。独立検証�
 
 Gate checklistは`STATUS.md`で管理する。Gate失敗を隠して先へ進まない。
 
-人間へ停止して確認するのはRQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断である。重要変更はDecision Logにprevious/new state、reason、evidence、impact、approvalを残す。
+人間へ停止して確認するのはS0/S1の選択肢の選択、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断である。重要変更はDecision Logにprevious/new state、reason、evidence、impact、approvalを残す。
 
 ## 10. Writing and completion
 
