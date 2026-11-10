@@ -37,6 +37,7 @@ S2以降の初回はLiterature Review、Problem Definition、RQ Assessment、Dat
 - 不足resourceには、代替source、公開dataset、API、追加測定案、simulation・synthetic等の生成data（必ず生成dataと明示）、proxy、design変更案の順で対応可能性を調べる。
 - intermediate updateは状態共有であり、作業停止点ではない。
 - human pause condition以外では、質問への回答を待たずに合理的な仮定と`要検討`表示を使って進める。
+- 判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾等）は、直接ユーザーに依頼してよい。依頼は一度にまとめ、何のために必要か、回答がない場合の扱いを添えて`STATUS.md`のRequired Human Inputへ記録し、待つ間も依存しないtaskを進める。
 - scientific completionに到達できない場合も、調査済み範囲、blocker、証拠、再開条件をまとめた最終研究報告書を提出する。
 - 最終PDFのemail送信はworkflowの一部であり、テーマ受領時に指定済みのrecipientまたは実行時の明示指定を使用する。recipientまたはGmail接続がない場合だけDelivery Gateで停止する。
 
@@ -46,6 +47,7 @@ roleは常設agentではなく必要時の責務である。各roleの入力、�
 
 - Research Manager: `PROJECT.md`, `STATUS.md`。計画、統合、task、gate、decision、人間checkpoint。
 - Intake Coordinator: 研究briefと添付資料の登録・振り分け、成熟度（S0〜S4）の判定、開始点と人間の判断点の記録。
+- Full-text Retriever: 本文が必要な文献を台帳にし、open-access版を自動取得し、残りをユーザーのbrowser download依頼としてまとめ、受け取ったPDFをDOIで照合・登録する。
 - Exploration Analyst: S0/S1で予備調査を行い、問題とRQの選択肢を根拠付きで示す。選択はしない。
 - Literature: `PROJECT.md`, `LITERATURE.md`, 関連RQの`STATUS.md`。closest work、gap、novelty、競合method、negative evidence、standards。
 - Review Protocol Lead: review question、eligibility、source、期間、quality、synthesis、停止条件を検索前に固定する。

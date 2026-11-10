@@ -24,6 +24,7 @@ included studyのstudy-design別quality/risk-of-bias評価と、data、method、
 - `literature/protocol.json`
 - `literature/records.csv`
 - `literature/screening_decisions.csv`
+- `literature/fulltext.csv`
 
 ## 出力（書いてよいfile）
 
@@ -35,6 +36,7 @@ included studyのstudy-design別quality/risk-of-bias評価と、data、method、
 2. 原文を確認し、抽出値にsource_location（page、table、figure）を付ける。
 3. data_availability列にdataset名、DOI/URL、license、公開状態を記録する（data discoveryの入口になる）。
 4. 抽出前に`verify_refs.py doi`で書誌を確認し、原文を読んだ場合はsource_locationにpage等を記録する（ORIGINAL_CHECKED）。
+5. extractionはREADの本文からだけ行い、`fulltext.py mark-read`で読んだ箇所を記録する。本文が読めない文献はevidence_labelに`ABSTRACT_ONLY`と書き、数値やmethod詳細を抽出しない。
 
 ## してはいけないこと
 

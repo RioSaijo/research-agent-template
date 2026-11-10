@@ -28,6 +28,7 @@ artifactだけを読み、反証を先に試すTopic、Scientific/Technical、Pu
 - `evidence/`
 - `results/`
 - `paper/`
+- `literature/fulltext.csv`
 
 ## 出力（書いてよいfile）
 
@@ -46,6 +47,7 @@ artifactだけを読み、反証を先に試すTopic、Scientific/Technical、Pu
 3. 再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。
 4. 生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。
 5. `results/references/verification.json`を確認し、未検証referenceに依存する記述を指摘する。
+6. 中心的な主張がREADの文献に支えられているかを`literature/fulltext.csv`で確認する。
 
 ## してはいけないこと
 

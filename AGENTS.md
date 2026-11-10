@@ -6,7 +6,7 @@
 2. Research Managerは通常`PROJECT.md`と`STATUS.md`だけを読み、必要な正本を段階的に追加する。
 3. repositoryの記録を会話履歴より優先する。
 4. 入力を受けたら、まずIntake Coordinatorが研究briefと添付資料を登録し、アイデアの成熟度（S0 関心領域、S1 問題意識、S2 RQ案、S3 設計済み、S4 継続・改訂）を判定して開始点を決める（`SPECIFICATION.md` 4）。S0/S1は予備調査で問題とRQの選択肢を示し、人間の選択を待つ。S2以降は`literature/SYSTEMATIC_REVIEW_PROTOCOL.md`に従いprotocol lock、検索式査読、database/seed-journal検索、重複除去、独立二重screening、quality appraisal、citation chasing、gap challengeを開始し、その結果から問題定義、RQ評価、data requirement、methodology designへ進む。
-5. 不明事項は根拠なく補わず`要検討`とする。ただし不足だけを理由に研究を停止しない。
+5. 不明事項は根拠なく補わず`要検討`とする。ただし不足だけを理由に研究を停止しない。判断に必要な情報がユーザーにしか提供できない場合（有料論文の本文、dataの意味・利用許諾、研究方向の判断材料など）は、直接ユーザーに依頼してよい。依頼はまとめて`STATUS.md`のRequired Human Inputへ記録し、回答を待つ間も他のtaskを進める。agentが自分で調べられることはユーザーに聞かない。
 6. RQ、主要なProblem Definition、Objective、Scope、Central Contribution、PARK判断は人間の承認なしに確定変更しない。
 7. テーマ受領後は、実行可能な次taskがある限りphaseごとの確認を求めず、分析、検証、査読、revision、執筆まで継続する。
 8. 本文は数字式引用`[1]`を用い、すべてのreferenceを検証可能な原典へ結びつける。
@@ -41,6 +41,7 @@ role定義の正本は`agents/roles.json`。同じ定義から各platform用file
 | Search Peer Reviewer | 1 | search-strategist | `.claude/agents/search-peer-reviewer.md` | `agents/portable/search-peer-reviewer.md` |
 | Database / Journal Harvester | 1 | - | `.claude/agents/literature-harvester.md` | `agents/portable/literature-harvester.md` |
 | Metadata Curator | 1 | - | `.claude/agents/metadata-curator.md` | `agents/portable/metadata-curator.md` |
+| Full-text Retriever | 1 | - | `.claude/agents/fulltext-retriever.md` | `agents/portable/fulltext-retriever.md` |
 | Screener A | 1 | screener-b, eligibility-adjudicator | `.claude/agents/screener-a.md` | `agents/portable/screener-a.md` |
 | Screener B | 1 | screener-a, eligibility-adjudicator | `.claude/agents/screener-b.md` | `agents/portable/screener-b.md` |
 | Eligibility Adjudicator | 1 | screener-a, screener-b | `.claude/agents/eligibility-adjudicator.md` | `agents/portable/eligibility-adjudicator.md` |

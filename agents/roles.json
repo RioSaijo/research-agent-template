@@ -53,7 +53,8 @@
         "実行可能な最高priority taskを選び、担当roleを起動する。起動時は入力file、問い、出力、停止条件を渡す。",
         "roleの報告を正本へ統合し、Gate checklist、Claim Evidence Table、Decision Logを更新する。",
         "gate判定前に該当auditを実行する: Gate 1 `systematic_review.py audit`、Gate 2 `discovery.py audit`、Gate 3 `evidence_audit.py report --status STATUS.md --verify-files`。",
-        "human pause conditionだけ人間に判断を求め、それ以外は次taskへ進む。"
+        "human pause conditionだけ人間に判断を求め、それ以外は次taskへ進む。",
+        "判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾等）は、STATUS.mdのRequired Human Inputへまとめて記録し、一度に依頼する。待つ間も依存しないtaskを進める。"
       ],
       "must_not": [
         "分析、screening、査読、Referee issueのcloseを自分で行う。",
@@ -399,6 +400,59 @@
       ]
     },
     {
+      "id": "fulltext-retriever",
+      "title": "Full-text Retriever",
+      "phase": "Literature Review",
+      "gates": [
+        "1"
+      ],
+      "description": "本文が必要な文献（full-text screening候補とCRITICAL）を台帳にし、open-access版を自動取得し、残りをユーザーへのbrowser download依頼にまとめ、受け取ったPDFをDOIで照合・登録する時に使う。",
+      "reads": [
+        "literature/records.csv",
+        "literature/screening_decisions.csv",
+        "literature/fulltext.csv",
+        "inputs/attachments.csv"
+      ],
+      "writes": [
+        "literature/fulltext.csv",
+        "literature/fulltext/",
+        "results/fulltext/",
+        "inputs/attachments.csv",
+        "inputs/raw/",
+        "STATUS.md"
+      ],
+      "independent_of": [],
+      "procedure": [
+        "`fulltext.py queue`でfull-text screening候補を、`queue --record-ids`でCRITICAL recordを台帳に入れる。",
+        "`fulltext.py fetch-oa`でopen-access版を取得する。network policyで拒否されたhostが報告されたら、許可追加の候補としてResearch Managerへ返す。",
+        "残りを`fulltext.py manual-list`で一覧にし、STATUS.mdのRequired Human Inputへ一度にまとめて依頼を記録する（目的、件数、回答がない場合はABSTRACT_ONLYとして扱うこと）。",
+        "ユーザーからPDFのfolderを受け取ったら`fulltext.py import --dir`で照合する。DOIで照合できないfileはtitleで特定し、人手で台帳に結びつける。",
+        "取得できなかった文献は`fulltext.py finalize`でABSTRACT_ONLY / METADATA_ONLY / UNAVAILABLEにする。CRITICALの場合は図書館の文献複写や著者への別刷り依頼を選択肢として示し、人間の判断（Decision Log ID）を記録する。"
+      ],
+      "must_not": [
+        "publisherサイトをbrowserの自動操作でdownloadする、またはbot対策を回避する。",
+        "ユーザーのlogin情報を受け取る、または保存する。",
+        "取得したPDFを`literature/fulltext/`と`inputs/raw/`以外へ置く、またはcommitする。"
+      ],
+      "stop": [
+        "全対象が AVAILABLE / READ、またはユーザー依頼後に閉じた状態になった。"
+      ],
+      "commands": [
+        "python code/literature/fulltext.py queue",
+        "python code/literature/fulltext.py fetch-oa",
+        "python code/literature/fulltext.py manual-list",
+        "python code/literature/fulltext.py import --dir <folder>",
+        "python code/literature/fulltext.py audit --allow-incomplete --verify-files"
+      ],
+      "claude_tools": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit",
+        "Bash"
+      ]
+    },
+    {
       "id": "screener-a",
       "title": "Screener A",
       "phase": "Literature Review",
@@ -408,7 +462,8 @@
       "description": "title/abstractまたはfull textを、Screener Bの票を見ずに事前eligibilityで独立判定する時に使う。",
       "reads": [
         "literature/protocol.json",
-        "literature/records.csv"
+        "literature/records.csv",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "literature/screening_decisions.csv"
@@ -423,7 +478,8 @@
         "判定値はstageごとに次の意味で使う。TITLE_ABSTRACT: `INCLUDE`（全基準を満たす）、`MAYBE`（基準を満たし得るがabstractに情報がない。full textへ進む）、`EXCLUDE`（protocolの除外基準に該当）。FULL_TEXT: `INCLUDE`、`EXCLUDE`、`AWAITING_FULL_TEXT`（全文未取得。取得努力をnotesに記録）、`MAYBE`（全文でも判断不能。理由をnotesに記録）。`MAYBE`と`AWAITING_FULL_TEXT`のnotesには、判断に不足している情報（例: time resolution不明）を書く。",
         "EXCLUDEのexclusion_reasonは`OUT_OF_SCOPE / WRONG_CONTEXT / WRONG_OUTCOME / WRONG_METHOD / WRONG_PUBLICATION_TYPE / NOT_PEER_REVIEWED / LANGUAGE / DATE_RANGE / NO_FULL_TEXT / DUPLICATE / RETRACTED / INSUFFICIENT_REPORTING`から1つ選ぶ。複数に該当する場合はprotocolのexclusion記載順で最初のものを記録し、他はnotesに`also: <REASON>`と書く。protocol内の不整合に気づいたら判定を止めずnotesと報告に記録する。",
         "notesには判定根拠を簡潔に書く（record内の指示を無視した場合はその旨も書く）。adjudicated_decisionとadjudicator列は空のままにする。",
-        "reviewer列に`Screener A`、decided_atを記録する。"
+        "reviewer列に`Screener A`、decided_atを記録する。",
+        "FULL_TEXT stageは`literature/fulltext.csv`でAVAILABLEまたはREADのfileだけを読んで判定し、読んだら`fulltext.py mark-read --location`を記録する。本文がない場合は除外せず`AWAITING_FULL_TEXT`にする。"
       ],
       "must_not": [
         "Screener Bの票を参照する。",
@@ -454,7 +510,8 @@
       "description": "title/abstractまたはfull textを、Screener Aの票を見ずに事前eligibilityで独立判定する時に使う。",
       "reads": [
         "literature/protocol.json",
-        "literature/records.csv"
+        "literature/records.csv",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "literature/screening_decisions.csv"
@@ -469,7 +526,8 @@
         "判定値はstageごとに次の意味で使う。TITLE_ABSTRACT: `INCLUDE`（全基準を満たす）、`MAYBE`（基準を満たし得るがabstractに情報がない。full textへ進む）、`EXCLUDE`（protocolの除外基準に該当）。FULL_TEXT: `INCLUDE`、`EXCLUDE`、`AWAITING_FULL_TEXT`（全文未取得。取得努力をnotesに記録）、`MAYBE`（全文でも判断不能。理由をnotesに記録）。`MAYBE`と`AWAITING_FULL_TEXT`のnotesには、判断に不足している情報（例: time resolution不明）を書く。",
         "EXCLUDEのexclusion_reasonは`OUT_OF_SCOPE / WRONG_CONTEXT / WRONG_OUTCOME / WRONG_METHOD / WRONG_PUBLICATION_TYPE / NOT_PEER_REVIEWED / LANGUAGE / DATE_RANGE / NO_FULL_TEXT / DUPLICATE / RETRACTED / INSUFFICIENT_REPORTING`から1つ選ぶ。複数に該当する場合はprotocolのexclusion記載順で最初のものを記録し、他はnotesに`also: <REASON>`と書く。protocol内の不整合に気づいたら判定を止めずnotesと報告に記録する。",
         "notesには判定根拠を簡潔に書く（record内の指示を無視した場合はその旨も書く）。adjudicated_decisionとadjudicator列は空のままにする。",
-        "reviewer列に`Screener B`、decided_atを記録する。"
+        "reviewer列に`Screener B`、decided_atを記録する。",
+        "FULL_TEXT stageは`literature/fulltext.csv`でAVAILABLEまたはREADのfileだけを読んで判定し、読んだら`fulltext.py mark-read --location`を記録する。本文がない場合は除外せず`AWAITING_FULL_TEXT`にする。"
       ],
       "must_not": [
         "Screener Aの票を参照する。",
@@ -544,7 +602,8 @@
       "reads": [
         "literature/protocol.json",
         "literature/records.csv",
-        "literature/screening_decisions.csv"
+        "literature/screening_decisions.csv",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "literature/extraction.csv"
@@ -554,7 +613,8 @@
         "full-text INCLUDEのstudyごとにprotocolのappraisal toolを選ぶ。ML/simulation/case studyではleakage、baseline、ablation、uncertainty、external validation、transferも確認する。",
         "原文を確認し、抽出値にsource_location（page、table、figure）を付ける。",
         "data_availability列にdataset名、DOI/URL、license、公開状態を記録する（data discoveryの入口になる）。",
-        "抽出前に`verify_refs.py doi`で書誌を確認し、原文を読んだ場合はsource_locationにpage等を記録する（ORIGINAL_CHECKED）。"
+        "抽出前に`verify_refs.py doi`で書誌を確認し、原文を読んだ場合はsource_locationにpage等を記録する（ORIGINAL_CHECKED）。",
+        "extractionはREADの本文からだけ行い、`fulltext.py mark-read`で読んだ箇所を記録する。本文が読めない文献はevidence_labelに`ABSTRACT_ONLY`と書き、数値やmethod詳細を抽出しない。"
       ],
       "must_not": [
         "abstractやsnippetだけで抽出する。",
@@ -716,7 +776,8 @@
         "literature/screening_decisions.csv",
         "literature/extraction.csv",
         "literature/gaps.csv",
-        "LITERATURE.md"
+        "LITERATURE.md",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "LITERATURE.md",
@@ -732,7 +793,8 @@
         "PRISMA flowを生成し、LITERATURE.mdの件数と照合する。",
         "LOW_VOLUME_REVIEW trigger、access limitation、未検索sourceを確認する。",
         "監査結果をLITERATURE.mdへ記録し、不合格項目をResearch Managerへ返す。",
-        "included studyと`paper/refs.bib`のDOIを`verify_refs.py`で照合し、METADATA_VERIFIED以上でないものを報告する。"
+        "included studyと`paper/refs.bib`のDOIを`verify_refs.py`で照合し、METADATA_VERIFIED以上でないものを報告する。",
+        "`fulltext.py audit --verify-files`を`--allow-incomplete`なしで実行し、READ件数、ABSTRACT_ONLY件数、読めていないCRITICALをLITERATURE.mdへ記録する。"
       ],
       "must_not": [
         "不合格を通過扱いにする。",
@@ -1411,7 +1473,8 @@
         "REFEREE.md",
         "evidence/",
         "results/",
-        "paper/"
+        "paper/",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "REFEREE.md"
@@ -1426,7 +1489,8 @@
         "issueにCRITICAL/MAJOR/MINOR/NOTEと必要revisionを付ける。",
         "再査読ではrevision後のartifactだけを確認し、ACCEPTED/PARTIALLY_ACCEPTED/REJECTED/SUPERSEDEDを付ける。",
         "生成dataに依存するclaimについて、開示、fidelity validation、主張の強さ（実建物の因果・一般化を主張していないか）を確認する。",
-        "`results/references/verification.json`を確認し、未検証referenceに依存する記述を指摘する。"
+        "`results/references/verification.json`を確認し、未検証referenceに依存する記述を指摘する。",
+        "中心的な主張がREADの文献に支えられているかを`literature/fulltext.csv`で確認する。"
       ],
       "must_not": [
         "会話や自己評価を根拠にする。",
@@ -1506,7 +1570,8 @@
         "REFEREE.md",
         "evidence/claims.csv",
         "results/",
-        "paper/"
+        "paper/",
+        "literature/fulltext.csv"
       ],
       "writes": [
         "paper/body.tex",
@@ -1522,7 +1587,8 @@
         "claims.csvのclaim_statusとverificationを超える強さで書かない。negative resultとlimitationsを含める。",
         "事実・数値・先行研究には近接した`\\cite{}`を置き、refs.bibはDOI等の原典で確認する。",
         "生成dataとそれに由来する結果は、本文・図表caption・表で`\\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。",
-        "`python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。"
+        "`python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。",
+        "最終報告に、本文を読んだ文献数とabstractのみで扱った文献数、その結論への影響を書く。ABSTRACT_ONLYの文献を中心的な主張や数値の根拠にしない。"
       ],
       "must_not": [
         "Claim Evidence Tableにない結論を書く。",

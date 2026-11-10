@@ -32,6 +32,7 @@ Claim Evidence Tableを上限として、研究typeに適応したoutlineで数�
 - `evidence/claims.csv`
 - `results/`
 - `paper/`
+- `literature/fulltext.csv`
 
 ## 出力（書いてよいfile）
 
@@ -53,6 +54,7 @@ Claim Evidence Tableを上限として、研究typeに適応したoutlineで数�
 3. 事実・数値・先行研究には近接した`\cite{}`を置き、refs.bibはDOI等の原典で確認する。
 4. 生成dataとそれに由来する結果は、本文・図表caption・表で`\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。
 5. `python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。
+6. 最終報告に、本文を読んだ文献数とabstractのみで扱った文献数、その結論への影響を書く。ABSTRACT_ONLYの文献を中心的な主張や数値の根拠にしない。
 
 ## してはいけないこと
 

@@ -28,6 +28,7 @@ systematic reviewのcoverage、dual screening、PRISMA count、除外理由、me
 - `literature/extraction.csv`
 - `literature/gaps.csv`
 - `LITERATURE.md`
+- `literature/fulltext.csv`
 
 ## 出力（書いてよいfile）
 
@@ -47,6 +48,7 @@ systematic reviewのcoverage、dual screening、PRISMA count、除外理由、me
 3. LOW_VOLUME_REVIEW trigger、access limitation、未検索sourceを確認する。
 4. 監査結果をLITERATURE.mdへ記録し、不合格項目をResearch Managerへ返す。
 5. included studyと`paper/refs.bib`のDOIを`verify_refs.py`で照合し、METADATA_VERIFIED以上でないものを報告する。
+6. `fulltext.py audit --verify-files`を`--allow-incomplete`なしで実行し、READ件数、ABSTRACT_ONLY件数、読めていないCRITICALをLITERATURE.mdへ記録する。
 
 ## してはいけないこと
 

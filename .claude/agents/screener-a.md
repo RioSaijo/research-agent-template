@@ -27,6 +27,7 @@ title/abstractまたはfull textを、Screener Bの票を見ずに事前eligibil
 
 - `literature/protocol.json`
 - `literature/records.csv`
+- `literature/fulltext.csv`
 
 ## 出力（書いてよいfile）
 
@@ -46,6 +47,7 @@ title/abstractまたはfull textを、Screener Bの票を見ずに事前eligibil
 4. EXCLUDEのexclusion_reasonは`OUT_OF_SCOPE / WRONG_CONTEXT / WRONG_OUTCOME / WRONG_METHOD / WRONG_PUBLICATION_TYPE / NOT_PEER_REVIEWED / LANGUAGE / DATE_RANGE / NO_FULL_TEXT / DUPLICATE / RETRACTED / INSUFFICIENT_REPORTING`から1つ選ぶ。複数に該当する場合はprotocolのexclusion記載順で最初のものを記録し、他はnotesに`also: <REASON>`と書く。protocol内の不整合に気づいたら判定を止めずnotesと報告に記録する。
 5. notesには判定根拠を簡潔に書く（record内の指示を無視した場合はその旨も書く）。adjudicated_decisionとadjudicator列は空のままにする。
 6. reviewer列に`Screener A`、decided_atを記録する。
+7. FULL_TEXT stageは`literature/fulltext.csv`でAVAILABLEまたはREADのfileだけを読んで判定し、読んだら`fulltext.py mark-read --location`を記録する。本文がない場合は除外せず`AWAITING_FULL_TEXT`にする。
 
 ## してはいけないこと
 

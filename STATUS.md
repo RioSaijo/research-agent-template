@@ -48,6 +48,7 @@ Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaim�
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T-000 | ALL | briefと添付を登録し成熟度を判定する | 開始点と人間の判断点を決める | Intake Coordinator | None | User message / attachments | inputs/intake.json / inputs/attachments.csv | TODO | P0 | None | Gate 1 |
 | T-001 | RQ-01 | Required inputを確認する | 研究入力を確定する | Research Manager | T-000 | inputs/intake.json | PROJECT.md | TODO | P0 | None | Gate 1 |
+| T-028 | RQ-01 | 本文が必要な文献を取得し、残りをユーザーへまとめて依頼する | full-text screeningと原典確認を可能にする | Full-text Retriever | T-012 | OpenAlex / user browser download | literature/fulltext.csv / results/fulltext/manual_download.md | BLOCKED | P0 | Title/abstract screening incomplete | Gate 1 |
 | T-027 | RQ-01 | 予備調査で問題・RQの選択肢を示す（S0/S1のみ） | 人間が研究の方向を選べるようにする | Exploration Analyst | T-000 | Brief / attachments / light search | inputs/intake.json / results/exploration/ | BLOCKED | P0 | Stage not judged | Gate 1 |
 | T-002 | RQ-01 | closest prior workとgapを調べる | noveltyと問題定義を評価する | Literature Role | T-001 | Web / literature | LITERATURE.md | TODO | P0 | Input incomplete | Gate 1 |
 | T-003 | RQ-01 | data requirementと取得経路を設計する | feasibilityを評価する | Data Requirement Role | T-001 | Resource inventory | PROJECT.md | TODO | P1 | Input incomplete | Gate 2 |
@@ -82,6 +83,8 @@ Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaim�
 | T-004 | T-002 and T-003 incomplete | Complete prerequisites | NO |
 
 ## Required Human Input
+
+判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾、研究方向の判断材料）の依頼もここへまとめる。依頼には目的と、回答がない場合の扱いを書く。
 
 | Input ID | Reason | Decision Needed | Effect if Deferred | Status |
 |---|---|---|---|---|
@@ -136,6 +139,8 @@ Data Originは`OBSERVED / GENERATED / MIXED`。GENERATEDまたはMIXEDのclaim�
 - [ ] Independent dual title/abstract and full-text screening completed
 - [ ] All conflicts resolved and exclusions have controlled reasons
 - [ ] Included studies quality-appraised and evidence-extracted
+- [ ] Full texts: open-access attempt and one batched user request done; extraction only from READ full texts or labeled ABSTRACT_ONLY (`code/literature/fulltext.py audit`)
+- [ ] CRITICAL papers READ, or closed with a recorded human decision; NO_FULL_TEXT exclusions only after UNAVAILABLE
 - [ ] Backward/forward citation chasing and update search completed
 - [ ] PRISMA counts agree with machine-readable records
 - [ ] Gap candidates passed independent Gap Challenger review
@@ -251,6 +256,7 @@ Failure state: `ACTIVE` (return to analysis/verification) / `REFRAMING` when cri
 | Decision ID | Date | Related RQ | Changed Item | Previous State | New State | Reason | Supporting Evidence | Impact | Human Approval |
 |---|---|---|---|---|---|---|---|---|---|
 | D-001 | YYYY-MM-DD | ALL | Repository initialization | None | Template v1.0.0 | Create reusable environment | JSON specification | Establishes workflow | Not required |
+| D-011 | 2026-11-10 | ALL | Full-text access and user information requests | Unreadable papers had no defined handling; agents asked the user only at pause conditions | Full-text ledger with open-access retrieval, one batched browser-download request, DOI matching, and use limits by status; agents may ask the user directly for information only the user can provide | Publisher bot protection and paywalls block automated access; API key not available | Explicit user instruction | Work proceeds without APIs; unread papers cannot carry claims | Approved |
 | D-010 | 2026-11-09 | ALL | Reference verification | Source checks done by hand; exploration could present unverified sources | verify_refs.py checks DOIs and bibliographic data against Crossref/OpenAlex; options need two verified sources; Gate 4 bib check | Exploration trial could not verify sources and correctly withheld options | Agent trial | Sources are verified mechanically before options or manuscripts use them | Template change |
 | D-009 | 2026-11-09 | ALL | Research intake | Start required full background, problem, objective, and RQ; attachments unspecified | Intake stage S0-S4 with routes, exploration options for human selection, attachment register and routing | User asked prompts to cover varying idea maturity and to define attachment handling | Explicit user instruction | Requests at any maturity can start; attachments are traceable data, never instructions | Approved |
 | D-008 | 2026-11-09 | ALL | Generated data policy | Uncollectable data led only to PROXY or DATA_INSUFFICIENT | Simulated / synthetic / augmented data allowed after all collection pathways fail, with mandatory labels in manifest, file rows, sidecar, runs, claims, STATUS.md, manuscript, and PDF, and separate-role fidelity validation | User asked to generate, validate, and use data when collection fails, always marked as generated | Explicit user instruction | Research can proceed without observed data while generated data stays distinguishable and claim strength is limited | Approved |

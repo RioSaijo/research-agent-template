@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py data/manifest.json code/data/acquire.py code/data/quality.py code/analysis/stats.py code/analysis/record_run.py tests/test_data_analysis.py requirements.txt code/data/discovery.py tests/test_discovery.py literature/gaps.csv data/requirements.csv data/source_search_log.csv data/candidates.csv data/screening_rubric.json CLAUDE.md agents/roles.json code/agents/build_agents.py tests/test_build_agents.py code/data/generate.py tests/test_generated_data.py inputs/intake.json inputs/attachments.csv code/intake/intake.py tests/test_intake.py code/literature/verify_refs.py tests/test_verify_refs.py)
+required_files=(README.md SPECIFICATION.md AGENTS.md AGENTS_CORE.md PROJECT.md STATUS.md LITERATURE.md REFEREE.md paper/main.tex paper/body.tex paper/refs.bib scripts/check.sh .github/workflows/ci.yml literature/SYSTEMATIC_REVIEW_PROTOCOL.md literature/protocol.json literature/journal_scope.json literature/search_log.csv literature/records.csv literature/screening_decisions.csv literature/extraction.csv code/literature/systematic_review.py tests/test_systematic_review.py evidence/analysis_plan.json evidence/runs.csv evidence/checks.csv evidence/claims.csv code/evidence/evidence_audit.py tests/test_evidence_audit.py data/manifest.json code/data/acquire.py code/data/quality.py code/analysis/stats.py code/analysis/record_run.py tests/test_data_analysis.py requirements.txt code/data/discovery.py tests/test_discovery.py literature/gaps.csv data/requirements.csv data/source_search_log.csv data/candidates.csv data/screening_rubric.json CLAUDE.md agents/roles.json code/agents/build_agents.py tests/test_build_agents.py code/data/generate.py tests/test_generated_data.py inputs/intake.json inputs/attachments.csv code/intake/intake.py tests/test_intake.py code/literature/verify_refs.py tests/test_verify_refs.py code/literature/fulltext.py literature/fulltext.csv tests/test_fulltext.py)
 required_dirs=(paper/figures code results tests literature evidence data inputs)
 
 for path in "${required_files[@]}"; do
@@ -49,6 +49,7 @@ if [[ -n "$python_bin" ]]; then
   "$python_bin" code/agents/build_agents.py --check
   "$python_bin" code/data/generate.py check-disclosure
   "$python_bin" code/intake/intake.py audit --allow-incomplete
+  "$python_bin" code/literature/fulltext.py audit --allow-incomplete
 else
   echo "[check] Python not found; evidence artifacts were not audited" >&2
 fi

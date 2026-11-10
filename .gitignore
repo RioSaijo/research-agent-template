@@ -37,3 +37,6 @@ tmp/
 
 # User attachments (originals; the register inputs/attachments.csv is committed)
 inputs/raw/
+
+# Full texts (copyrighted; the ledger literature/fulltext.csv is committed)
+literature/fulltext/

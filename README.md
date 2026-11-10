@@ -148,6 +148,7 @@ research-agent-template/
 │   └── figures/
 ├── code/
 │   ├── literature/systematic_review.py
+│   ├── literature/fulltext.py     # 本文の取得・依頼・照合・利用制限
 │   ├── literature/verify_refs.py  # DOI・書誌をCrossref/OpenAlexで照合
 │   ├── intake/intake.py     # 添付の登録・振り分け、受付の監査
 │   ├── agents/build_agents.py  # role定義から各platform用fileを生成・検査
@@ -166,6 +167,16 @@ research-agent-template/
 ```
 
 `code/`と`results/`の下位directoryは必要になった時だけ作ります。生データは原則Git管理せず、read-onlyとして扱い、入手元と処理履歴を`PROJECT.md`および成果物に記録します。
+
+## 本文が読めない論文の扱い
+
+購読誌の本文は、publisherのbot対策と購読確認のため自動では読めないことがあります。moduleは次の順で扱います（`code/literature/fulltext.py`）。
+
+1. open-access版（著者版、機関repository、J-STAGE、arXiv、OSTIなど）を自動で探して取得する。
+2. 残りは優先度順のDOIリンク一覧（`results/fulltext/manual_download.md`）にして、まとめて一度だけお願いします。大学ネットワークのブラウザで普段どおりPDFを保存し、フォルダごと渡してください。ファイル名はそのままで、PDF内のDOIで照合します。
+3. それでも読めない論文は「abstractのみ」などと記録し、中心的な主張や数値の根拠には使いません。最終報告に件数と影響を明記します。
+
+ログイン情報は受け取らず、publisherサイトの自動操作やbot対策の回避も行いません。
 
 ## Problem → gap → RQ → data
 

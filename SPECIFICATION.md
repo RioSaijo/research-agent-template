@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.10.0
+Version: 1.11.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -98,7 +98,7 @@ resourceは`PROJECT.md`でURLs、DOI/Literature、PDFs、Datasets、Repositories
 
 Research Managerが全体を統合する。systematic reviewではReview Manager、Search Strategist、Search Peer Reviewer、Database/Journal Harvester、Citation Chaser、Metadata Curator、Screener A/B、Adjudicator、Quality Appraiser、Evidence Extractor、Gap Analyst/Challenger、Review Auditorを分離する。その後、必要な時だけProblem Definition、RQ Assessment、Data Requirement、Methodology、domain specialist、Analysis/Implementation、Methods Challenger、Evidence Auditor、Reproducibility Auditor、Verification、Referee、Revision Lead、Writerの役割を起動する。specialistは常設せず、中心RQを独立に拡張しない。中心claimには複数の独立した視点を割り当て、RefereeとRevision Leadを同一roleにしない。Refereeは完了前に必須、Writerは最終段階だけでなく段階的に執筆する。
 
-テーマ受領後はnon-stop executionを既定とする。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、S0/S1の予備調査で示した選択肢の選択、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断、またはGmail接続・recipient不足に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、journal文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した引用番号付きPDFを生成し、指定recipientへ送信する。
+テーマ受領後はnon-stop executionを既定とする。判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾等）は直接ユーザーに依頼してよく、依頼は一度にまとめて`STATUS.md`のRequired Human Inputへ記録し、待つ間も依存しないtaskを進める。phaseごとの追加承認を求めず、実行可能なtaskがある限りworkflowを継続する。停止して人間へ判断を求めるのは、S0/S1の予備調査で示した選択肢の選択、RQ変更、主要scope変更、人間だけが取得できるresource、研究方向を要するcritical referee issue、PARK判断、またはGmail接続・recipient不足に限る。完了または合理的なblocking pointに到達したら、研究背景、RQ、journal文献、gap、data、method、evaluation、results、Claim–Evidence、反証試行、limitations、再現性、statusを統合した引用番号付きPDFを生成し、指定recipientへ送信する。
 
 RQとmethodology readinessが不足する間はfull implementationを開始しない。Evaluation Criterionが未定義ならfinal analysisを開始しない。Evidenceがなければconclusionを書かない。
 
@@ -209,6 +209,17 @@ research agentは発見・関連性・gap・novelty・競合methodを担当す�
 source優先順位は原著査読論文、公式standard/regulation/specification、公式dataset/institutional report、publisher/DOI、author/institution repository、高品質review、その他secondaryの順。数値記述にはsourceが必要で、未確認値は`要検討`。referenceの確認状態は`ORIGINAL_CHECKED / METADATA_VERIFIED / SEARCH_SUMMARY_ONLY / MISMATCH / NOT_FOUND`で記録し、`code/literature/verify_refs.py`（Crossref、OpenAlex）でDOIと書誌を照合する。`METADATA_VERIFIED`は文献の実在と書誌の正しさだけを示し、内容の根拠にはならない。中心的な主張を支える文献は原典を確認する。`DIRECT_EVIDENCE / SECONDARY_EVIDENCE / INFERENCE / UNVERIFIED`を表示し、推論を明記する。novelty、method、metric根拠、threshold、standard要件、数値背景には原典を使う。referenceを捏造しない。web snippetだけを最終証拠にしない。
 
 報告書本文とmanuscriptは数字式引用`[1]`を使用する。引用番号はreference listと一意に対応させ、LaTeXでは`\cite{...}`と`unsrt` bibliographyを既定とする。事実、数値、先行研究、method選定根拠、standard要件には近接した本文引用を置く。
+
+### 9.1 Full-text access
+
+本文が自動で読めない文献（購読誌、publisherのbot対策）は、取得できる範囲を取得し、残りだけをユーザーへまとめて依頼し、最後まで読めない文献は使い方を制限して明示する。台帳は`literature/fulltext.csv`、取得fileは`literature/fulltext/`（gitignored）、ユーザーがdownloadしたPDFは`inputs/raw/`に置く（`code/literature/fulltext.py`）。
+
+1. 対象: title/abstractでfull-textへ進んだrecord（`queue`）と、RQ、gap、central claim、methodを左右するCRITICAL record（`queue --record-ids`）。
+2. 自動取得: OpenAlexが示すopen-access版（機関repository、著者版、J-STAGE、arXiv、OSTI等）を順に試す（`fetch-oa`）。network policyで拒否されたhostは集計し、許可追加の候補として報告する。
+3. ユーザーへの依頼: 残りは優先度順のDOI link一覧にし（`manual-list`）、ユーザーが大学networkのbrowserで通常どおりPDFを保存してfolderごと渡す。`import`がPDF内のDOIで照合し、添付として登録する。自動操作によるpublisherからのdownload、bot対策の回避、ユーザーのlogin情報の受け取りは行わない。
+4. 状態と使い方: `READ`（読んだ箇所を記録）だけがextraction、central claim、数値、method詳細、gapの根拠を支えられる。`ABSTRACT_ONLY`はtitle/abstract screeningとevidence mapにだけ使い、extractionではevidence labelに`ABSTRACT_ONLY`を明示する。`METADATA_ONLY`は存在確認と引用追跡の起点にだけ使う。
+5. 除外と終了: `NO_FULL_TEXT`による除外は、open-access試行とユーザーへの依頼の後に`UNAVAILABLE`とした場合だけ認める。CRITICAL recordを読めないまま閉じる場合は、図書館の文献複写や著者への別刷り依頼の検討を含めて人間の判断（Decision Log ID）を記録する。
+6. 報告: 最終報告には、本文を読んだ件数、abstractのみで扱った件数とその結論への影響を明記する。`fulltext.py audit`がこれらを検査し、Gate 1判定では`--allow-incomplete`なしで実行する。
 
 ## 10. Referee and quality gates
 

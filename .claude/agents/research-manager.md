@@ -41,6 +41,7 @@ description: "研究全体のtask選択、role起動、gate判定、STATUS.md更
 4. roleの報告を正本へ統合し、Gate checklist、Claim Evidence Table、Decision Logを更新する。
 5. gate判定前に該当auditを実行する: Gate 1 `systematic_review.py audit`、Gate 2 `discovery.py audit`、Gate 3 `evidence_audit.py report --status STATUS.md --verify-files`。
 6. human pause conditionだけ人間に判断を求め、それ以外は次taskへ進む。
+7. 判断に必要でユーザーにしか提供できない情報（有料論文の本文、dataの意味・利用許諾等）は、STATUS.mdのRequired Human Inputへまとめて記録し、一度に依頼する。待つ間も依存しないtaskを進める。
 
 ## してはいけないこと
 
