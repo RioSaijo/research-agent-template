@@ -152,10 +152,28 @@ def cmd_queue(args: argparse.Namespace) -> int:
     return 0
 
 
+class _TrackRedirects(urllib.request.HTTPRedirectHandler):
+    """Remember the last URL so a refusal is reported for the host that refused, not the first one."""
+
+    def __init__(self, start: str):
+        self.last = start
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        self.last = newurl
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def http_get(url: str) -> tuple[int, str, bytes]:
+    tracker = _TrackRedirects(url)
+    opener = urllib.request.build_opener(tracker)
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"})
-    with urllib.request.urlopen(request, timeout=40) as response:
-        return response.status, response.headers.get("Content-Type", ""), response.read(60 * 1024 * 1024)
+    try:
+        with opener.open(request, timeout=40) as response:
+            return response.status, response.headers.get("Content-Type", ""), response.read(60 * 1024 * 1024)
+    except urllib.error.HTTPError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise OSError(f"{exc} [at {urllib.parse.urlparse(tracker.last).netloc}]") from exc
 
 
 def oa_locations(doi: str, fetch: Fetcher) -> list[str]:
@@ -195,10 +213,14 @@ def cmd_fetch_oa(args: argparse.Namespace, fetch: Fetcher = http_get) -> int:
                 add_attempt(row, f"{host} HTTP {exc.code}")
                 continue
             except Exception as exc:  # noqa: BLE001
-                reason = "network policy" if "403" in str(exc) and "Tunnel" in str(exc) else str(exc)[:50]
+                text = str(exc)
+                at = re.search(r"\[at ([^\]]+)\]", text)
+                refused_host = at.group(1) if at else host
+                reason = "network policy" if "403" in text and "Tunnel" in text else text[:50]
                 if reason == "network policy":
-                    blocked[host] += 1
-                add_attempt(row, f"{host} {reason}")
+                    blocked[refused_host] += 1
+                via = f" (via redirect from {host})" if refused_host != host else ""
+                add_attempt(row, f"{refused_host} {reason}{via}")
                 continue
             if body[:5] != b"%PDF-":
                 add_attempt(row, f"{host} {status} not a PDF ({ctype.split(';')[0]})")
