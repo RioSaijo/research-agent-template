@@ -90,6 +90,16 @@
 
 role定義を変える時は`agents/roles.json`を編集し、`python code/agents/build_agents.py`を実行します。CIは生成物のずれを`--check`で検出します。独立性が必要なroleは別のagent実行で起動し、platformをまたいでも構いません（例: Screener AをClaude Code、Screener BをChatGPT）。
 
+## 新しい研究を始める手順
+
+1. **（最初の1回だけ）テンプレート化**: GitHubでこのrepositoryの Settings → General → 「Template repository」にチェックを入れる。
+2. **研究用repositoryを作る**: このrepositoryの「Use this template」→「Create a new repository」で `research-<topic-slug>` を作る。未発表の研究を扱うのでPrivateを推奨。
+3. **sessionを始める**: Claude Code（claude.ai/code）で新しいrepositoryを選び、環境に「research-agent-template」を選ぶ。この環境には学術系hostの許可と初期設定script（日本語LuaLaTeX、PDF処理、Python依存）が入っている。
+4. **依頼を送る**: 下の「依頼の書き方」に沿ってやりたいことを書き、資料があれば添付する。最終PDFの送付先emailは、このときに本文で伝える（repositoryには記録されない）。
+5. **一覧に登録する**: 研究一覧用のrepository `research-project-index` に1行追加する（研究名、repository、段階S0〜S4、PROJECT_STATUS、最終報告書のlink）。
+
+ChatGPTやCodexで進める場合も、同じrepositoryで `AGENTS.md` を入口にし、`agents/portable/` のrole指示を使う。
+
 ## Multiple research projects
 
 このrepository自体には個別研究のdata、文献、結果を保存しません。新しい研究テーマごとに、このtemplateから`research-<topic-slug>`という独立repositoryを作成します。

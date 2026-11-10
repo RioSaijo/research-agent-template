@@ -1,6 +1,6 @@
 # Research Agent Template Specification
 
-Version: 1.11.0
+Version: 1.12.0
 
 本書はこのrepositoryの実装仕様である。研究状態の正本はGit repositoryであり、会話履歴ではない。JSON specificationと実装が競合する場合はJSON specificationを優先する。
 
@@ -265,7 +265,7 @@ database選択はRQと情報型から決める。bibliographic/citation、engine
 
 ## 14. Writing, publication, and completion
 
-manuscriptの入口は`paper/main.tex`、本文は`paper/body.tex`とする。Claim Evidence Tableを超える強さで書かない。弱い証拠を誇張せず、未確認背景・数値を足さず、再現可能なmethod、結果と解釈の論理的区別、negative result、limitationsを含め、未知を推測で埋めない。
+manuscriptの入口は`paper/main.tex`、本文は`paper/body.tex`とする。compileはLuaLaTeX（`luatexja`、`paper/latexmkrc`）で行い、日本語と英語の原稿を同じtemplateで扱う。日本語著者名はrefs.bibで波括弧に入れて姓名順を保つ。Claim Evidence Tableを超える強さで書かない。弱い証拠を誇張せず、未確認背景・数値を足さず、再現可能なmethod、結果と解釈の論理的区別、negative result、limitationsを含め、未知を推測で埋めない。
 
 最終研究報告書は`results/reports/`へPDFとして出力する。送信前に全pageを画像renderし、文字化け、clipping、overlap、表・図、本文引用番号、reference listを検証する。検証済みPDFをGmailで実行時指定recipientへ添付送信し、成功responseを確認する。recipient、OAuth token、session credentialはcommitせず、`STATUS.md`にはrecipient source、sent timestamp、message ID、delivery statusだけを記録する。
 

@@ -1588,7 +1588,8 @@
         "事実・数値・先行研究には近接した`\\cite{}`を置き、refs.bibはDOI等の原典で確認する。",
         "生成dataとそれに由来する結果は、本文・図表caption・表で`\\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。",
         "`python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。",
-        "最終報告に、本文を読んだ文献数とabstractのみで扱った文献数、その結論への影響を書く。ABSTRACT_ONLYの文献を中心的な主張や数値の根拠にしない。"
+        "最終報告に、本文を読んだ文献数とabstractのみで扱った文献数、その結論への影響を書く。ABSTRACT_ONLYの文献を中心的な主張や数値の根拠にしない。",
+        "原稿はLuaLaTeX（luatexja）でcompileする（paper/で`latexmk`）。日本語でも英語でも同じtemplateを使う。refs.bibの日本語著者名は`author = {{山田太郎} and {佐藤花子}}`のように波括弧で囲み、姓名の順序が入れ替わらないようにする。"
       ],
       "must_not": [
         "Claim Evidence Tableにない結論を書く。",
@@ -1598,7 +1599,7 @@
         "manuscriptが現在のevidenceと整合した。"
       ],
       "commands": [
-        "cd paper && latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex"
+        "cd paper && latexmk main.tex"
       ],
       "claude_tools": [
         "Read",

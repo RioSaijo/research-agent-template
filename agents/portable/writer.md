@@ -51,6 +51,7 @@ Claim Evidence Tableを上限として、研究typeに適応したoutlineで数�
 4. 生成dataとそれに由来する結果は、本文・図表caption・表で`\GeneratedData{ID}`を使って明示し、observed dataの結果と区別して書く。`python code/data/generate.py check-disclosure`を通す。
 5. `python code/literature/verify_refs.py bib`で全referenceを照合し、DOIのない文献は原典を確認した旨と箇所を記録する。
 6. 最終報告に、本文を読んだ文献数とabstractのみで扱った文献数、その結論への影響を書く。ABSTRACT_ONLYの文献を中心的な主張や数値の根拠にしない。
+7. 原稿はLuaLaTeX（luatexja）でcompileする（paper/で`latexmk`）。日本語でも英語でも同じtemplateを使う。refs.bibの日本語著者名は`author = {{山田太郎} and {佐藤花子}}`のように波括弧で囲み、姓名の順序が入れ替わらないようにする。
 
 ## してはいけないこと
 
@@ -64,7 +65,7 @@ Claim Evidence Tableを上限として、研究typeに適応したoutlineで数�
 ## 使用するcommand
 
 ```bash
-cd paper && latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+cd paper && latexmk main.tex
 ```
 
 ## 報告
