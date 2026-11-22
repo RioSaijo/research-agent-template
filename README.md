@@ -92,13 +92,7 @@ Expert roleの正本は`agents/roles.json`です。role数はこの定義から�
 
 role定義を変える時は`agents/roles.json`を編集し、`python code/agents/build_agents.py`を実行します。独立性が必要なroleは別のagent実行で起動し、platformをまたいでも構いません（例: Screener AをClaude Code、Screener BをChatGPT）。現在の環境がsubagentや独立した実行contextを提供しない場合、独立性を満たしたと扱わず、制約として報告します。
 
-| Platform | 使うfile | 起動方法 |
-|---|---|---|
-| Claude Code | `.claude/agents/<id>.md` | subagentとして起動（`CLAUDE.md`が`AGENTS.md`をimport） |
-| ChatGPT | `agents/portable/<id>.md` | Project / custom GPTの指示に使う、またはrepositoryから読ませる |
-| Codex / その他 | `agents/portable/<id>.md` | `AGENTS.md`の一覧から該当fileを読ませて、そのroleだけを実行 |
 
-role定義を変える時は`agents/roles.json`を編集し、`python code/agents/build_agents.py`を実行します。CIは生成物のずれを`--check`で検出します。独立性が必要なroleは別のagent実行で起動し、platformをまたいでも構いません（例: Screener AをClaude Code、Screener BをChatGPT）。
 
 ## 新しい研究を始める手順
 
