@@ -1,14 +1,10 @@
-"""Build platform-specific agent definitions from the single source ``agents/roles.json``.
+"""Build platform-specific agent definitions and skill entrypoints.
 
-Outputs (all generated; edit ``agents/roles.json`` instead):
+The canonical research manager skill lives at ``skills/research-manager/SKILL.md``.
+This script copies it to the Codex and Claude Code discovery directories. Role definitions
+remain canonical in ``agents/roles.json``.
 
-- ``.claude/agents/<id>.md``  Claude Code subagents (YAML frontmatter: name, description, tools)
-- ``agents/portable/<id>.md`` platform-neutral instructions for ChatGPT (Projects / custom GPTs),
-                              Codex, or any other agent: the same role text without platform syntax
-- ``AGENTS.md`` role index between ``<!-- agents:begin -->`` and ``<!-- agents:end -->``
-
-``--check`` fails when a generated file is missing, stale, or orphaned, so CI keeps every
-platform on the same role definitions.
+``--check`` checks generated role and skill files for missing or stale copies.
 """
 
 from __future__ import annotations
@@ -148,6 +144,12 @@ def expected_files(spec: dict, root: Path) -> dict[Path, str]:
     for role in spec["roles"]:
         files[root / ".claude/agents" / f"{role['id']}.md"] = render_claude(role, spec)
         files[root / "agents/portable" / f"{role['id']}.md"] = render_portable(role, spec)
+    canonical_skill = root / "skills/research-manager/SKILL.md"
+    if canonical_skill.exists():
+        skill_text = canonical_skill.read_text(encoding="utf-8")
+        files[root / ".agents/skills/research-manager/SKILL.md"] = skill_text
+        files[root / ".claude/skills/research-manager/SKILL.md"] = skill_text
+
     agents_md = root / "AGENTS.md"
     current = agents_md.read_text(encoding="utf-8") if agents_md.exists() else ""
     index = render_index(spec)
@@ -194,7 +196,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         path.write_text(text, encoding="utf-8")
     for path in orphans(spec, root):
         path.unlink()
-    print(f"[agents] generated {len(spec['roles'])} roles for Claude Code and portable use")
+    print(f"[agents] generated {len(spec['roles'])} roles and Codex/Claude Code skill entrypoints")
     return 0
 
 
