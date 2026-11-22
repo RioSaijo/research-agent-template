@@ -80,7 +80,17 @@
 
 ## Expert agents on every platform
 
-30のexpert role（Research Manager、Screener A/B、Gap Challenger、Data Screener、Methods Challenger、Independent Verifier、Refereeなど）を`agents/roles.json`に一度だけ定義し、各platform用fileを生成します。
+Expert roleの正本は`agents/roles.json`です。role数はこの定義から導出し、READMEに固定値を重複記載しません。
+
+| Platform | 入口・role files | 起動方法 |
+|---|---|---|
+| Claude Code | `.claude/skills/research-manager/SKILL.md`, `.claude/agents/<id>.md` | Research Manager skillを起動し、必要な専門roleをsubagentとして呼び出す |
+| Codex | `.agents/skills/research-manager/SKILL.md`, `agents/portable/<id>.md` | Research Manager skillを起動し、必要なrole fileを読む |
+| ChatGPT | `skills/research-manager/SKILL.md`, `agents/portable/<id>.md` | Skillsが利用可能な環境ではcanonical packageを登録する。それ以外ではProject等にrepository資料を追加し、skillとrole fileを明示的に読む |
+
+`skills/research-manager/SKILL.md`が共通skillの正本です。`python code/agents/build_agents.py`はこれをCodexとClaude Codeのskill discovery directoryへ複製します。`--check`はrole fileとskill copyのずれを検出します。ChatGPT Skillsへ登録する場合はcanonical packageを使います。Projectや通常のChatにGitHub接続を追加しただけでは、このskillが自動起動するとは限りません。
+
+role定義を変える時は`agents/roles.json`を編集し、`python code/agents/build_agents.py`を実行します。独立性が必要なroleは別のagent実行で起動し、platformをまたいでも構いません（例: Screener AをClaude Code、Screener BをChatGPT）。現在の環境がsubagentや独立した実行contextを提供しない場合、独立性を満たしたと扱わず、制約として報告します。
 
 | Platform | 使うfile | 起動方法 |
 |---|---|---|
